@@ -1,48 +1,69 @@
-type Intensity = 'Baja' | 'Media' | 'Alta'
-type Exercise = { id: string; title: string; category: string; objective: string; description: string; intensity: Intensity; minPlayers: number; maxPlayers: number; ageMin: number; ageMax: number }
+import { cadetPhysicalPlan } from '../data/cadet-physical-plan-2026-27'
 
-const exercises: Exercise[] = [
-  { id: 'warmup-ball', title: 'Activación con balón', category: 'Calentamiento', objective: 'Elevar la temperatura y activar coordinación', description: 'Movilidad dinámica, cambios de mano y finalizaciones suaves por parejas.', intensity: 'Baja', minPlayers: 4, maxPlayers: 16, ageMin: 12, ageMax: 18 },
-  { id: 'finish-2v1', title: 'Finalización 2 contra 1', category: 'Finalización', objective: 'Leer al defensor y decidir cerca del aro', description: 'Dos atacantes salen desde medio campo contra un defensor y deben resolver en ventaja.', intensity: 'Media', minPlayers: 6, maxPlayers: 14, ageMin: 14, ageMax: 18 },
-  { id: 'finish-closeouts', title: 'Finalizar ante closeout', category: 'Finalización', objective: 'Atacar el espacio tras recepción', description: 'Recepción en perímetro, lectura del cierre defensivo y finalización con contacto controlado.', intensity: 'Alta', minPlayers: 6, maxPlayers: 12, ageMin: 14, ageMax: 18 },
-  { id: 'finish-advantage', title: 'Ventajas en superioridad', category: 'Finalización', objective: 'Finalizar tras crear una ventaja', description: 'Situaciones 3 contra 2 continuas priorizando pase extra y ocupación de calles.', intensity: 'Media', minPlayers: 8, maxPlayers: 15, ageMin: 14, ageMax: 18 },
-  { id: 'finish-footwork', title: 'Pies y ángulos de finalización', category: 'Finalización', objective: 'Dominar paradas y ángulos bajo el aro', description: 'Circuito breve de eurostep, parada en dos tiempos y uso del tablero.', intensity: 'Baja', minPlayers: 4, maxPlayers: 14, ageMin: 12, ageMax: 18 },
-  { id: 'shoot-relocation', title: 'Tiro tras pase y reubicación', category: 'Tiro', objective: 'Recibir preparado y tirar con equilibrio', description: 'Pase, desplazamiento corto y tiro desde posiciones definidas.', intensity: 'Media', minPlayers: 4, maxPlayers: 14, ageMin: 12, ageMax: 18 },
-  { id: 'shoot-pressure', title: 'Tiro con presión temporal', category: 'Tiro', objective: 'Sostener mecánica bajo presión', description: 'Series de tiro por equipos con objetivo de aciertos y reloj visible.', intensity: 'Alta', minPlayers: 6, maxPlayers: 16, ageMin: 14, ageMax: 18 },
-  { id: 'defense-1v1', title: 'Defensa individual en el balón', category: 'Defensa', objective: 'Contener sin cometer falta', description: '1 contra 1 desde ventaja corta, con foco en postura y primer desplazamiento.', intensity: 'Media', minPlayers: 6, maxPlayers: 14, ageMin: 12, ageMax: 18 },
-  { id: 'defense-shell', title: 'Shell defensivo 4 contra 4', category: 'Defensa', objective: 'Coordinar ayudas y recuperaciones', description: 'Trabajo sin y con balón para ajustar posiciones, comunicación y closeouts.', intensity: 'Media', minPlayers: 8, maxPlayers: 16, ageMin: 14, ageMax: 18 },
-  { id: 'pass-advantage', title: 'Pase en ventaja', category: 'Pase', objective: 'Encontrar al compañero libre a tiempo', description: 'Rueda de pase con defensor activo y progresión a decisiones en 3 contra 3.', intensity: 'Media', minPlayers: 6, maxPlayers: 15, ageMin: 12, ageMax: 18 },
-  { id: 'pass-pressure', title: 'Conservar y progresar', category: 'Pase', objective: 'Cuidar el balón bajo presión', description: 'Juego reducido que puntúa las secuencias de pases y castiga pérdidas.', intensity: 'Alta', minPlayers: 8, maxPlayers: 16, ageMin: 14, ageMax: 18 },
-  { id: 'transition-lanes', title: 'Calles de contraataque', category: 'Transición', objective: 'Correr, pasar y ocupar espacios', description: 'Salidas tras rebote con tres calles, pase adelantado y llegada al aro.', intensity: 'Media', minPlayers: 6, maxPlayers: 15, ageMin: 12, ageMax: 18 },
-  { id: 'transition-back', title: 'Balance defensivo', category: 'Transición', objective: 'Frenar el contraataque rival', description: 'Transición ida y vuelta donde el equipo sin balón debe proteger aro y comunicar.', intensity: 'Alta', minPlayers: 8, maxPlayers: 16, ageMin: 14, ageMax: 18 },
-  { id: 'cooldown', title: 'Vuelta a la calma y revisión', category: 'Cierre', objective: 'Bajar carga y fijar aprendizajes', description: 'Movilidad suave, respiración y dos preguntas rápidas sobre las decisiones tomadas.', intensity: 'Baja', minPlayers: 1, maxPlayers: 20, ageMin: 10, ageMax: 20 },
-]
+type TrainingDay = 'lunes' | 'miércoles' | 'viernes'
+type Block = { order: number; phase: string; exerciseId: string; exerciseSlug: string; title: string; duration: number; objective: string; description: string; why: string }
 
-function level(intensity: Intensity) { return ['Baja', 'Media', 'Alta'].indexOf(intensity) }
+const dayDetails: Record<TrainingDay, { label: string; duration: number }> = {
+  lunes: { label: 'Día 1 · fuerza y potencia', duration: 40 },
+  miércoles: { label: 'Día 2 · velocidad, cambios de dirección y fuerza', duration: 40 },
+  viernes: { label: 'Día 3 · reactividad y prevención', duration: 30 },
+}
+
+const phaseFocus: Record<string, Record<TrainingDay, Array<[string, string, string, string]>>> = {
+  FIS0001: {
+    lunes: [['boxjump', 'Salto al cajón con parada', 'Aterrizaje y potencia', '3 × 3 · cajón de 30-40 cm'], ['goblet', 'Sentadilla goblet', 'Fuerza básica de piernas', 'Circuito de 4 estaciones · 3 vueltas'], ['calfraise', 'Elevación de talón a una pierna', 'Prevención de tobillo y pantorrilla', '2 × 10 por pierna']],
+    miércoles: [['frenada', 'Frenada en 2 tiempos + salida', 'Aceleración y frenada controlada', '4 por lado · detenerse 2 segundos'], ['slbridge', 'Puente de glúteos a una pierna', 'Fuerza de cadera', 'Circuito de 4 estaciones · 3 vueltas'], ['pallof', 'Pallof press', 'Core y control antirotación', '2 vueltas · 8 por lado']],
+    viernes: [['broadjump', 'Salto horizontal con parada', 'Pliometría con aterrizaje seguro', '3 × 3 · detenerse 2 segundos'], ['slam', 'Lanzamiento al suelo', 'Potencia con balón medicinal', '2 × 6'], ['nordic', 'Nórdico de isquiotibiales', 'Prevención posterior', '2 × 3 · bajar bajo control']],
+  },
+  FIS0002: {
+    lunes: [['cmj', 'Salto vertical con contramovimiento', 'Potencia vertical y aterrizaje', '3 × 4'], ['splitsq', 'Split squat goblet', 'Fuerza unilateral', '3 vueltas · 8 por pierna'], ['calfraise', 'Elevación de talón a una pierna', 'Prevención de tobillo y pantorrilla', '2 × 12 por pierna']],
+    miércoles: [['proagility', '5-10-5', 'Cambio de dirección', '4 repeticiones · 2 por lado'], ['rdl', 'Peso muerto rumano con mancuernas', 'Bisagra de cadera', '3 vueltas · 8 repeticiones'], ['sideplank', 'Plancha lateral', 'Core lateral', '2 vueltas · 6 elevaciones por lado']],
+    viernes: [['hopstick', 'Salto a una pierna con parada', 'Control unilateral', '2 × 3 por pierna'], ['slam', 'Lanzamiento al suelo', 'Potencia con balón medicinal', '2 × 8'], ['tibialis', 'Tibial en pared', 'Prevención de la pierna', '2 × 15']],
+  },
+  FIS0003: {
+    lunes: [['pogo', 'Pogos', 'Reactividad de tobillo', '3 × 10'], ['rfess', 'Sentadilla búlgara', 'Fuerza unilateral y contraste', '4 vueltas · 5 por pierna + 2 saltos'], ['calfraise', 'Elevación de talón a una pierna', 'Prevención de tobillo y pantorrilla', '2 × 10 por pierna']],
+    miércoles: [['mirall', 'Espejo 1 contra 1', 'Velocidad reactiva', '6 × 6 segundos'], ['slrdl', 'Peso muerto a una pierna', 'Bisagra unilateral', '3 vueltas · 6 por pierna'], ['copen', 'Plancha Copenhagen', 'Prevención de aductores', '2 vueltas · 15 segundos por lado']],
+    viernes: [['contbroad', 'Saltos horizontales encadenados', 'Pliometría reactiva', '3 × 3 saltos'], ['rotslam', 'Slam rotacional', 'Potencia rotacional', '2 × 5 por lado'], ['tibialis', 'Tibial en pared', 'Prevención de la pierna', '2 × 15']],
+  },
+  FIS0004: {
+    lunes: [['depthjump', 'Salto reactivo desde cajón', 'Potencia reactiva', '3 × 3 · cajón de 30 cm'], ['stepup', 'Subida al cajón con mancuernas', 'Fuerza unilateral', '3 vueltas · 5 por pierna'], ['calfraise', 'Elevación de talón a una pierna', 'Prevención de tobillo y pantorrilla', '2 × 10 por pierna']],
+    miércoles: [['ttest', 'T-test adaptado', 'Cambios de dirección reactivos', '3 series · a señal'], ['slrdl', 'Peso muerto a una pierna', 'Bisagra unilateral', '3 vueltas · 5 por pierna'], ['sideplank', 'Plancha lateral', 'Core lateral', '2 vueltas · 8 elevaciones por lado']],
+    viernes: [['snapdown', 'Snap down + salto', 'Reactividad y frenada', '3 × 3'], ['overback', 'Lanzamiento por encima de la cabeza', 'Potencia con balón medicinal', '3 × 3'], ['nordic', 'Nórdico de isquiotibiales', 'Prevención posterior', '3 × 5']],
+  },
+  FIS0005: {
+    lunes: [['depthjump', 'Salto reactivo desde cajón', 'Transferencia de potencia', '3 × 3'], ['rfess', 'Sentadilla búlgara', 'Fuerza unilateral y contraste', '3 vueltas · 4 por pierna + 2 saltos'], ['calfraise', 'Elevación de talón a una pierna', 'Prevención de tobillo y pantorrilla', '2 × 10 por pierna']],
+    miércoles: [['rsa', 'Sprints repetidos de 20 m', 'Velocidad específica', '6 × 20 m'], ['slrdl', 'Peso muerto a una pierna', 'Fuerza unilateral', '3 vueltas · 4 por pierna'], ['copen', 'Plancha Copenhagen', 'Prevención de aductores', '2 vueltas · 20 segundos por lado']],
+    viernes: [['latbound', 'Saltos laterales continuos', 'Reactividad lateral', '3 × 4'], ['scoop', 'Lanzamiento rotacional a pared', 'Potencia rotacional', '3 × 4 por lado'], ['tibialis', 'Tibial en pared', 'Prevención de la pierna', '2 × 15']],
+  },
+  FIS0006: {
+    lunes: [['cmj', 'Salto vertical con contramovimiento', 'Potencia con volumen reducido', '2 × 3'], ['goblet', 'Sentadilla goblet', 'Mantenimiento de fuerza', '2 vueltas · 5 repeticiones'], ['calfraise', 'Elevación de talón a una pierna', 'Prevención de tobillo y pantorrilla', '2 × 10 por pierna']],
+    miércoles: [['frenada', 'Frenada en 2 tiempos + salida', 'Frenada y aceleración', '3 por lado'], ['slrdl', 'Peso muerto a una pierna', 'Mantenimiento unilateral', '2 vueltas · 5 por pierna'], ['pallof', 'Pallof press', 'Core y control antirotación', '2 vueltas · 8 por lado']],
+    viernes: [['snapdown', 'Snap down + salto', 'Activación prepartido', '2 × 3'], ['chestpass', 'Pase de pecho a pared', 'Potencia con balón medicinal', '2 × 5'], ['wgs', "World's greatest stretch", 'Movilidad y recuperación', '3 por lado']],
+  },
+}
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody<{ team?: string; objective?: string; duration?: number; intensity?: Intensity; context?: string }>(event)
-  const objective = body.objective || 'Finalización'
-  const duration = [60, 75, 90, 120].includes(Number(body.duration)) ? Number(body.duration) : 90
-  const intensity = ['Baja', 'Media', 'Alta'].includes(body.intensity || '') ? body.intensity as Intensity : 'Media'
-  const team = body.team || 'Cadete A · U16'
-  const age = Number(team.match(/U(\d+)/)?.[1] || 16)
-  const players = 12
-  const compatible = exercises.filter((exercise) => exercise.ageMin <= age && exercise.ageMax >= age && exercise.minPlayers <= players && exercise.maxPlayers >= players && level(exercise.intensity) <= level(intensity))
-  const selected = compatible.filter((exercise) => exercise.category === objective).slice(0, 3)
-  const warmup = exercises.find((exercise) => exercise.id === 'warmup-ball')!
-  const cooldown = exercises.find((exercise) => exercise.id === 'cooldown')!
-  const workMinutes = duration - 15
-  const base = Math.floor(workMinutes / selected.length / 5) * 5
-  const remainder = workMinutes - base * selected.length
-  const minutes = selected.map((_, index) => base + (index === selected.length - 1 ? remainder : 0))
-  const contextLine = body.context?.trim() ? 'El contexto indicado se ha usado para mantener una progresión prudente y una carga acorde.' : 'La sesión progresa de la activación a decisiones específicas y termina con una revisión breve.'
+  const body = await readBody<{ phaseId?: string; day?: TrainingDay; context?: string }>(event)
+  const selectedPhase = cadetPhysicalPlan.phases.find((phase) => phase.id === body.phaseId) || cadetPhysicalPlan.phases[0]
+  const day = body.day && dayDetails[body.day] ? body.day : 'lunes'
+  const dayDetail = dayDetails[day]
+  const exercises = phaseFocus[selectedPhase.id][day]
+  const context = body.context?.trim() || ''
+  const matchWeek = /partido/i.test(context)
+  const rationale = matchWeek
+    ? 'El contexto indica partido entre semana: aplica la regla de Laude, ajusta el orden semanal y reduce una serie cuando corresponda.'
+    : 'La estructura respeta la fase, el estímulo elegido y la progresión de carga definidas por Laude.'
+
+  const blocks: Block[] = exercises.map(([slug, title, objective, description], index) => ({
+    order: index + 1, phase: index === 0 ? 'POTENCIA / VELOCIDAD' : index === 1 ? 'FUERZA' : 'PREVENCIÓN',
+    exerciseId: slug, exerciseSlug: slug, title, duration: index === 0 ? 10 : index === 1 ? 20 : 8,
+    objective, description, why: selectedPhase.objective,
+  }))
+
   return {
-    team, objective, duration, intensity, context: body.context?.trim() || '', candidatesCount: compatible.length, rationale: contextLine,
-    blocks: [
-      { order: 1, phase: 'ACTIVACIÓN', title: warmup.title, duration: 10, objective: warmup.objective, description: warmup.description, why: 'Prepara al grupo antes de elevar la exigencia.' },
-      ...selected.map((exercise, index) => ({ order: index + 2, phase: `BLOQUE ${index + 1}`, title: exercise.title, duration: minutes[index], objective: exercise.objective, description: exercise.description, why: `Es compatible con ${team}, el objetivo de ${objective.toLowerCase()} y una carga ${intensity.toLowerCase()}.` })),
-      { order: selected.length + 2, phase: 'CIERRE', title: cooldown.title, duration: 5, objective: cooldown.objective, description: cooldown.description, why: 'Permite recuperar y convertir lo trabajado en una referencia clara para el próximo entrenamiento.' },
-    ],
+    team: 'Cadete A · U16', objective: selectedPhase.name, duration: dayDetail.duration, intensity: selectedPhase.load,
+    context, candidatesCount: 69, rationale, physicalPlanCode: cadetPhysicalPlan.teamCode,
+    physicalContext: { planName: cadetPhysicalPlan.name, status: 'activo', message: `${dayDetail.label}. ${selectedPhase.objective}`, phase: selectedPhase, weeklyStructure: cadetPhysicalPlan.weeklyStructure },
+    blocks,
   }
 })
