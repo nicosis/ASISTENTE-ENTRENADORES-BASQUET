@@ -43,7 +43,7 @@ const phaseFocus: Record<string, Record<TrainingDay, Array<[string, string, stri
 }
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody<{ phaseId?: string; day?: TrainingDay; context?: string }>(event)
+  const body = await readBody<{ team?: string; phaseId?: string; day?: TrainingDay; context?: string }>(event)
   const selectedPhase = cadetPhysicalPlan.phases.find((phase) => phase.id === body.phaseId) || cadetPhysicalPlan.phases[0]
   const day = body.day && dayDetails[body.day] ? body.day : 'lunes'
   const dayDetail = dayDetails[day]
@@ -61,7 +61,7 @@ export default defineEventHandler(async (event) => {
   }))
 
   return {
-    team: 'Cadete A · U16', objective: selectedPhase.name, duration: dayDetail.duration, intensity: selectedPhase.load,
+    team: body.team?.trim() || 'Cadete A · U16', objective: selectedPhase.name, duration: dayDetail.duration, intensity: selectedPhase.load,
     context, candidatesCount: 69, rationale, physicalPlanCode: cadetPhysicalPlan.teamCode,
     physicalContext: { planName: cadetPhysicalPlan.name, status: 'activo', message: `${dayDetail.label}. ${selectedPhase.objective}`, phase: selectedPhase, weeklyStructure: cadetPhysicalPlan.weeklyStructure },
     blocks,

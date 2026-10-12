@@ -5,7 +5,11 @@ type TrainingSession = { team: string; objective: string; duration: number; inte
 
 const trainerName = ref('')
 const signedIn = ref(false)
-const team = ref('Cadete A · U16')
+const teams = [
+  { id: 'EQU0001', name: 'Cadete A · U16' },
+  { id: 'EQU0004', name: 'Cadete B · U16' },
+]
+const team = ref(teams[0].name)
 const phaseId = ref('FIS0001')
 const trainingDay = ref<'lunes' | 'miércoles' | 'viernes'>('lunes')
 const sessionsPerWeek = ref<2 | 3>(3)
@@ -92,7 +96,7 @@ function loadSavedSessions() {
 async function generateTraining() {
   loading.value = true; error.value = ''; notice.value = ''
   try {
-    session.value = await $fetch<TrainingSession>('/api/generate-training', { method: 'POST', body: { phaseId: phaseId.value, day: trainingDay.value, context: context.value } })
+    session.value = await $fetch<TrainingSession>('/api/generate-training', { method: 'POST', body: { team: team.value, phaseId: phaseId.value, day: trainingDay.value, context: context.value } })
   } catch { error.value = 'No se pudo generar la propuesta. Inténtalo de nuevo.' } finally { loading.value = false }
 }
 function saveSession() {
@@ -130,7 +134,7 @@ onMounted(() => {
       <div class="workspace">
         <aside class="side-panel">
           <p class="eyebrow">PLAN DE LAUDE</p><h2>Prepara la sesión física</h2>
-          <p class="side-copy">Elige fase y día. La sesión respeta la progresión anual de Cadete A.</p>
+          <p class="side-copy">Elige equipo, fase y día. La sesión sigue la progresión anual de referencia.</p>
           <div class="saved"><strong>{{ savedCount }}</strong><span>sesiones guardadas<br>en este dispositivo</span></div>
           <div class="beta-note"><span>✦</span> Esta beta usa el plan físico Cadete 2026-27 de Laude como fuente principal.</div>
         </aside>
@@ -139,7 +143,7 @@ onMounted(() => {
             <p class="eyebrow">PLAN FÍSICO · CADETE 2026-27</p><h1>Prepara la sesión física.</h1><p class="subhead">Selecciona la fase y el estímulo que quieres preparar.</p>
             <form @submit.prevent="generateTraining">
               <div class="field-grid">
-                <label>Equipo<select v-model="team"><option>Cadete A · U16</option></select></label>
+                <label>Equipo<select v-model="team"><option v-for="item in teams" :key="item.id" :value="item.name">{{ item.name }}</option></select></label>
                 <label>Fase física<select v-model="phaseId"><option v-for="item in phases" :key="item.id" :value="item.id">{{ item.name }}</option></select></label>
               </div>
               <section class="phase-preview" aria-live="polite"><p>VISTA PREVIA · {{ phases.find((item) => item.id === phaseId)?.name }}</p><strong>{{ activePhasePreview.focus }}</strong><span>Carga orientativa: {{ activePhasePreview.load }}</span></section>
