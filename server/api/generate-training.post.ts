@@ -43,16 +43,12 @@ const phaseFocus: Record<string, Record<TrainingDay, Array<[string, string, stri
 }
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody<{ team?: string; phaseId?: string; day?: TrainingDay; context?: string }>(event)
+  const body = await readBody<{ team?: string; phaseId?: string; day?: TrainingDay }>(event)
   const selectedPhase = cadetPhysicalPlan.phases.find((phase) => phase.id === body.phaseId) || cadetPhysicalPlan.phases[0]
   const day = body.day && dayDetails[body.day] ? body.day : 'dia1'
   const dayDetail = dayDetails[day]
   const exercises = phaseFocus[selectedPhase.id][day]
-  const context = body.context?.trim() || ''
-  const matchWeek = /partido/i.test(context)
-  const rationale = matchWeek
-    ? 'El contexto indica partido entre semana: aplica la regla de Laude, ajusta el orden semanal y reduce una serie cuando corresponda.'
-    : 'La estructura respeta la fase, el estímulo elegido y la progresión de carga definidas por Laude.'
+  const rationale = 'La estructura respeta la fase, el estímulo elegido y la progresión de carga definidas por Laude.'
 
   const blocks: Block[] = exercises.map(([slug, title, objective, description], index) => ({
     order: index + 1, phase: index === 0 ? 'POTENCIA / VELOCIDAD' : index === 1 ? 'FUERZA' : 'PREVENCIÓN',
@@ -62,7 +58,7 @@ export default defineEventHandler(async (event) => {
 
   return {
     team: body.team?.trim() || 'Cadete A · U16', objective: selectedPhase.name, duration: dayDetail.duration, intensity: selectedPhase.load,
-    context, candidatesCount: 69, rationale, physicalPlanCode: cadetPhysicalPlan.teamCode,
+    candidatesCount: 69, rationale, physicalPlanCode: cadetPhysicalPlan.teamCode,
     physicalContext: { planName: cadetPhysicalPlan.name, status: 'activo', message: `${dayDetail.label}. ${selectedPhase.objective}`, phase: selectedPhase, weeklyStructure: cadetPhysicalPlan.weeklyStructure },
     blocks,
   }

@@ -1,11 +1,26 @@
 <script setup lang="ts">
 type SessionBlock = { order: number; phase: string; exerciseId: string; exerciseSlug: string; title: string; duration: number; objective: string; description: string; why: string }
 type PhysicalContext = { planName: string; status: string; message: string; phase: { id: string; name: string; objective: string; load: string; plyometrics: string }; weeklyStructure: readonly string[] }
-type TrainingSession = { team: string; objective: string; duration: number; intensity: string; context: string; candidatesCount: number; rationale: string; physicalPlanCode: string | null; physicalContext: PhysicalContext | null; blocks: SessionBlock[] }
+type TrainingSession = { team: string; objective: string; duration: number; intensity: string; candidatesCount: number; rationale: string; physicalPlanCode: string | null; physicalContext: PhysicalContext | null; blocks: SessionBlock[] }
 type DayId = 'dia1' | 'dia2' | 'dia3'
 type ViewId = 'week' | 'annual'
 type SavedSession = TrainingSession & { savedAt: string; team?: string; planningDate?: string; weekStart?: string; trainingDay?: DayId }
 type CompletedSession = { team: string; planningDate: string; trainingDay: DayId; completedAt: string }
+type Phase = { id: string; name: string; startsAt: string; endsAt: string }
+
+const defaultPlanStart = '2026-10-12'
+const planDurationDays = 230
+const lastWeekOffset = 224
+function asLocalDate(value: string) { return new Date(`${value}T00:00:00`) }
+function dateKey(date: Date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` }
+function addDays(value: string, days: number) { const date = asLocalDate(value); date.setDate(date.getDate() + days); return dateKey(date) }
+function formatPlanDate(value: string) { return new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }).format(asLocalDate(value)).replace('.', '') }
+function formatSpanishDate(value: string) { return value.split('-').reverse().join('/') }
+function dayDifference(from: string, to: string) {
+  const [fromYear, fromMonth, fromDay] = from.split('-').map(Number)
+  const [toYear, toMonth, toDay] = to.split('-').map(Number)
+  return Math.round((Date.UTC(toYear, toMonth - 1, toDay) - Date.UTC(fromYear, fromMonth - 1, fromDay)) / 86400000)
+}
 
 const trainerName = ref('')
 const signedIn = ref(false)
@@ -15,17 +30,25 @@ const teams = [
   { id: 'EQU0004', name: 'Cadete B · U16' },
 ]
 const team = ref(teams[0].name)
-const planningDate = ref('2026-10-12')
+const planStart = ref(defaultPlanStart)
+const planStartDisplay = ref(formatSpanishDate(defaultPlanStart))
+const planStartError = ref('')
+const showPlanStartCalendar = ref(false)
+const planStartCalendarMonth = ref(`${defaultPlanStart.slice(0, 7)}-01`)
+const planStartDateControl = ref<HTMLElement | null>(null)
+const planEnd = computed(() => addDays(planStart.value, planDurationDays))
+const finalWeekStart = computed(() => addDays(planStart.value, lastWeekOffset))
+const planWeeks = computed(() => Math.floor(lastWeekOffset / 7) + 1)
+const planningDate = ref(defaultPlanStart)
 const planningDateDisplay = ref('12/10/2026')
 const planningDateError = ref('')
 const showDatePicker = ref(false)
-const datePickerWasOpen = ref(false)
+const planningDateControl = ref<HTMLElement | null>(null)
 const calendarMonth = ref('2026-10-01')
 const phaseId = ref('FIS0001')
 const trainingDay = ref<DayId>('dia1')
-const sessionDates = ref<Record<DayId, string>>({ dia1: '2026-10-12', dia2: '2026-10-14', dia3: '2026-10-16' })
+const sessionDates = ref<Record<DayId, string>>({ dia1: defaultPlanStart, dia2: addDays(defaultPlanStart, 2), dia3: addDays(defaultPlanStart, 4) })
 const showSessionDateModal = ref(false)
-const context = ref('')
 const loading = ref(false)
 const error = ref('')
 const session = ref<TrainingSession | null>(null)
@@ -34,14 +57,20 @@ const savedSessions = ref<SavedSession[]>([])
 const completedSessions = ref<CompletedSession[]>([])
 const weeklySavedDays = ref<DayId[]>([])
 const notice = ref('')
-const phases = [
-  { id: 'FIS0001', name: 'Fundamentos', startsAt: '2026-10-12', endsAt: '2026-11-08' },
-  { id: 'FIS0002', name: 'Fuerza base', startsAt: '2026-11-09', endsAt: '2026-12-20' },
-  { id: 'FIS0003', name: 'Fuerza y potencia', startsAt: '2027-01-07', endsAt: '2027-02-14' },
-  { id: 'FIS0004', name: 'Potencia reactiva', startsAt: '2027-02-15', endsAt: '2027-03-21' },
-  { id: 'FIS0005', name: 'Transferencia', startsAt: '2027-03-29', endsAt: '2027-05-02' },
-  { id: 'FIS0006', name: 'Mantenimiento final', startsAt: '2027-05-03', endsAt: '2027-05-30' },
+const phaseSchedule = [
+  { id: 'FIS0001', name: 'Fundamentos', startsAfter: 0, endsAfter: 27 },
+  { id: 'FIS0002', name: 'Fuerza base', startsAfter: 28, endsAfter: 69 },
+  { id: 'FIS0003', name: 'Fuerza y potencia', startsAfter: 87, endsAfter: 125 },
+  { id: 'FIS0004', name: 'Potencia reactiva', startsAfter: 126, endsAfter: 160 },
+  { id: 'FIS0005', name: 'Transferencia', startsAfter: 168, endsAfter: 202 },
+  { id: 'FIS0006', name: 'Mantenimiento final', startsAfter: 203, endsAfter: 230 },
 ]
+const phases = computed<Phase[]>(() => phaseSchedule.map((phase) => ({
+  id: phase.id,
+  name: phase.name,
+  startsAt: addDays(planStart.value, phase.startsAfter),
+  endsAt: addDays(planStart.value, phase.endsAfter),
+})))
 const phasePreviews: Record<string, { focus: string; load: string; days: Record<DayId, string> }> = {
   FIS0001: { focus: 'Aprender el aterrizaje, crear base de core y tobillo.', load: '2-3 series · esfuerzo 5-6/10', days: { dia1: 'Salto al cajón · sentadilla goblet · tobillo', dia2: 'Frenada · glúteo a una pierna · core', dia3: 'Salto horizontal · balón medicinal · isquiotibiales' } },
   FIS0002: { focus: 'Añadir carga, fuerza unilateral y control de aterrizaje.', load: '3 series · esfuerzo 6-7/10', days: { dia1: 'CMJ · split squat · tobillo', dia2: '5-10-5 · peso muerto rumano · core lateral', dia3: 'Salto a una pierna · balón medicinal · tibial' } },
@@ -55,17 +84,11 @@ const physicalDays = [
   { id: 'dia2', label: 'Día 2', detail: 'Velocidad, cambio de dirección y fuerza', duration: '40 min' },
   { id: 'dia3', label: 'Día 3', detail: 'Reactividad y prevención', duration: '30 min' },
 ] as const
-const planStart = '2026-10-12'
-const planEnd = '2027-05-30'
-function asLocalDate(value: string) { return new Date(`${value}T00:00:00`) }
 function setPlanningDate(isoDate: string) {
-  const previousWeek = weekStartFor(planningDate.value)
-  const targetWeek = weekStartFor(isoDate)
+  const previousWeek = planWeekStartFor(planningDate.value)
+  const targetWeek = planWeekStartFor(isoDate)
   if (previousWeek !== targetWeek) {
-    const monday = asLocalDate(targetWeek)
-    const wednesday = new Date(monday); wednesday.setDate(monday.getDate() + 2)
-    const friday = new Date(monday); friday.setDate(monday.getDate() + 4)
-    sessionDates.value = { dia1: dateKey(monday), dia2: dateKey(wednesday), dia3: dateKey(friday) }
+    sessionDates.value = { dia1: targetWeek, dia2: addDays(targetWeek, 2), dia3: addDays(targetWeek, 4) }
   }
   planningDate.value = isoDate
   sessionDates.value[trainingDay.value] = isoDate
@@ -80,53 +103,101 @@ function updatePlanningDate() {
   const [, day, month, year] = parts
   const date = new Date(Number(year), Number(month) - 1, Number(day))
   const isoDate = `${year}-${month}-${day}`
-  if (date.getFullYear() !== Number(year) || date.getMonth() !== Number(month) - 1 || date.getDate() !== Number(day) || isoDate < planStart || isoDate > planEnd) {
-    planningDateError.value = 'Elige una fecha entre el 12/10/2026 y el 30/05/2027.'
+  if (date.getFullYear() !== Number(year) || date.getMonth() !== Number(month) - 1 || date.getDate() !== Number(day) || isoDate < planStart.value || isoDate > planEnd.value) {
+    planningDateError.value = `Elige una fecha entre ${formatPlanDate(planStart.value)} y ${formatPlanDate(planEnd.value)}.`
     return
   }
   setPlanningDate(isoDate)
 }
-function weekStartFor(value: string) {
-  const date = asLocalDate(value)
-  const dayOffset = (date.getDay() + 6) % 7
-  date.setDate(date.getDate() - dayOffset)
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+function updatePlanStart() {
+  const parts = planStartDisplay.value.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  if (!parts) {
+    planStartError.value = 'Usa el formato dd/mm/aaaa.'
+    return
+  }
+  const [, day, month, year] = parts
+  const nextDate = new Date(Number(year), Number(month) - 1, Number(day))
+  const nextStart = `${year}-${month}-${day}`
+  if (nextDate.getFullYear() !== Number(year) || nextDate.getMonth() !== Number(month) - 1 || nextDate.getDate() !== Number(day)) {
+    planStartError.value = 'Elige una fecha válida.'
+    return
+  }
+  planStart.value = nextStart
+  planStartDisplay.value = formatSpanishDate(nextStart)
+  planStartError.value = ''
+  planStartCalendarMonth.value = `${nextStart.slice(0, 7)}-01`
+  showPlanStartCalendar.value = false
+  localStorage.setItem('basket-beta-plan-start', nextStart)
+  trainingDay.value = 'dia1'
+  sessionDates.value = { dia1: nextStart, dia2: addDays(nextStart, 2), dia3: addDays(nextStart, 4) }
+  setPlanningDate(nextStart)
+}
+const planStartCalendarDays = computed(() => {
+  const firstDay = asLocalDate(planStartCalendarMonth.value)
+  const offset = (firstDay.getDay() + 6) % 7
+  const totalDays = new Date(firstDay.getFullYear(), firstDay.getMonth() + 1, 0).getDate()
+  return Array.from({ length: offset + totalDays }, (_, index) => {
+    if (index < offset) return null
+    const date = new Date(firstDay.getFullYear(), firstDay.getMonth(), index - offset + 1)
+    return { value: dateKey(date), day: date.getDate() }
+  })
+})
+const planStartMonthLabel = computed(() => new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(asLocalDate(planStartCalendarMonth.value)))
+function togglePlanStartCalendar() {
+  if (!showPlanStartCalendar.value) planStartCalendarMonth.value = `${planStart.value.slice(0, 7)}-01`
+  showPlanStartCalendar.value = !showPlanStartCalendar.value
+}
+function movePlanStartCalendarMonth(amount: number) {
+  const date = asLocalDate(planStartCalendarMonth.value)
+  date.setMonth(date.getMonth() + amount, 1)
+  planStartCalendarMonth.value = dateKey(date)
+}
+function selectPlanStartDate(value: string) {
+  planStartDisplay.value = formatSpanishDate(value)
+  updatePlanStart()
+}
+function closeCalendarsOnOutsideClick(event: MouseEvent) {
+  if (!(event.target instanceof Node)) return
+  if (showPlanStartCalendar.value && !planStartDateControl.value?.contains(event.target)) showPlanStartCalendar.value = false
+  if (showDatePicker.value && !planningDateControl.value?.contains(event.target)) showDatePicker.value = false
+}
+function planWeekStartFor(value: string) {
+  return addDays(planStart.value, Math.floor(dayDifference(planStart.value, value) / 7) * 7)
 }
 function phaseForDate(value: string) {
-  return phases.find((item) => value >= item.startsAt && value <= item.endsAt)
+  return phases.value.find((item) => value >= item.startsAt && value <= item.endsAt)
 }
 function phaseForWeek(start: string, end: string) {
-  return phases.find((item) => item.startsAt <= end && item.endsAt >= start)
+  return phases.value.find((item) => item.startsAt <= end && item.endsAt >= start)
 }
-const activePhase = computed(() => phases.find((item) => item.id === phaseId.value) || phases[0])
-const planningWeek = computed(() => Math.max(1, Math.min(33, Math.floor((asLocalDate(planningDate.value).getTime() - asLocalDate(planStart).getTime()) / 604800000) + 1)))
+const activePhase = computed(() => phases.value.find((item) => item.id === phaseId.value) || phases.value[0])
+const planningWeek = computed(() => Math.max(1, Math.min(planWeeks.value, Math.floor(dayDifference(planStart.value, planningDate.value) / 7) + 1)))
 const planningWeekRange = computed(() => {
-  const start = asLocalDate(weekStartFor(planningDate.value))
+  const start = asLocalDate(planWeekStartFor(planningDate.value))
   const end = new Date(start)
   end.setDate(end.getDate() + 6)
   return `${new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long' }).format(start)} – ${new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long' }).format(end)}`
 })
-const canGoToPreviousWeek = computed(() => weekStartFor(planningDate.value) > planStart)
-const canGoToNextWeek = computed(() => weekStartFor(planningDate.value) < '2027-05-24')
+const canGoToPreviousWeek = computed(() => planWeekStartFor(planningDate.value) > planStart.value)
+const canGoToNextWeek = computed(() => planWeekStartFor(planningDate.value) < finalWeekStart.value)
 const weeklyProgress = computed(() => Math.min(weeklySavedDays.value.length, 3))
 const weeklyCompleted = computed(() => {
-  const currentWeekStart = weekStartFor(planningDate.value)
+  const currentWeekStart = planWeekStartFor(planningDate.value)
   return new Set(completedSessions.value
-    .filter((item) => item.team === team.value && weekStartFor(item.planningDate) === currentWeekStart)
+    .filter((item) => item.team === team.value && planWeekStartFor(item.planningDate) === currentWeekStart)
     .map((item) => item.trainingDay)).size
 })
 const activePhasePreview = computed(() => phasePreviews[phaseId.value])
-function dateKey(date: Date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` }
 function formatShortDate(value: string) { return new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }).format(asLocalDate(value)).replace('.', '') }
 function formatDateRange(start: string, end: string) {
   const formatter = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' })
   return `${formatter.format(asLocalDate(start)).replace('.', '')} – ${formatter.format(asLocalDate(end)).replace('.', '')}`
 }
 const annualWeeks = computed(() => {
-  const weeks: { number: number; start: string; end: string; phase?: (typeof phases)[number] }[] = []
-  const cursor = asLocalDate(planStart)
+  const weeks: { number: number; start: string; end: string; phase?: Phase }[] = []
+  const cursor = asLocalDate(planStart.value)
   let number = 1
-  while (dateKey(cursor) <= planEnd) {
+  while (dateKey(cursor) <= planEnd.value) {
     const start = dateKey(cursor)
     const endDate = new Date(cursor); endDate.setDate(endDate.getDate() + 6)
     const end = dateKey(endDate)
@@ -140,17 +211,17 @@ function savedCountForWeek(weekStart: string) {
   return new Set(savedSessions.value.filter((item) => item.team === team.value && item.weekStart === weekStart && item.trainingDay).map((item) => item.trainingDay)).size
 }
 function completedCountForWeek(weekStart: string) {
-  return new Set(completedSessions.value.filter((item) => item.team === team.value && weekStartFor(item.planningDate) === weekStart).map((item) => item.trainingDay)).size
+  return new Set(completedSessions.value.filter((item) => item.team === team.value && planWeekStartFor(item.planningDate) === weekStart).map((item) => item.trainingDay)).size
 }
 function openAnnualWeek(weekStart: string) {
   setPlanningDate(weekStart)
   activeView.value = 'week'
 }
 function movePlanningWeek(amount: -1 | 1) {
-  const target = asLocalDate(weekStartFor(planningDate.value))
+  const target = asLocalDate(planWeekStartFor(planningDate.value))
   target.setDate(target.getDate() + amount * 7)
   const targetWeek = dateKey(target)
-  if (targetWeek < planStart || targetWeek > '2027-05-24') return
+  if (targetWeek < planStart.value || targetWeek > finalWeekStart.value) return
   trainingDay.value = 'dia1'
   setPlanningDate(targetWeek)
 }
@@ -162,7 +233,7 @@ const monthCalendar = computed(() => {
     if (index < offset) return null
     const date = new Date(firstDay.getFullYear(), firstDay.getMonth(), index - offset + 1)
     const value = dateKey(date)
-    return { value, day: date.getDate(), disabled: value < planStart || value > planEnd }
+    return { value, day: date.getDate(), disabled: value < planStart.value || value > planEnd.value }
   })
 })
 const monthLabel = computed(() => new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(asLocalDate(calendarMonth.value)))
@@ -171,11 +242,9 @@ function moveCalendarMonth(amount: number) {
   date.setMonth(date.getMonth() + amount, 1)
   calendarMonth.value = dateKey(date)
 }
-function rememberDatePickerState() {
-  datePickerWasOpen.value = showDatePicker.value
-}
-function toggleDatePicker() {
-  showDatePicker.value = !datePickerWasOpen.value
+function togglePlanningDateCalendar() {
+  if (!showDatePicker.value) calendarMonth.value = `${planningDate.value.slice(0, 7)}-01`
+  showDatePicker.value = !showDatePicker.value
 }
 function selectTrainingDay(day: DayId) {
   trainingDay.value = day
@@ -197,11 +266,11 @@ function assignSessionDate(value: string) {
   showSessionDateModal.value = false
 }
 function syncPhaseToPlanningDate() {
-  const current = phases.find((item) => planningDate.value >= item.startsAt && planningDate.value <= item.endsAt)
+  const current = phases.value.find((item) => planningDate.value >= item.startsAt && planningDate.value <= item.endsAt)
   if (current) phaseId.value = current.id
 }
 function refreshWeeklyProgress() {
-  const currentWeekStart = weekStartFor(planningDate.value)
+  const currentWeekStart = planWeekStartFor(planningDate.value)
   weeklySavedDays.value = [...new Set(savedSessions.value
     .filter((item) => item.team === team.value && item.weekStart === currentWeekStart && item.trainingDay)
     .map((item) => item.trainingDay as DayId))]
@@ -271,22 +340,29 @@ function loadSavedSessions() {
 async function generateTraining() {
   loading.value = true; error.value = ''; notice.value = ''
   try {
-    session.value = await $fetch<TrainingSession>('/api/generate-training', { method: 'POST', body: { team: team.value, phaseId: phaseId.value, day: trainingDay.value, context: context.value } })
+    session.value = await $fetch<TrainingSession>('/api/generate-training', { method: 'POST', body: { team: team.value, phaseId: phaseId.value, day: trainingDay.value } })
   } catch { error.value = 'No se pudo generar la propuesta. Inténtalo de nuevo.' } finally { loading.value = false }
 }
 function saveSession() {
   if (!session.value) return
   const saved = JSON.parse(localStorage.getItem('basket-beta-sessions') || '[]') as SavedSession[]
-  saved.unshift({ ...session.value, team: team.value, planningDate: planningDate.value, weekStart: weekStartFor(planningDate.value), trainingDay: trainingDay.value, savedAt: new Date().toISOString() })
+  saved.unshift({ ...session.value, team: team.value, planningDate: planningDate.value, weekStart: planWeekStartFor(planningDate.value), trainingDay: trainingDay.value, savedAt: new Date().toISOString() })
   localStorage.setItem('basket-beta-sessions', JSON.stringify(saved))
   savedSessions.value = saved
   savedCount.value = saved.length; refreshWeeklyProgress(); notice.value = 'Sesión guardada para esta semana en este dispositivo.'
 }
 onMounted(() => {
+  document.addEventListener('click', closeCalendarsOnOutsideClick)
   const savedTrainer = localStorage.getItem('basket-beta-trainer')
+  const savedPlanStart = localStorage.getItem('basket-beta-plan-start')
+  if (savedPlanStart) {
+    planStartDisplay.value = formatSpanishDate(savedPlanStart)
+    updatePlanStart()
+  }
   syncPhaseToPlanningDate()
   if (savedTrainer) { trainerName.value = savedTrainer; signedIn.value = true; loadSavedSessions() }
 })
+onBeforeUnmount(() => document.removeEventListener('click', closeCalendarsOnOutsideClick))
 </script>
 
 <template>
@@ -316,20 +392,19 @@ onMounted(() => {
           <div class="beta-note"><span>✦</span> Esta beta usa el plan físico Cadete 2026-27 de Laude como fuente principal.</div>
         </aside>
         <section class="content-panel">
-          <section v-if="activeView === 'annual'" class="annual-plan"><p class="eyebrow">PLAN ANUAL · CADETE 2026-27</p><div class="annual-plan-heading"><div><h1>El mapa de la temporada.</h1><p>Consulta las fases y abre cualquier semana para preparar o revisar sus sesiones.</p></div><button class="secondary-button" type="button" @click="activeView = 'week'">Volver a mi semana</button></div><section class="annual-plan-summary"><div><span>INICIO</span><strong>12 oct 2026</strong></div><div><span>FINAL</span><strong>30 may 2027</strong></div><div><span>ESTRUCTURA</span><strong>33 semanas · 6 fases</strong></div></section><section class="phase-roadmap" aria-label="Fases del plan anual"><article v-for="phase in phases" :key="phase.id" :class="{ active: phase.id === phaseId }"><p>{{ phase.id }}</p><strong>{{ phase.name }}</strong><span>{{ formatDateRange(phase.startsAt, phase.endsAt) }}</span></article></section><section class="annual-weeks" aria-label="Semanas del plan"><button v-for="week in annualWeeks" :key="week.start" type="button" :disabled="!week.phase" :class="{ current: week.start === weekStartFor(planningDate), pause: !week.phase }" @click="openAnnualWeek(week.start)"><span>SEMANA {{ week.number }}</span><strong>{{ week.phase?.name || 'Pausa y transición' }}</strong><small>{{ formatDateRange(week.start, week.end) }}</small><em>{{ week.phase ? `${savedCountForWeek(week.start)} guardadas · ${completedCountForWeek(week.start)} realizadas` : 'Sin sesiones programadas' }}</em></button></section></section>
+          <section v-if="activeView === 'annual'" class="annual-plan"><p class="eyebrow">PLAN ANUAL · CADETE 2026-27</p><div class="annual-plan-heading"><div><h1>El mapa de la temporada.</h1><p>Consulta las fases y abre cualquier semana para preparar o revisar sus sesiones.</p></div><button class="secondary-button" type="button" @click="activeView = 'week'">Volver a mi semana</button></div><section class="annual-plan-summary"><div><span>INICIO</span><strong>{{ formatPlanDate(planStart) }}</strong></div><div><span>FINAL</span><strong>{{ formatPlanDate(planEnd) }}</strong></div><div><span>ESTRUCTURA</span><strong>{{ planWeeks }} semanas · {{ phases.length }} fases</strong></div></section><section class="plan-start-settings" aria-label="Configuración del inicio del plan"><div><p>CONFIGURACIÓN DEL PLAN</p><strong>Fecha de inicio del plan anual</strong><span>Las fases, semanas y días de sesión se desplazan desde esta fecha.</span></div><div ref="planStartDateControl" class="date-control" @keydown.esc="showPlanStartCalendar = false"><label><span>Inicio del plan (dd/mm/aaaa)</span><div class="calendar-input-row"><input v-model="planStartDisplay" type="text" inputmode="numeric" autocomplete="off" placeholder="dd/mm/aaaa" aria-describedby="plan-start-help" @input="planStartDisplay.length === 10 && updatePlanStart()" @change="updatePlanStart"><button type="button" class="calendar-trigger" aria-label="Abrir calendario de inicio del plan" :aria-expanded="showPlanStartCalendar" aria-controls="plan-start-calendar" @click="togglePlanStartCalendar">▦</button></div><small id="plan-start-help">La fecha elegida será el Día 1.</small><small>Fecha configurada: {{ formatSpanishDate(planStart) }}</small><small v-if="planStartError" class="date-error">{{ planStartError }}</small></label><section v-if="showPlanStartCalendar" id="plan-start-calendar" class="date-picker" aria-label="Calendario para elegir el inicio del plan"><div class="date-picker-header"><button type="button" aria-label="Mes anterior" @click="movePlanStartCalendarMonth(-1)">←</button><strong>{{ planStartMonthLabel }}</strong><button type="button" aria-label="Mes siguiente" @click="movePlanStartCalendarMonth(1)">→</button></div><div class="date-picker-weekdays"><span v-for="weekday in ['L', 'M', 'X', 'J', 'V', 'S', 'D']" :key="weekday">{{ weekday }}</span></div><div class="date-picker-days"><span v-for="(date, index) in planStartCalendarDays" :key="date?.value || `plan-start-empty-${index}`"><button v-if="date" type="button" :class="{ selected: planStart === date.value }" @click="selectPlanStartDate(date.value)">{{ date.day }}</button></span></div></section></div></section><section class="phase-roadmap" aria-label="Fases del plan anual"><article v-for="phase in phases" :key="phase.id" :class="{ active: phase.id === phaseId }"><p>{{ phase.id }}</p><strong>{{ phase.name }}</strong><span>{{ formatDateRange(phase.startsAt, phase.endsAt) }}</span></article></section><section class="annual-weeks" aria-label="Semanas del plan"><button v-for="week in annualWeeks" :key="week.start" type="button" :disabled="!week.phase" :class="{ current: week.start === planWeekStartFor(planningDate), pause: !week.phase }" @click="openAnnualWeek(week.start)"><span>SEMANA {{ week.number }}</span><strong>{{ week.phase?.name || 'Pausa y transición' }}</strong><small>{{ formatDateRange(week.start, week.end) }}</small><em>{{ week.phase ? `${savedCountForWeek(week.start)} guardadas · ${completedCountForWeek(week.start)} realizadas` : 'Sin sesiones programadas' }}</em></button></section></section>
           <div v-else-if="!session" class="generator">
             <p class="eyebrow">PLAN ANUAL · CADETE 2026-27</p><h1>Organiza tu semana física.</h1><p class="subhead">La fecha sitúa al equipo en su fase anual. Después prepara cada estímulo de la semana.</p>
             <form @submit.prevent="generateTraining">
               <div class="field-grid">
                 <label>Equipo<select v-model="team"><option v-for="item in teams" :key="item.id" :value="item.name">{{ item.name }}</option></select></label>
-                <div class="date-field"><label>Fecha de la sesión<input v-model="planningDateDisplay" type="text" inputmode="numeric" autocomplete="off" placeholder="dd/mm/aaaa" @mousedown="rememberDatePickerState" @focus="showDatePicker = true" @click="toggleDatePicker" @change="updatePlanningDate"><small>Ubica esta sesión en la fase y semana del plan anual.</small></label><section v-if="showDatePicker" class="date-picker" aria-label="Calendario para elegir fecha"><div class="date-picker-header"><button type="button" aria-label="Mes anterior" @click="moveCalendarMonth(-1)">←</button><strong>{{ monthLabel }}</strong><button type="button" aria-label="Mes siguiente" @click="moveCalendarMonth(1)">→</button></div><div class="date-picker-weekdays"><span v-for="weekday in ['L', 'M', 'X', 'J', 'V', 'S', 'D']" :key="weekday">{{ weekday }}</span></div><div class="date-picker-days"><span v-for="(date, index) in monthCalendar" :key="date?.value || `empty-${index}`"><button v-if="date" type="button" :disabled="date.disabled" :class="{ selected: planningDate === date.value }" @click="setPlanningDate(date.value)">{{ date.day }}</button></span></div></section></div>
+                <div ref="planningDateControl" class="date-control date-field" @keydown.esc="showDatePicker = false"><label>Fecha de la sesión (dd/mm/aaaa)<div class="calendar-input-row"><input v-model="planningDateDisplay" type="text" inputmode="numeric" autocomplete="off" placeholder="dd/mm/aaaa" aria-describedby="planning-date-help" @input="planningDateDisplay.length === 10 && updatePlanningDate()" @change="updatePlanningDate"><button type="button" class="calendar-trigger" aria-label="Abrir calendario de la sesión" :aria-expanded="showDatePicker" aria-controls="planning-date-calendar" @click="togglePlanningDateCalendar">▦</button></div><small id="planning-date-help">Formato dd/mm/aaaa · la fecha se aplica automáticamente.</small></label><section v-if="showDatePicker" id="planning-date-calendar" class="date-picker" aria-label="Calendario para elegir la fecha de la sesión"><div class="date-picker-header"><button type="button" aria-label="Mes anterior" @click="moveCalendarMonth(-1)">←</button><strong>{{ monthLabel }}</strong><button type="button" aria-label="Mes siguiente" @click="moveCalendarMonth(1)">→</button></div><div class="date-picker-weekdays"><span v-for="weekday in ['L', 'M', 'X', 'J', 'V', 'S', 'D']" :key="weekday">{{ weekday }}</span></div><div class="date-picker-days"><span v-for="(date, index) in monthCalendar" :key="date?.value || `empty-${index}`"><button v-if="date" type="button" :disabled="date.disabled" :class="{ selected: planningDate === date.value }" @click="setPlanningDate(date.value)">{{ date.day }}</button></span></div></section></div>
               </div>
               <p v-if="planningDateError" class="date-error">{{ planningDateError }}</p>
-              <section class="annual-status" aria-live="polite"><p>PLAN ACTIVO · {{ team }}</p><strong>Semana {{ planningWeek }} · {{ activePhase.name }}</strong><span>{{ planningWeekRange }} · {{ weeklyProgress }} guardadas · {{ weeklyCompleted }} realizadas</span><small>Inicio del plan: 12/10/2026 · Fin: 30/05/2027</small><em>{{ activePhasePreview.focus }}</em></section>
+              <section class="annual-status" aria-live="polite"><p>PLAN ACTIVO · {{ team }}</p><strong>Semana {{ planningWeek }} · {{ activePhase.name }}</strong><span>{{ planningWeekRange }} · {{ weeklyProgress }} guardadas · {{ weeklyCompleted }} realizadas</span><small>Inicio del plan: {{ formatPlanDate(planStart) }} · Fin: {{ formatPlanDate(planEnd) }}</small><em>{{ activePhasePreview.focus }}</em></section>
               <nav class="week-navigation" aria-label="Cambiar de semana"><button type="button" :disabled="!canGoToPreviousWeek" @click="movePlanningWeek(-1)">← Semana anterior</button><button type="button" :disabled="!canGoToNextWeek" @click="movePlanningWeek(1)">Semana siguiente →</button></nav>
               <details class="phase-adjustment"><summary>Ajustar fase manualmente</summary><label>Usa esta opción solo si la planificación real difiere del calendario.<select v-model="phaseId"><option v-for="item in phases" :key="item.id" :value="item.id">{{ item.name }}</option></select></label></details>
               <fieldset><legend>3 sesiones de esta semana · {{ activePhase.name }}</legend><div class="choice-row"><article v-for="item in physicalDays" :key="item.id" class="day-choice" :class="{ selected: trainingDay === item.id, completed: isSessionCompleted(item.id) }"><button class="day-choice-main" type="button" @click="selectTrainingDay(item.id)"><strong>{{ item.label }}</strong><span>{{ item.detail }}</span><small>{{ formatShortDate(sessionDates[item.id]) }} · {{ isSessionCompleted(item.id) ? 'Realizada' : weeklySavedDays.includes(item.id) ? 'Guardada' : item.duration }}</small><em>{{ activePhasePreview.days[item.id] }}</em></button><div class="day-choice-actions"><label class="completion-toggle"><input type="checkbox" :checked="isSessionCompleted(item.id)" @change="toggleSessionCompleted(item.id)"><span>Realizada</span></label><button class="day-date-button" type="button" @click="toggleSessionDatePicker(item.id)">Modificar fecha</button><button v-if="savedSessionForDay(item.id)" class="day-history-button" type="button" @click="openSavedSession(item.id)">Ver guardada</button></div><section v-if="showSessionDateModal && trainingDay === item.id" class="day-date-picker" :aria-label="`Modificar fecha de ${item.label}`"><div class="date-picker-header"><button type="button" aria-label="Mes anterior" @click="moveCalendarMonth(-1)">←</button><strong>{{ monthLabel }}</strong><button type="button" aria-label="Mes siguiente" @click="moveCalendarMonth(1)">→</button></div><div class="date-picker-weekdays"><span v-for="weekday in ['L', 'M', 'X', 'J', 'V', 'S', 'D']" :key="weekday">{{ weekday }}</span></div><div class="date-picker-days"><span v-for="(date, index) in monthCalendar" :key="date?.value || `empty-day-${index}`"><button v-if="date" type="button" :disabled="date.disabled" :class="{ selected: sessionDates[trainingDay] === date.value }" @click="assignSessionDate(date.value)">{{ date.day }}</button></span></div><small>Vuelve a pulsar «Modificar fecha» si no quieres realizar cambios.</small></section></article></div></fieldset>
-              <label class="context-label">Contexto opcional<textarea v-model="context" rows="3" placeholder="Ej.: hay partido entre semana o el grupo vuelve de vacaciones."></textarea></label>
               <p v-if="error" class="error">{{ error }}</p>
               <button class="primary-button generate" type="submit" :disabled="loading">{{ loading ? 'Preparando sesión…' : 'Preparar sesión física' }} <span>→</span></button>
             </form>
@@ -337,7 +412,6 @@ onMounted(() => {
           <div v-else class="session-result">
             <div class="result-heading"><div><p class="eyebrow">SESIÓN FÍSICA GENERADA</p><h1>{{ session.objective }}</h1></div><button class="text-button" @click="session = null">← Editar datos</button></div>
             <div class="summary"><span><strong>{{ session.duration }}</strong> min</span><span><strong>{{ session.objective }}</strong></span><span><strong>Intensidad {{ session.intensity }}</strong></span></div>
-            <p v-if="session.context" class="context-summary">Contexto considerado: “{{ session.context }}”</p>
             <div class="rationale"><span>✦</span><p>{{ session.rationale }} <strong>{{ session.candidatesCount }} ejercicios compatibles</strong> analizados.</p></div>
             <section v-if="session.physicalContext" class="physical-context">
               <p class="physical-label">PLAN FÍSICO DE LAUDE · {{ session.physicalContext.status }}</p>
@@ -363,8 +437,8 @@ onMounted(() => {
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap');
-:root { font-family: 'DM Sans', sans-serif; color: #17231d; background: #f4f2eb; font-synthesis: none; } * { box-sizing: border-box; } body { margin: 0; } button, input, select, textarea { font: inherit; } button { cursor: pointer; }
-.app-shell { min-height: 100vh; background: #f4f2eb; }.welcome-panel { min-height: 100vh; max-width: 720px; padding: 11vh 32px 70px; margin: auto; }.brand-mark,.brand-ball { display: inline-grid; place-items: center; width: 35px; height: 35px; background: #ed6a45; color: white; border-radius: 50%; font: 700 18px 'Fraunces'; }.eyebrow { margin: 22px 0 11px; color: #69806f; font: 500 11px 'DM Mono'; letter-spacing: .11em; }.welcome-panel h1,.generator h1,.session-result h1 { margin: 0; letter-spacing: -.055em; font: 600 clamp(42px,7vw,70px)/.98 'Fraunces'; }.welcome-panel em { color: #ef704d; font-style: normal; }.intro { max-width: 510px; color: #59665e; font-size: 18px; line-height: 1.55; }.access-form { max-width: 440px; margin-top: 42px; }.access-form label,.field-grid label,.context-label { display: grid; gap: 8px; color: #4e5d52; font-size: 14px; font-weight: 600; } input,select,textarea { width: 100%; border: 1px solid #d5d8ce; border-radius: 8px; padding: 14px 15px; color: #17231d; background: #fffefa; outline-color: #ed6a45; } .access-form input { margin-bottom: 12px; font-size: 16px; }.primary-button { border: 0; border-radius: 7px; padding: 14px 18px; color: #fff; background: #203d30; font-weight: 700; transition: transform .2s, background .2s; }.primary-button:not(:disabled):hover { transform: translateY(-2px); background: #28523e; }.primary-button:disabled { opacity: .65; cursor: wait; }.primary-button span { margin-left: 14px; color: #f6b561; font-size: 20px; }.microcopy { color: #879087; font-size: 13px; }.topbar { display: flex; justify-content: space-between; align-items: center; height: 70px; padding: 0 clamp(22px,5vw,72px); border-bottom: 1px solid #dfe0d8; background: #fbfaf5; }.brand { display: flex; align-items: center; gap: 9px; font: 700 20px 'Fraunces'; letter-spacing: -.04em; }.brand-ball { width: 26px; height: 26px; font-size: 14px; }.topbar-right { display: flex; align-items: center; gap: 14px; color: #667267; font-size: 14px; }.beta-pill { padding: 4px 7px; color: #c34a2a; background: #ffeadf; border-radius: 4px; font: 500 10px 'DM Mono'; }.sign-out-button { border: 1px solid #ccd3ca; border-radius: 5px; padding: 6px 9px; color: #496052; background: transparent; font-size: 12px; font-weight: 600; }.sign-out-button:hover { border-color: #8c9e90; color: #203d30; background: #f1f4ef; }.workspace { display: grid; grid-template-columns: minmax(240px, .8fr) minmax(0, 2fr); max-width: 1440px; min-height: calc(100vh - 70px); margin: auto; }.side-panel { padding: 60px clamp(24px,4vw,64px); border-right: 1px solid #dfe0d8; background: #e9eee7; }.side-panel .eyebrow { margin-top: 0; }.side-panel h2 { margin: 0; font: 600 clamp(28px,3vw,39px)/1.04 'Fraunces'; letter-spacing: -.045em; }.side-copy { color: #5c695f; line-height: 1.55; }.saved { display: flex; gap: 13px; align-items: center; margin-top: 42px; padding-top: 23px; border-top: 1px solid #cdd5ca; }.saved strong { color: #df5e3c; font: 700 32px 'Fraunces'; }.saved span { color: #5c695f; font-size: 12px; line-height: 1.35; }.beta-note { display: flex; gap: 10px; margin-top: 40px; padding: 14px; color: #526357; background: #f5f7f1; border-radius: 8px; font-size: 12px; line-height: 1.4; }.beta-note span,.rationale span { color: #e66b48; }.content-panel { padding: 60px clamp(24px,7vw,106px); background: #fbfaf5; }.generator { max-width: 690px; }.generator .eyebrow,.session-result .eyebrow { margin-top: 0; }.subhead { margin: 15px 0 38px; color: #657268; }.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }.phase-preview { display: grid; gap: 5px; margin-top: 20px; padding: 15px 17px; border: 1px solid #cbd8ca; border-radius: 9px; color: #395044; background: #eef5ec; }.phase-preview p { margin: 0; color: #62806d; font: 500 10px 'DM Mono'; letter-spacing: .1em; }.phase-preview strong { font: 600 16px/1.35 'Fraunces'; }.phase-preview span { color: #5a7060; font-size: 12px; } fieldset { margin: 28px 0; padding: 0; border: 0; } legend { margin-bottom: 11px; color: #4e5d52; font-size: 14px; font-weight: 600; }.frequency-selector { margin-bottom: 0; }.frequency-selector > div { display: flex; gap: 8px; }.frequency-selector button { border: 1px solid #cbd4cb; border-radius: 999px; padding: 8px 15px; color: #526357; background: #fffefa; font-weight: 600; }.frequency-selector button.selected { border-color: #203d30; color: #fff; background: #203d30; }.frequency-selector p { margin: 9px 0 0; color: #708076; font-size: 12px; line-height: 1.45; }.rotation-note { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin: 18px 0 0; padding: 13px 15px; border: 1px solid #e6d7c4; border-radius: 8px; background: #fff7ee; }.rotation-note div { display: grid; gap: 3px; }.rotation-note p { margin: 0; color: #a26c41; font: 500 10px 'DM Mono'; letter-spacing: .09em; }.rotation-note strong { color: #5e4939; font: 600 16px 'Fraunces'; }.rotation-note span { color: #7c6b5f; font-size: 12px; }.rotation-note button { flex: 0 0 auto; border: 1px solid #cfae90; border-radius: 6px; padding: 8px 10px; color: #7e542f; background: transparent; font-size: 12px; font-weight: 600; }.choice-row { display: grid; gap: 9px; }.choice-row button { display: grid; grid-template-columns: 82px minmax(0, 1fr) auto; align-items: center; gap: 6px 12px; width: 100%; border: 1px solid #d5d8ce; border-radius: 8px; padding: 13px 16px; color: #59665e; background: #fffefa; text-align: left; }.choice-row button strong { color: #203d30; font: 600 17px 'Fraunces'; }.choice-row button span { font-size: 14px; }.choice-row button small { color: #708076; font: 500 11px 'DM Mono'; }.choice-row button em { grid-column: 2 / -1; color: #78857d; font-size: 12px; font-style: normal; }.choice-row button.selected { border-color: #203d30; color: #fff; background: #203d30; }.choice-row button.selected strong,.choice-row button.selected small,.choice-row button.selected em { color: #fff; }.context-label { margin: 30px 0 24px; }.generate { min-width: 250px; }.error { color: #c34a2a; }.result-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }.result-heading h1 { font-size: clamp(35px,5vw,56px); }.text-button { border: 0; padding: 7px 0; color: #52725e; background: transparent; text-decoration: underline; }.summary { display: flex; flex-wrap: wrap; gap: 9px; margin: 27px 0 12px; }.summary span { padding: 7px 10px; border-radius: 5px; color: #4a5e50; background: #eaf0e9; font-size: 13px; }.context-summary { color: #6a756d; font-size: 13px; font-style: italic; }.rationale { display: flex; gap: 12px; align-items: flex-start; margin: 29px 0; padding: 13px 15px; border-left: 3px solid #ef704d; background: #fff0e9; color: #5d514b; font-size: 13px; line-height: 1.5; }.rationale p { margin: 0; }.session-list { margin: 35px 0 25px; padding: 0; list-style: none; }.session-card { display: grid; grid-template-columns: 48px 1fr; gap: 18px; }.timeline { display: flex; flex-direction: column; align-items: center; color: #799081; font: 11px 'DM Mono'; }.timeline i { display: block; width: 1px; flex: 1; margin-top: 9px; background: #d6ddd3; }.session-card:last-child .timeline i { display: none; }.session-card article { margin-bottom: 18px; padding: 21px 24px; border: 1px solid #e0e1da; border-radius: 10px; background: #fffefa; box-shadow: 0 2px 0 rgba(25,40,30,.02); }.card-top { display: flex; justify-content: space-between; align-items: center; color: #7a8c7e; font: 11px 'DM Mono'; letter-spacing: .08em; }.card-top p { margin: 0; }.card-top span { padding: 4px 6px; color: #c34a2a; background: #fff0e9; border-radius: 4px; letter-spacing: 0; }.exercise-card-content { display: grid; grid-template-columns: minmax(0, 1fr) 132px; gap: 20px; align-items: start; }.session-card h2 { margin: 9px 0 2px; font: 600 25px 'Fraunces'; letter-spacing: -.035em; }.session-card article > p { margin: 8px 0; color: #59665e; font-size: 14px; line-height: 1.5; }.session-card .card-objective { color: #304b3b; font-weight: 600; }.exercise-visual { position: relative; margin: 9px 0 0; overflow: hidden; border: 1px solid #dfe4dc; border-radius: 8px; background: #edf0e9; aspect-ratio: 1; }.exercise-visual img { display: block; width: 100%; height: 100%; object-fit: cover; }.exercise-visual figcaption { position: absolute; right: 0; bottom: 0; left: 0; padding: 5px 7px; color: #f5f7f2; background: rgba(32,61,48,.78); font: 10px 'DM Mono'; }.why { display: grid; grid-template-columns: 130px 1fr; gap: 10px; margin-top: 15px; padding-top: 13px; border-top: 1px solid #ecebe6; color: #68746c; font-size: 12px; line-height: 1.45; }.why strong { color: #597362; }.result-actions { display: flex; justify-content: flex-end; gap: 10px; }.secondary-button { border: 1px solid #bdc8bd; border-radius: 7px; padding: 12px 15px; color: #365443; background: transparent; font-weight: 600; }.saved-notice { color: #3c7a52; text-align: right; font-size: 13px; }
+:root { font-family: 'DM Sans', sans-serif; color: #17231d; background: #f4f2eb; font-synthesis: none; } * { box-sizing: border-box; } body { margin: 0; } button, input, select { font: inherit; } button { cursor: pointer; }
+.app-shell { min-height: 100vh; background: #f4f2eb; }.welcome-panel { min-height: 100vh; max-width: 720px; padding: 11vh 32px 70px; margin: auto; }.brand-mark,.brand-ball { display: inline-grid; place-items: center; width: 35px; height: 35px; background: #ed6a45; color: white; border-radius: 50%; font: 700 18px 'Fraunces'; }.eyebrow { margin: 22px 0 11px; color: #69806f; font: 500 11px 'DM Mono'; letter-spacing: .11em; }.welcome-panel h1,.generator h1,.session-result h1 { margin: 0; letter-spacing: -.055em; font: 600 clamp(42px,7vw,70px)/.98 'Fraunces'; }.welcome-panel em { color: #ef704d; font-style: normal; }.intro { max-width: 510px; color: #59665e; font-size: 18px; line-height: 1.55; }.access-form { max-width: 440px; margin-top: 42px; }.access-form label,.field-grid label { display: grid; gap: 8px; color: #4e5d52; font-size: 14px; font-weight: 600; } input,select { width: 100%; border: 1px solid #d5d8ce; border-radius: 8px; padding: 14px 15px; color: #17231d; background: #fffefa; outline-color: #ed6a45; } .access-form input { margin-bottom: 12px; font-size: 16px; }.primary-button { border: 0; border-radius: 7px; padding: 14px 18px; color: #fff; background: #203d30; font-weight: 700; transition: transform .2s, background .2s; }.primary-button:not(:disabled):hover { transform: translateY(-2px); background: #28523e; }.primary-button:disabled { opacity: .65; cursor: wait; }.primary-button span { margin-left: 14px; color: #f6b561; font-size: 20px; }.microcopy { color: #879087; font-size: 13px; }.topbar { display: flex; justify-content: space-between; align-items: center; height: 70px; padding: 0 clamp(22px,5vw,72px); border-bottom: 1px solid #dfe0d8; background: #fbfaf5; }.brand { display: flex; align-items: center; gap: 9px; font: 700 20px 'Fraunces'; letter-spacing: -.04em; }.brand-ball { width: 26px; height: 26px; font-size: 14px; }.topbar-right { display: flex; align-items: center; gap: 14px; color: #667267; font-size: 14px; }.beta-pill { padding: 4px 7px; color: #c34a2a; background: #ffeadf; border-radius: 4px; font: 500 10px 'DM Mono'; }.sign-out-button { border: 1px solid #ccd3ca; border-radius: 5px; padding: 6px 9px; color: #496052; background: transparent; font-size: 12px; font-weight: 600; }.sign-out-button:hover { border-color: #8c9e90; color: #203d30; background: #f1f4ef; }.workspace { display: grid; grid-template-columns: minmax(240px, .8fr) minmax(0, 2fr); max-width: 1440px; min-height: calc(100vh - 70px); margin: auto; }.side-panel { padding: 60px clamp(24px,4vw,64px); border-right: 1px solid #dfe0d8; background: #e9eee7; }.side-panel .eyebrow { margin-top: 0; }.side-panel h2 { margin: 0; font: 600 clamp(28px,3vw,39px)/1.04 'Fraunces'; letter-spacing: -.045em; }.side-copy { color: #5c695f; line-height: 1.55; }.saved { display: flex; gap: 13px; align-items: center; margin-top: 42px; padding-top: 23px; border-top: 1px solid #cdd5ca; }.saved strong { color: #df5e3c; font: 700 32px 'Fraunces'; }.saved span { color: #5c695f; font-size: 12px; line-height: 1.35; }.beta-note { display: flex; gap: 10px; margin-top: 40px; padding: 14px; color: #526357; background: #f5f7f1; border-radius: 8px; font-size: 12px; line-height: 1.4; }.beta-note span,.rationale span { color: #e66b48; }.content-panel { padding: 60px clamp(24px,7vw,106px); background: #fbfaf5; }.generator { max-width: 690px; }.generator .eyebrow,.session-result .eyebrow { margin-top: 0; }.subhead { margin: 15px 0 38px; color: #657268; }.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }.phase-preview { display: grid; gap: 5px; margin-top: 20px; padding: 15px 17px; border: 1px solid #cbd8ca; border-radius: 9px; color: #395044; background: #eef5ec; }.phase-preview p { margin: 0; color: #62806d; font: 500 10px 'DM Mono'; letter-spacing: .1em; }.phase-preview strong { font: 600 16px/1.35 'Fraunces'; }.phase-preview span { color: #5a7060; font-size: 12px; } fieldset { margin: 28px 0; padding: 0; border: 0; } legend { margin-bottom: 11px; color: #4e5d52; font-size: 14px; font-weight: 600; }.frequency-selector { margin-bottom: 0; }.frequency-selector > div { display: flex; gap: 8px; }.frequency-selector button { border: 1px solid #cbd4cb; border-radius: 999px; padding: 8px 15px; color: #526357; background: #fffefa; font-weight: 600; }.frequency-selector button.selected { border-color: #203d30; color: #fff; background: #203d30; }.frequency-selector p { margin: 9px 0 0; color: #708076; font-size: 12px; line-height: 1.45; }.rotation-note { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin: 18px 0 0; padding: 13px 15px; border: 1px solid #e6d7c4; border-radius: 8px; background: #fff7ee; }.rotation-note div { display: grid; gap: 3px; }.rotation-note p { margin: 0; color: #a26c41; font: 500 10px 'DM Mono'; letter-spacing: .09em; }.rotation-note strong { color: #5e4939; font: 600 16px 'Fraunces'; }.rotation-note span { color: #7c6b5f; font-size: 12px; }.rotation-note button { flex: 0 0 auto; border: 1px solid #cfae90; border-radius: 6px; padding: 8px 10px; color: #7e542f; background: transparent; font-size: 12px; font-weight: 600; }.choice-row { display: grid; gap: 9px; }.choice-row button { display: grid; grid-template-columns: 82px minmax(0, 1fr) auto; align-items: center; gap: 6px 12px; width: 100%; border: 1px solid #d5d8ce; border-radius: 8px; padding: 13px 16px; color: #59665e; background: #fffefa; text-align: left; }.choice-row button strong { color: #203d30; font: 600 17px 'Fraunces'; }.choice-row button span { font-size: 14px; }.choice-row button small { color: #708076; font: 500 11px 'DM Mono'; }.choice-row button em { grid-column: 2 / -1; color: #78857d; font-size: 12px; font-style: normal; }.choice-row button.selected { border-color: #203d30; color: #fff; background: #203d30; }.choice-row button.selected strong,.choice-row button.selected small,.choice-row button.selected em { color: #fff; }.generate { min-width: 250px; }.error { color: #c34a2a; }.result-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }.result-heading h1 { font-size: clamp(35px,5vw,56px); }.text-button { border: 0; padding: 7px 0; color: #52725e; background: transparent; text-decoration: underline; }.summary { display: flex; flex-wrap: wrap; gap: 9px; margin: 27px 0 12px; }.summary span { padding: 7px 10px; border-radius: 5px; color: #4a5e50; background: #eaf0e9; font-size: 13px; }.rationale { display: flex; gap: 12px; align-items: flex-start; margin: 29px 0; padding: 13px 15px; border-left: 3px solid #ef704d; background: #fff0e9; color: #5d514b; font-size: 13px; line-height: 1.5; }.rationale p { margin: 0; }.session-list { margin: 35px 0 25px; padding: 0; list-style: none; }.session-card { display: grid; grid-template-columns: 48px 1fr; gap: 18px; }.timeline { display: flex; flex-direction: column; align-items: center; color: #799081; font: 11px 'DM Mono'; }.timeline i { display: block; width: 1px; flex: 1; margin-top: 9px; background: #d6ddd3; }.session-card:last-child .timeline i { display: none; }.session-card article { margin-bottom: 18px; padding: 21px 24px; border: 1px solid #e0e1da; border-radius: 10px; background: #fffefa; box-shadow: 0 2px 0 rgba(25,40,30,.02); }.card-top { display: flex; justify-content: space-between; align-items: center; color: #7a8c7e; font: 11px 'DM Mono'; letter-spacing: .08em; }.card-top p { margin: 0; }.card-top span { padding: 4px 6px; color: #c34a2a; background: #fff0e9; border-radius: 4px; letter-spacing: 0; }.exercise-card-content { display: grid; grid-template-columns: minmax(0, 1fr) 132px; gap: 20px; align-items: start; }.session-card h2 { margin: 9px 0 2px; font: 600 25px 'Fraunces'; letter-spacing: -.035em; }.session-card article > p { margin: 8px 0; color: #59665e; font-size: 14px; line-height: 1.5; }.session-card .card-objective { color: #304b3b; font-weight: 600; }.exercise-visual { position: relative; margin: 9px 0 0; overflow: hidden; border: 1px solid #dfe4dc; border-radius: 8px; background: #edf0e9; aspect-ratio: 1; }.exercise-visual img { display: block; width: 100%; height: 100%; object-fit: cover; }.exercise-visual figcaption { position: absolute; right: 0; bottom: 0; left: 0; padding: 5px 7px; color: #f5f7f2; background: rgba(32,61,48,.78); font: 10px 'DM Mono'; }.why { display: grid; grid-template-columns: 130px 1fr; gap: 10px; margin-top: 15px; padding-top: 13px; border-top: 1px solid #ecebe6; color: #68746c; font-size: 12px; line-height: 1.45; }.why strong { color: #597362; }.result-actions { display: flex; justify-content: flex-end; gap: 10px; }.secondary-button { border: 1px solid #bdc8bd; border-radius: 7px; padding: 12px 15px; color: #365443; background: transparent; font-weight: 600; }.saved-notice { color: #3c7a52; text-align: right; font-size: 13px; }
 .physical-context { margin: 0 0 29px; padding: 17px 18px; border: 1px solid #cbd8ca; border-radius: 10px; background: #eef5ec; color: #395044; }.physical-label { margin: 0 0 7px; color: #62806d; font: 500 10px 'DM Mono'; letter-spacing: .1em; }.physical-context h2 { margin: 0; font: 600 23px 'Fraunces'; letter-spacing: -.03em; }.physical-context > p:not(.physical-label):not(.physical-week) { margin: 7px 0; font-size: 13px; line-height: 1.5; }.physical-details { display: grid; gap: 6px; margin-top: 12px; font-size: 12px; line-height: 1.45; }.physical-week { margin: 13px 0 0; padding-top: 11px; border-top: 1px solid #d5e0d3; color: #5a7060; font-size: 11px; line-height: 1.5; }
 @media (max-width: 760px) { .workspace { grid-template-columns: 1fr; }.side-panel { padding: 30px 25px; border-right: 0; border-bottom: 1px solid #dfe0d8; }.side-copy,.beta-note { display: none; }.saved { margin-top: 19px; padding-top: 16px; }.content-panel { padding: 40px 22px; }.field-grid { grid-template-columns: 1fr; }.rotation-note { align-items: flex-start; flex-direction: column; }.choice-row button { grid-template-columns: 1fr auto; gap: 3px 12px; }.choice-row button span,.choice-row button em { grid-column: 1 / -1; }.exercise-card-content { grid-template-columns: 1fr; }.exercise-visual { width: min(100%, 240px); }.trainer { display: none; }.result-heading { display: block; }.text-button { margin-top: 18px; }.why { grid-template-columns: 1fr; gap: 3px; }.result-actions { justify-content: stretch; flex-direction: column; }.result-actions button { width: 100%; } }
 .topbar { position: sticky; top: 0; z-index: 10; }
@@ -373,7 +447,7 @@ onMounted(() => {
 .field-grid label { align-content: start; }
 .week-calendar { display: grid; gap: 10px; margin: -7px 0 28px; padding: 16px 17px; border: 1px solid #d7dfd3; border-radius: 10px; background: #f5f8f2; }.week-calendar p { margin: 0; color: #62806d; font: 500 10px 'DM Mono'; letter-spacing: .1em; }.week-calendar strong { color: #395044; font: 600 17px 'Fraunces'; }.week-calendar > div { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; }.week-calendar button { display: grid; gap: 3px; justify-items: center; border: 1px solid #d5d8ce; border-radius: 7px; padding: 9px 4px; color: #587062; background: #fffefa; }.week-calendar button span { font: 500 10px 'DM Mono'; text-transform: uppercase; }.week-calendar button b { color: #203d30; font-size: 16px; }.week-calendar button.selected { border-color: #203d30; background: #203d30; }.week-calendar button.selected span,.week-calendar button.selected b { color: #fff; }.week-calendar > small { color: #708076; font-size: 11px; }
 .date-picker { display: grid; gap: 9px; width: min(100%, 330px); margin: 10px 0 4px auto; padding: 13px; border: 1px solid #ccd8cb; border-radius: 9px; background: #fffefa; box-shadow: 0 8px 22px rgba(30, 51, 39, .08); }.date-picker-header { display: flex; justify-content: space-between; align-items: center; text-transform: capitalize; }.date-picker-header strong { color: #304b3b; font: 600 16px 'Fraunces'; }.date-picker-header button { width: 29px; height: 29px; border: 1px solid #d5d8ce; border-radius: 5px; color: #43604e; background: #f7f8f3; }.date-picker-weekdays,.date-picker-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }.date-picker-weekdays span { color: #7a8a7f; font: 500 10px 'DM Mono'; }.date-picker-days span { display: grid; min-height: 31px; }.date-picker-days button { border: 0; border-radius: 5px; color: #405a4a; background: transparent; font-size: 12px; }.date-picker-days button:hover:not(:disabled) { background: #eaf0e9; }.date-picker-days button.selected { color: #fff; background: #203d30; }.date-picker-days button:disabled { color: #c6cec5; cursor: not-allowed; }
-.date-field { position: relative; }.date-field .date-picker { position: absolute; top: calc(100% + 8px); right: 0; z-index: 20; margin: 0; }
+.date-control { position: relative; }.date-control .date-picker { position: absolute; top: calc(100% + 8px); right: 0; z-index: 35; width: min(330px, calc(100vw - 54px)); margin: 0; }
 .annual-status small { color: #708076; font: 500 10px 'DM Mono'; letter-spacing: .02em; }
 .choice-row .day-choice { display: grid; grid-template-columns: minmax(0, 1fr) auto; overflow: hidden; border: 1px solid #d5d8ce; border-radius: 8px; background: #fffefa; }.choice-row .day-choice-main { border: 0; border-radius: 0; }.choice-row .day-choice.selected { border-color: #203d30; background: #203d30; }.choice-row .day-choice.selected .day-choice-main { color: #fff; background: #203d30; }.choice-row .day-choice.selected .day-choice-main strong,.choice-row .day-choice.selected .day-choice-main small,.choice-row .day-choice.selected .day-choice-main em { color: #fff; }.choice-row .day-choice.completed { border-color: #b8d6ba; background: #f0f8ef; }.choice-row .day-choice.completed .day-choice-main { background: #f0f8ef; }.choice-row .day-choice.completed .day-choice-main small { color: #397148; }.choice-row .day-choice.completed.selected { border-color: #203d30; background: #203d30; }.choice-row .day-choice.completed.selected .day-choice-main { background: #203d30; }.choice-row .day-choice.completed.selected .day-choice-main small { color: #d9f0d8; }.day-choice-actions { display: flex; align-items: center; gap: 7px; padding: 10px 13px 10px 0; }.choice-row .day-date-button,.choice-row .day-history-button { display: block; width: auto; border: 1px solid #bdc8bd; border-radius: 6px; padding: 8px 9px; color: #365443; background: transparent; font-size: 12px; font-weight: 600; white-space: nowrap; }.choice-row .day-history-button { border-color: #aac6af; color: #397148; }.choice-row .day-choice.selected .day-date-button { border-color: #91ad9c; color: #fff; }.choice-row .day-choice.selected .day-history-button { border-color: #a8d5ac; color: #d9f0d8; }.date-modal-backdrop { position: fixed; z-index: 40; inset: 0; display: grid; place-items: center; padding: 22px; background: rgba(17, 31, 24, .38); }.date-modal { display: grid; gap: 12px; width: min(100%, 370px); padding: 18px; border: 1px solid #cbd8ca; border-radius: 12px; background: #fffefa; box-shadow: 0 24px 64px rgba(18, 35, 26, .25); }.date-modal-header { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; }.date-modal-header p { margin: 0 0 4px; color: #62806d; font: 500 10px 'DM Mono'; letter-spacing: .1em; }.date-modal-header strong { color: #395044; font: 600 20px/1.2 'Fraunces'; }.date-modal-header > button { flex: 0 0 auto; width: 30px; height: 30px; border: 1px solid #d5d8ce; border-radius: 6px; color: #43604e; background: #f7f8f3; font-size: 20px; line-height: 1; }.date-modal > small { color: #708076; font-size: 11px; line-height: 1.4; }
 @media (max-width: 760px) { .choice-row .day-choice { grid-template-columns: 1fr; }.day-choice-actions { padding: 0 13px 12px 16px; }.choice-row .day-choice-main { grid-template-columns: 1fr auto; }.choice-row .day-choice-main span,.choice-row .day-choice-main em { grid-column: 1 / -1; } }
@@ -382,4 +456,6 @@ onMounted(() => {
 .week-navigation { display: flex; justify-content: space-between; gap: 10px; margin: 12px 0 0; }.week-navigation button { border: 1px solid #cbd8ca; border-radius: 6px; padding: 8px 10px; color: #42604e; background: #f7faf5; font-size: 12px; font-weight: 600; }.week-navigation button:not(:disabled):hover { border-color: #7f9d89; background: #edf4eb; }.week-navigation button:disabled { border-color: #e0e3dd; color: #a3aca4; background: #f7f7f4; cursor: not-allowed; }
 .topbar-left { display: flex; align-items: center; gap: 28px; }.main-nav { display: flex; gap: 5px; }.main-nav button { border: 0; border-radius: 5px; padding: 7px 9px; color: #68756c; background: transparent; font-size: 13px; font-weight: 600; }.main-nav button:hover { color: #203d30; background: #eef2ec; }.main-nav button.active { color: #203d30; background: #e7eee6; }.annual-plan { max-width: 860px; }.annual-plan > .eyebrow { margin-top: 0; }.annual-plan h1 { margin: 0; letter-spacing: -.055em; font: 600 clamp(42px,6vw,62px)/.98 'Fraunces'; }.annual-plan-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; }.annual-plan-heading p { max-width: 525px; margin: 14px 0 0; color: #657268; line-height: 1.55; }.annual-plan-heading .secondary-button { flex: 0 0 auto; }.annual-plan-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; overflow: hidden; margin: 33px 0 18px; border: 1px solid #d6ded3; border-radius: 10px; background: #d6ded3; }.annual-plan-summary div { display: grid; gap: 5px; padding: 15px 17px; background: #f5f8f2; }.annual-plan-summary span,.phase-roadmap p,.annual-weeks button > span { color: #69806f; font: 500 10px 'DM Mono'; letter-spacing: .08em; }.annual-plan-summary strong { color: #314b3c; font: 600 17px 'Fraunces'; }.phase-roadmap { display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; margin-bottom: 25px; }.phase-roadmap article { display: grid; gap: 5px; min-height: 116px; padding: 13px; border: 1px solid #d7dfd3; border-radius: 8px; background: #fffefa; }.phase-roadmap article.active { border-color: #203d30; background: #e7eee6; }.phase-roadmap p { margin: 0; }.phase-roadmap strong { color: #304b3b; font: 600 16px/1.1 'Fraunces'; }.phase-roadmap span { color: #68776d; font-size: 11px; line-height: 1.35; }.annual-weeks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }.annual-weeks button { display: grid; gap: 5px; min-height: 126px; padding: 14px; border: 1px solid #d5dcd3; border-radius: 9px; color: #526357; background: #fffefa; text-align: left; }.annual-weeks button:hover { border-color: #89a291; background: #f4f8f3; }.annual-weeks button.current { border-color: #203d30; background: #203d30; }.annual-weeks button.current > span,.annual-weeks button.current strong,.annual-weeks button.current small,.annual-weeks button.current em { color: #fff; }.annual-weeks button.pause { border-style: dashed; background: #f5f3ed; }.annual-weeks button.pause:disabled { color: #9aa39b; cursor: not-allowed; }.annual-weeks button.pause:disabled:hover { border-color: #d5dcd3; background: #f5f3ed; }.annual-weeks button strong { color: #304b3b; font: 600 18px/1.1 'Fraunces'; }.annual-weeks button small { color: #69776d; font: 500 11px 'DM Mono'; }.annual-weeks button em { margin-top: auto; color: #718078; font-size: 11px; font-style: normal; }
 @media (max-width: 900px) { .phase-roadmap { grid-template-columns: repeat(3, 1fr); }.annual-weeks { grid-template-columns: repeat(2, 1fr); } }.topbar-left { min-width: 0; } @media (max-width: 760px) { .topbar { height: auto; min-height: 70px; padding-top: 10px; padding-bottom: 10px; }.topbar-left { gap: 14px; }.main-nav button { padding: 6px 7px; font-size: 12px; }.annual-plan-heading { display: grid; align-items: start; }.annual-plan-heading .secondary-button { justify-self: start; }.annual-plan-summary { grid-template-columns: 1fr; }.phase-roadmap { grid-template-columns: repeat(2, 1fr); }.annual-weeks { grid-template-columns: 1fr; }.trainer { display: none; } }
+.plan-start-settings { display: grid; grid-template-columns: minmax(0, 1fr) 175px; gap: 14px; align-items: end; margin: 0 0 24px; padding: 16px 17px; border: 1px solid #cbd8ca; border-radius: 10px; background: #eef5ec; }.plan-start-settings > div { display: grid; gap: 4px; }.plan-start-settings p { margin: 0; color: #62806d; font: 500 10px 'DM Mono'; letter-spacing: .1em; }.plan-start-settings strong { color: #395044; font: 600 17px 'Fraunces'; }.plan-start-settings span,.plan-start-settings small { color: #587062; font-size: 12px; line-height: 1.4; }.plan-start-settings label { display: grid; gap: 5px; }.plan-start-settings input { padding: 10px 11px; } @media (max-width: 760px) { .plan-start-settings { grid-template-columns: 1fr; align-items: stretch; } }
+.calendar-input-row { display: grid; grid-template-columns: minmax(0, 1fr) 42px; gap: 6px; }.calendar-input-row input { min-width: 0; }.calendar-trigger { border: 1px solid #bdc8bd; border-radius: 7px; color: #365443; background: #f7faf5; font-size: 19px; line-height: 1; }.calendar-trigger:hover,.calendar-trigger[aria-expanded="true"] { border-color: #7f9d89; background: #e5efe4; }
 </style>
