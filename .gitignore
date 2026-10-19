@@ -6,6 +6,12 @@
 .cache
 dist
 
+# Temporary design and export artifacts
+/output
+/outputs
+/tmp
+/tmp-spreadsheets
+
 # Node dependencies
 node_modules
 

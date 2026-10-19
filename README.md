@@ -1,63 +1,25 @@
 # Pizarra · Asistente de entrenamiento de baloncesto
 
-Beta inicial para organizar y preparar sesiones físicas de baloncesto a partir del plan Cadete 2026-27 de Laude.
+Prototipo local para configurar equipos y generar una semana de entrenamiento físico de 1, 2 o 3 sesiones.
 
-## Qué hace la beta
+## Núcleo actual
 
-- Acceso local con nombre de entrenador, sin cuenta real.
-- Dos equipos de demostración: Cadete A · U16 y Cadete B · U16.
-- Consulta de un plan anual de 33 semanas, seis fases y períodos de pausa.
-- Navegación por calendario, por semana anterior/siguiente o desde la vista de plan anual.
-- Tres estímulos semanales fijos: Día 1, Día 2 y Día 3.
-- Modificación de la fecha de cada sesión, consulta de semanas anteriores y marcado de entrenamiento realizado.
-- Propuesta física con bloques, dosis, objetivo, motivo e imágenes de referencia.
-- Guardado local de propuestas, sesiones realizadas y nombre del entrenador.
-- Botón de PDF visible como funcionalidad futura; todavía no genera un archivo.
+- Cada temporada indica los días reales de entrenamiento y, por tanto, su frecuencia semanal.
+- La frecuencia selecciona una semana reutilizable: 1 sesión integrada; 2 sesiones de fuerza/potencia y velocidad/control; o 3 sesiones de fuerza, velocidad/potencia y prevención/control.
+- Cada sesión declara sus ejercicios, objetivo y minutos exactos. La suma de los bloques coincide con la duración total.
+- La misma definición se usa para pintar las tarjetas del front y para generar la propuesta desde la API; no hay dos catálogos que puedan desincronizarse.
+- Equipos, temporadas y observaciones se guardan temporalmente en `localStorage`.
 
-## Generación de sesiones: estado real
+## Google Sheets: siguiente fase
 
-Al pulsar **Preparar sesión física** se llama a una ruta de servidor de Nuxt. Actualmente no utiliza una IA externa: compone una propuesta determinista según la fase y el día seleccionados, a partir de reglas definidas en el proyecto.
-
-En la siguiente etapa, ese mismo punto de entrada incorporará IA para adaptar la propuesta al contexto del entrenador —partido, fatiga, material o disponibilidad— sin salir de los ejercicios, cargas y reglas validadas por Laude.
-
-## Fuente de conocimiento
-
-Las hojas de Google Drive son la fuente editable de trabajo. El estado contrastado el 12/10/2026 es:
-
-- `07 - Planes físicos`: plan `PLF0001`, Cadete 2026-27, metodología MBSC.
-- `08 - Fases físicas`: seis fases entre el 12/10/2026 y el 30/05/2027.
-- `04 - Ejercicios físicos`: 69 ejercicios físicos con ficha técnica.
-- `03 - Equipos`: cuatro equipos disponibles; la beta muestra de momento Cadete A y Cadete B.
-
-No existe sincronización automática entre Google Sheets y Nuxt. Los datos revisados se trasladan manualmente al código hasta que se implemente Supabase.
-
-## Tecnologías
-
-| Tecnología | Uso |
-| --- | --- |
-| Nuxt 4 | Framework principal. |
-| Vue 3 | Interfaz reactiva. |
-| TypeScript | Tipado de interfaz, plan y ruta de servidor. |
-| Nitro / server routes | Generación actual de la propuesta. |
-| CSS personalizado | Diseño y responsive en `app/app.vue`. |
-| `localStorage` | Persistencia temporal en el navegador. |
-| JPG estáticos | Imágenes de ejercicios en `public/images/physical`. |
-| Vercel | Destino de despliegue de la beta. |
-
-### Tecnologías no conectadas todavía
-
-- Tailwind CSS no está instalado: se usa CSS personalizado.
-- Supabase no está conectado: aún no hay base de datos ni autenticación real.
-- Google Sheets no se consulta en tiempo real.
-- No hay proveedor de IA externo integrado.
+No hay integración todavía. Cuando la lógica esté validada, las tablas deberán sustituir el catálogo local de ejercicios y plantillas, manteniendo los mismos campos: frecuencia, orden, objetivo, duración, ejercicio y minutos. Así no habrá que rehacer la interfaz ni la API.
 
 ## Estructura
 
 ```text
-app/app.vue                                  # Interfaz de la beta
-server/api/generate-training.post.ts         # Generador determinista actual
-server/data/cadet-physical-plan-2026-27.ts   # Plan anual y reglas
-public/images/physical/                      # Imágenes de ejercicios
+app/app.vue                          # Interfaz
+app/shared/training.ts               # Catálogo y reglas reutilizables de 1/2/3 días
+server/api/generate-training.post.ts # API que compone una sesión desde esas reglas
 ```
 
 ## Ejecutar en local
