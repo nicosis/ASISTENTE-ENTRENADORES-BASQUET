@@ -1,21 +1,17 @@
 import { computed, type Ref } from 'vue'
 import {
-  blockExercises,
-  exercises,
+  defaultTrainingCatalog,
   getHydratedSession,
   getPhaseForWeek,
   getPlanHomeSessions,
   getPlanPhases,
   getPlanTests,
   getWeeklySessionsForPhase,
-  phaseSessions,
-  planPhases,
-  plans,
   resolvePlan,
-  sessionBlocks,
   type AgeCategory,
   type CompetitiveLevel,
   type Frequency,
+  type TrainingCatalogTables,
   type TrainingDay,
 } from '~/shared/training'
 
@@ -27,19 +23,26 @@ export interface SeasonPlanConfig {
   selectedDay: TrainingDay
 }
 
-export function useTrainingPlan(config: Ref<SeasonPlanConfig>) {
+export function useTrainingPlan(
+  config: Ref<SeasonPlanConfig>,
+  catalogRef?: Ref<TrainingCatalogTables>,
+) {
+  const catalog = computed(() => catalogRef?.value ?? defaultTrainingCatalog)
+
   const activePlan = computed(() =>
-    resolvePlan(
-      config.value.ageCategory,
-      config.value.competitiveLevel,
-      config.value.frequency,
-    ),
+    resolvePlan(config.value.ageCategory, catalog.value),
   )
 
-  const phases = computed(() => getPlanPhases(activePlan.value.id))
+  const phases = computed(() =>
+    getPlanPhases(activePlan.value.id, catalog.value),
+  )
 
   const currentWeekContext = computed(() =>
-    getPhaseForWeek(activePlan.value.id, config.value.weekNumber),
+    getPhaseForWeek(
+      activePlan.value.id,
+      config.value.weekNumber,
+      catalog.value,
+    ),
   )
 
   const currentPhase = computed(() => currentWeekContext.value.phase)
@@ -49,21 +52,29 @@ export function useTrainingPlan(config: Ref<SeasonPlanConfig>) {
       currentPhase.value.id,
       config.value.frequency,
       config.value.competitiveLevel,
+      catalog.value,
     ),
   )
 
   const hydratedPreviewSession = computed(() =>
-    getHydratedSession({
-      ageCategory: config.value.ageCategory,
-      competitiveLevel: config.value.competitiveLevel,
-      frequency: config.value.frequency,
-      weekNumber: config.value.weekNumber,
-      day: config.value.selectedDay,
-    }),
+    getHydratedSession(
+      {
+        ageCategory: config.value.ageCategory,
+        competitiveLevel: config.value.competitiveLevel,
+        frequency: config.value.frequency,
+        weekNumber: config.value.weekNumber,
+        day: config.value.selectedDay,
+      },
+      catalog.value,
+    ),
   )
 
-  const homeWorkouts = computed(() => getPlanHomeSessions(activePlan.value.id))
-  const seasonTests = computed(() => getPlanTests(activePlan.value.id))
+  const homeWorkouts = computed(() =>
+    getPlanHomeSessions(activePlan.value.id, catalog.value),
+  )
+  const seasonTests = computed(() =>
+    getPlanTests(activePlan.value.id, catalog.value),
+  )
 
   const allWeeksTimeline = computed(() => {
     const timeline: Array<{
@@ -98,6 +109,15 @@ export function useTrainingPlan(config: Ref<SeasonPlanConfig>) {
     return timeline
   })
 
+  const rawTables = computed(() => ({
+    plans: catalog.value.plans,
+    planPhases: catalog.value.planPhases,
+    phaseSessions: catalog.value.phaseSessions,
+    sessionBlocks: catalog.value.sessionBlocks,
+    blockExercises: catalog.value.blockExercises,
+    exercises: catalog.value.exercises,
+  }))
+
   return {
     activePlan,
     phases,
@@ -108,13 +128,6 @@ export function useTrainingPlan(config: Ref<SeasonPlanConfig>) {
     homeWorkouts,
     seasonTests,
     allWeeksTimeline,
-    rawTables: {
-      plans,
-      planPhases,
-      phaseSessions,
-      sessionBlocks,
-      blockExercises,
-      exercises,
-    },
+    rawTables,
   }
 }

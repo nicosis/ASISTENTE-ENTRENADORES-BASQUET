@@ -10,12 +10,20 @@ import {
 
 const {
   coach,
+  isAdmin,
   loginName,
+  loginRole,
   signedIn,
   view,
   activeTeamTab,
-  teams,
+  showArchivedTeams,
+  dbSource,
+  loadingDatabase,
+  activeTeams,
+  archivedTeams,
+  visibleTeams,
   seasons,
+  teamSeasons,
   activeTeam,
   activeSeason,
   frequency,
@@ -51,11 +59,18 @@ const {
   error,
   signIn,
   signOut,
+  toggleCoachRole,
   openTeam,
   openCreateTeam,
   createTeam,
+  archiveTeam,
+  restoreTeam,
+  deleteTeamCascade,
   toggleDraftDay,
   createSeason,
+  closeSeason,
+  reopenSeason,
+  selectSeason,
   moveWeek,
   selectPhaseWeek,
   saveReview,
@@ -65,7 +80,18 @@ const {
   closeHistory,
   generateSession,
   inspectDayInTables,
+  refreshDatabaseFromSheets,
 } = useCoachWorkspace()
+
+function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
+  if (!isAdmin.value) return
+  const accepted = window.confirm(
+    `¿Eliminar definitivamente el equipo "${teamName}" (${teamId})?\n\nEsta acción de administrador borrará en cascada el equipo, todas sus temporadas y sus observaciones semanales en Google Sheets.`,
+  )
+  if (accepted) {
+    deleteTeamCascade(teamId)
+  }
+}
 </script>
 
 <template>
@@ -75,9 +101,33 @@ const {
         <span class="brand-ball">B</span><span>pizarra</span>
       </button>
       <div class="topbar-right">
+        <button
+          class="logout-button"
+          type="button"
+          :disabled="loadingDatabase"
+          title="Recargar las 12 tablas directamente desde Google Sheets"
+          @click="refreshDatabaseFromSheets"
+        >
+          {{
+            loadingDatabase
+              ? 'Sincronizando Sheets…'
+              : dbSource === 'google-sheets'
+                ? '● Sheets DB conectado (Actualizar)'
+                : '○ Modo local (Conectar Sheets)'
+          }}
+        </button>
         <template v-if="signedIn">
           <span class="coach-avatar">{{ coach.name.slice(0, 1) }}</span>
           <span>{{ coach.name }}</span>
+          <button
+            class="role-badge"
+            :class="{ admin: isAdmin }"
+            type="button"
+            title="Haz clic para alternar rol en tabla `coaches` (Admin / Entrenador)"
+            @click="toggleCoachRole"
+          >
+            {{ isAdmin ? 'ADMIN' : 'ENTRENADOR' }}
+          </button>
           <button class="logout-button" type="button" @click="signOut">
             Cerrar sesión
           </button>
@@ -86,9 +136,12 @@ const {
     </header>
 
     <section v-if="!signedIn" class="page auth-page">
-      <p class="eyebrow">SESIÓN CERRADA</p>
+      <p class="eyebrow">SESIÓN CERRADA · TABLA `coaches`</p>
       <h1>Entra con tu perfil de entrenador.</h1>
-      <p>El equipo y sus temporadas se conservan en este dispositivo.</p>
+      <p>
+        El perfil y su rol (`admin` o `coach`) se sincronizan con la tabla
+        `coaches` en Google Sheets.
+      </p>
       <form class="login-form" @submit.prevent="signIn">
         <label>
           Nombre del entrenador
@@ -99,52 +152,153 @@ const {
             placeholder="Ej. Nicolás"
           />
         </label>
+        <label>
+          Rol en el club (`coaches.role`)
+          <select v-model="loginRole" class="form-select">
+            <option value="coach">
+              Entrenador (puede archivar equipos y cerrar temporadas)
+            </option>
+            <option value="admin">
+              Administrador (puede eliminar en cascada)
+            </option>
+          </select>
+        </label>
         <button class="primary-button" type="submit">Entrar</button>
       </form>
     </section>
 
     <section v-else-if="view === 'home'" class="page home-page">
-      <p class="eyebrow">PANEL DEL ENTRENADOR</p>
+      <p class="eyebrow">
+        PANEL DEL ENTRENADOR · {{ coach.id }} ({{
+          isAdmin ? 'ROL: ADMINISTRADOR' : 'ROL: ENTRENADOR'
+        }})
+      </p>
       <div class="heading-row">
         <div>
-          <h1>Mis equipos.</h1>
+          <h1>
+            {{ showArchivedTeams ? 'Equipos archivados.' : 'Mis equipos.' }}
+          </h1>
           <p>
-            Abre una temporada para explorar las fases del año, sus sesiones por
-            bloques y las relaciones entre tablas en local.
+            {{
+              showArchivedTeams
+                ? 'Estos equipos están ocultos del panel principal conservando todo su historial de temporadas y observaciones.'
+                : 'Abre una temporada para explorar las fases del año, o archiva equipos y temporadas cerradas para mantener limpio tu panel.'
+            }}
           </p>
         </div>
-        <button class="primary-button" type="button" @click="openCreateTeam">
-          + Crear equipo
-        </button>
+        <div class="heading-actions">
+          <button
+            v-if="archivedTeams.length > 0 || showArchivedTeams"
+            class="secondary-button"
+            type="button"
+            @click="showArchivedTeams = !showArchivedTeams"
+          >
+            {{
+              showArchivedTeams
+                ? `← Volver a activos (${activeTeams.length})`
+                : `Ver archivados (${archivedTeams.length})`
+            }}
+          </button>
+          <button
+            v-if="!showArchivedTeams"
+            class="primary-button"
+            type="button"
+            @click="openCreateTeam"
+          >
+            + Crear equipo
+          </button>
+        </div>
       </div>
       <section class="team-grid">
-        <button
-          v-for="team in teams"
+        <article
+          v-for="team in visibleTeams"
           :key="team.id"
           class="team-card"
-          type="button"
-          @click="openTeam(team.id)"
+          :class="{ 'is-archived': team.status === 'archived' }"
         >
-          <span>{{ team.id }}</span>
-          <h2>{{ team.name }}</h2>
-          <p>{{ team.club }}</p>
-          <div>
-            <strong>{{
-              seasons.find(
-                (item) => item.teamId === team.id && item.status === 'active',
-              )?.category || 'Sin temporada activa'
-            }}</strong>
-            <small>{{ team.players.length }} jugadores</small>
+          <div class="team-card-top">
+            <span>
+              {{ team.id }} ·
+              {{ team.status === 'archived' ? 'ARCHIVADO' : 'ACTIVO' }}
+            </span>
           </div>
-          <em>Abrir planificación anual →</em>
-        </button>
+          <button
+            class="team-card-main"
+            type="button"
+            @click="openTeam(team.id)"
+          >
+            <h2>{{ team.name }}</h2>
+            <p>{{ team.club }}</p>
+            <div class="team-card-meta">
+              <strong>{{
+                seasons.find(
+                  (item) =>
+                    item.teamId === team.id && item.status === 'active',
+                )?.category || 'Sin temporada activa (cerrada)'
+              }}</strong>
+              <small>{{ team.players.length }} jugadores</small>
+            </div>
+            <em>Abrir planificación anual →</em>
+          </button>
+          <div class="team-card-footer">
+            <button
+              v-if="team.status !== 'archived'"
+              class="card-mini-btn"
+              type="button"
+              title="Ocultar equipo del panel principal sin perder su historial"
+              @click.stop="archiveTeam(team.id)"
+            >
+              Archivar equipo
+            </button>
+            <button
+              v-else
+              class="card-mini-btn restore"
+              type="button"
+              @click.stop="restoreTeam(team.id)"
+            >
+              Restaurar al panel
+            </button>
+            <button
+              v-if="isAdmin"
+              class="card-mini-btn danger"
+              type="button"
+              title="Solo Administrador: borra equipo, temporadas y observaciones en cascada"
+              @click.stop="handleConfirmDeleteTeam(team.id, team.name)"
+            >
+              Eliminar (Admin)
+            </button>
+          </div>
+        </article>
       </section>
-      <section v-if="!teams.length" class="empty-state">
-        <h2>Tu primer equipo empieza aquí.</h2>
+      <section v-if="!visibleTeams.length" class="empty-state">
+        <h2>
+          {{
+            showArchivedTeams
+              ? 'No hay equipos archivados.'
+              : 'Tu primer equipo empieza aquí.'
+          }}
+        </h2>
         <p>
-          Crea su ficha, añade la plantilla y después configura la temporada.
+          {{
+            showArchivedTeams
+              ? 'Todos tus equipos están activos en el panel principal.'
+              : 'Crea su ficha, añade la plantilla y después configura la temporada.'
+          }}
         </p>
-        <button class="primary-button" type="button" @click="openCreateTeam">
+        <button
+          v-if="showArchivedTeams"
+          class="secondary-button"
+          type="button"
+          @click="showArchivedTeams = false"
+        >
+          ← Volver a equipos activos
+        </button>
+        <button
+          v-else
+          class="primary-button"
+          type="button"
+          @click="openCreateTeam"
+        >
           Crear equipo
         </button>
       </section>
@@ -281,18 +435,81 @@ const {
       <div class="team-heading">
         <div>
           <p class="eyebrow">
-            {{ activeTeam?.id }} · TEMPORADA {{ activeSeason?.name }} · PLAN ID:
+            {{ activeTeam?.id }} · TEMPORADA {{ activeSeason?.name }} ({{
+              activeSeason?.status === 'closed' ? 'CERRADA' : 'ACTIVA'
+            }}) · PLAN ID:
             {{ activePlan.id }}
           </p>
           <h1>{{ activeTeam?.name }}</h1>
           <p>{{ activeSeason?.category }} · {{ activeTeam?.club }}</p>
         </div>
+        <div class="heading-actions">
+          <button
+            v-if="activeSeason && activeSeason.status === 'active'"
+            class="secondary-button"
+            type="button"
+            title="Cerrar/archivar esta temporada"
+            @click="closeSeason(activeSeason.id)"
+          >
+            Cerrar temporada
+          </button>
+          <button
+            v-else-if="activeSeason && activeSeason.status === 'closed'"
+            class="secondary-button"
+            type="button"
+            title="Volver a marcar esta temporada como activa"
+            @click="reopenSeason(activeSeason.id)"
+          >
+            Reactivar temporada
+          </button>
+          <button
+            class="secondary-button"
+            type="button"
+            @click="view = 'create-season'"
+          >
+            + Nueva temporada
+          </button>
+          <button
+            v-if="activeTeam && activeTeam.status !== 'archived'"
+            class="secondary-button"
+            type="button"
+            title="Ocultar equipo del panel principal"
+            @click="archiveTeam(activeTeam.id)"
+          >
+            Archivar equipo
+          </button>
+          <button
+            v-else-if="activeTeam && activeTeam.status === 'archived'"
+            class="secondary-button"
+            type="button"
+            @click="restoreTeam(activeTeam.id)"
+          >
+            Restaurar equipo
+          </button>
+          <button
+            v-if="isAdmin && activeTeam"
+            class="danger-button"
+            type="button"
+            @click="handleConfirmDeleteTeam(activeTeam.id, activeTeam.name)"
+          >
+            Eliminar equipo (Admin)
+          </button>
+        </div>
+      </div>
+
+      <div v-if="teamSeasons.length > 1" class="seasons-switcher-bar">
+        <span>Temporadas del equipo:</span>
         <button
-          class="secondary-button"
+          v-for="item in teamSeasons"
+          :key="item.id"
           type="button"
-          @click="view = 'create-season'"
+          class="season-pill-btn"
+          :class="{ active: item.id === activeSeason?.id }"
+          @click="selectSeason(item.id)"
         >
-          Nueva temporada
+          {{ item.name }} ({{
+            item.status === 'active' ? 'Activa' : 'Cerrada'
+          }})
         </button>
       </div>
 
@@ -541,8 +758,7 @@ const {
                     <tr>
                       <th>id (PK)</th>
                       <th>age_category</th>
-                      <th>competitive_level</th>
-                      <th>frequency</th>
+                      <th>total_weeks</th>
                       <th>name</th>
                     </tr>
                   </thead>
@@ -550,8 +766,7 @@ const {
                     <tr class="highlighted-row">
                       <td><code>{{ activePlan.id }}</code></td>
                       <td>{{ activePlan.ageCategory }}</td>
-                      <td>{{ activePlan.competitiveLevel }}</td>
-                      <td>{{ activePlan.frequency }}</td>
+                      <td>{{ activePlan.totalWeeks }}</td>
                       <td>{{ activePlan.name }}</td>
                     </tr>
                   </tbody>
@@ -724,10 +939,10 @@ const {
                     <tr>
                       <th>block_id (FK)</th>
                       <th>station_label</th>
-                      <th>dose (en block_exercises)</th>
+                      <th>dose_formacion</th>
+                      <th>dose_liga</th>
                       <th>exercise_id (FK → PK)</th>
                       <th>exercise.name (Catálogo)</th>
-                      <th>exercise.cue</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -738,10 +953,10 @@ const {
                     >
                       <td><code>{{ item.blockId }}</code></td>
                       <td>{{ item.stationLabel }}</td>
-                      <td><strong>{{ item.dose }}</strong></td>
+                      <td>{{ item.doseFormacion }}</td>
+                      <td><strong>{{ item.doseLiga }}</strong></td>
                       <td><code>{{ item.exerciseId }}</code></td>
                       <td>{{ item.exercise.name }}</td>
-                      <td>{{ item.exercise.cue }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1210,6 +1425,62 @@ button {
 .primary-button:hover {
   background: #315744;
 }
+.danger-button {
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-weight: 700;
+  font-size: 13px;
+  border: 1px solid #d97c6c;
+  color: #a13422;
+  background: #fff5f3;
+}
+.danger-button:hover {
+  background: #fde8e4;
+}
+.heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.role-badge {
+  border: 1px solid #bdc8bd;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #365443;
+  background: #eef3ee;
+}
+.role-badge.admin {
+  border-color: #e66b48;
+  color: #fff;
+  background: #e66b48;
+}
+.seasons-switcher-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.season-pill-btn {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface);
+}
+.season-pill-btn.active {
+  border-color: var(--button);
+  color: #fff;
+  background: var(--button);
+}
 .team-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1217,9 +1488,10 @@ button {
   margin-top: 38px;
 }
 .team-card {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
-  min-height: 235px;
+  min-height: 250px;
   padding: 20px;
   border: 1px solid var(--line);
   border-radius: 13px;
@@ -1230,17 +1502,32 @@ button {
     transform 0.18s,
     border-color 0.18s;
 }
+.team-card.is-archived {
+  opacity: 0.82;
+  background: #f6f4ee;
+}
 .team-card:hover {
   transform: translateY(-3px);
   border-color: #829b87;
 }
-.team-card > span,
+.team-card-top span,
 .team-card em {
   color: #69806f;
   font-size: 11px;
   font-style: normal;
   font-weight: 700;
   letter-spacing: 0.06em;
+}
+.team-card-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
 }
 .team-card h2 {
   margin: 5px 0 0;
@@ -1254,7 +1541,7 @@ button {
   color: var(--muted);
   font-size: 13px;
 }
-.team-card div {
+.team-card-meta {
   display: grid;
   gap: 3px;
   margin-top: auto;
@@ -1265,8 +1552,40 @@ button {
   color: var(--muted);
 }
 .team-card em {
-  margin-top: 10px;
+  margin-top: 6px;
   color: var(--accent);
+}
+.team-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+.card-mini-btn {
+  border: 1px solid #cbd4cb;
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #365443;
+  background: #f5f7f4;
+}
+.card-mini-btn:hover {
+  background: #e7ede7;
+}
+.card-mini-btn.restore {
+  border-color: #69806f;
+  color: #203d30;
+}
+.card-mini-btn.danger {
+  border-color: #e29b8f;
+  color: #a13422;
+  background: #fff5f3;
+}
+.card-mini-btn.danger:hover {
+  background: #fde8e4;
 }
 .back,
 .close {

@@ -1,10 +1,13 @@
 import {
+  defaultTrainingCatalog,
   getHydratedSession,
   type AgeCategory,
   type CompetitiveLevel,
   type Frequency,
+  type TrainingCatalogTables,
   type TrainingDay,
 } from '../../app/shared/training'
+import { readDatabaseFromGoogleSheets } from '../utils/googleSheets'
 
 interface GenerateTrainingBody {
   day?: TrainingDay
@@ -16,6 +19,25 @@ interface GenerateTrainingBody {
 
 export default defineEventHandler(async (event) => {
   try {
+    const config = useRuntimeConfig(event)
+    const spreadsheetId = config.googleSpreadsheetId
+    const clientEmail = config.googleServiceAccountEmail
+    const privateKey = config.googlePrivateKey
+
+    let catalog: TrainingCatalogTables = defaultTrainingCatalog
+    if (spreadsheetId && clientEmail && privateKey) {
+      try {
+        const db = await readDatabaseFromGoogleSheets({
+          spreadsheetId,
+          clientEmail,
+          privateKey,
+        })
+        catalog = db.catalog
+      } catch {
+        catalog = defaultTrainingCatalog
+      }
+    }
+
     const body = await readBody<GenerateTrainingBody>(event)
     const frequency: Frequency =
       body.frequency === 1 || body.frequency === 2 || body.frequency === 3
@@ -41,13 +63,16 @@ export default defineEventHandler(async (event) => {
         ? body.competitiveLevel
         : 'liga'
 
-    const hydrated = getHydratedSession({
-      ageCategory,
-      competitiveLevel,
-      frequency,
-      weekNumber,
-      day,
-    })
+    const hydrated = getHydratedSession(
+      {
+        ageCategory,
+        competitiveLevel,
+        frequency,
+        weekNumber,
+        day,
+      },
+      catalog,
+    )
 
     if (!hydrated.session) {
       throw createError({
