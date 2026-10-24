@@ -126,7 +126,7 @@ export interface HydratedPhaseSession {
 }
 
 // ============================================================================
-// TABLA 1: exercises (Catálogo maestro de ejercicios - sin dosis ni minutos)
+// TABLA 1: ejercicios (Catálogo maestro de ejercicios - sin dosis ni minutos)
 // ============================================================================
 export const exercises: ExerciseRecord[] = [
   {
@@ -438,37 +438,37 @@ export const exercises: ExerciseRecord[] = [
 ]
 
 // ============================================================================
-// TABLA 2: plans (Catálogo maestro por Categoría Formativa - 4 categorías base)
+// TABLA 2: plantillas_macrociclo (Catálogo maestro por categoría formativa)
 // ============================================================================
 export const plans: PlanRecord[] = [
   {
     id: 'PLN0001',
     name: 'Plan Anual Alevín (U12)',
     ageCategory: 'alevin',
-    totalWeeks: 18,
+    totalWeeks: 45,
   },
   {
     id: 'PLN0002',
     name: 'Plan Anual Infantil (U14)',
     ageCategory: 'infantil',
-    totalWeeks: 18,
+    totalWeeks: 45,
   },
   {
     id: 'PLN0003',
     name: 'Plan Anual Cadete (U16)',
     ageCategory: 'cadete',
-    totalWeeks: 18,
+    totalWeeks: 45,
   },
   {
     id: 'PLN0004',
     name: 'Plan Anual Juvenil (U18)',
     ageCategory: 'juvenil',
-    totalWeeks: 18,
+    totalWeeks: 45,
   },
 ]
 
 // ============================================================================
-// TABLA 3: plan_phases (16 fases iniciales: 4 fases por cada una de las 4 categorías)
+// TABLA 3: mesociclos (fases iniciales por cada categoría)
 // ============================================================================
 export const planPhases: PlanPhaseRecord[] = [
   // --- PLN0001: ALEVÍN (U12) ---
@@ -477,7 +477,7 @@ export const planPhases: PlanPhaseRecord[] = [
     planId: 'PLN0001',
     phaseOrder: 1,
     type: 'training',
-    name: 'Fase 1 · Coordinación y Aterrizajes (U12)',
+    name: 'Pretemporada · Coordinación y Aterrizajes (U12)',
     weeksCount: 4,
     weekStart: 1,
     weekEnd: 4,
@@ -493,31 +493,31 @@ export const planPhases: PlanPhaseRecord[] = [
     planId: 'PLN0001',
     phaseOrder: 2,
     type: 'training',
-    name: 'Fase 2 · Autocarga y Agilidad (U12)',
-    weeksCount: 6,
+    name: 'Período competitivo 1 · Autocarga y Agilidad (U12)',
+    weeksCount: 12,
     weekStart: 5,
-    weekEnd: 10,
+    weekEnd: 16,
     color: '#3b8f7f',
     objective: 'Consolidar sentadilla, empuje inclinado y estabilidad a 1 pierna con retos de agilidad y reacción.',
     loadRules: ['2-3 series · 8-12 reps sin peso externo', 'S6 (Semana 10): descarga lúdica'],
     plioRule: 'Multisaltos suaves de baja altura y coordinación de pies.',
-    weeklyProgressionNote: 'S5-S9: progresión coordinativa · S10: semana de descarga.',
-    weeklyLoads: [4, 5, 5, 6, 6, 3],
+    weeklyProgressionNote: 'Progresión de coordinación, autocarga y agilidad; descarga en las semanas 8 y 16.',
+    weeklyLoads: [4, 5, 5, 6, 6, 4, 5, 5, 6, 6, 5, 3],
   },
   {
     id: 'FAS0003',
     planId: 'PLN0001',
     phaseOrder: 3,
     type: 'holiday',
-    name: 'Receso · Retos activos en casa (U12)',
+    name: 'Período transitorio Navidad · Retos activos en casa (U12)',
     weeksCount: 2,
-    weekStart: 11,
-    weekEnd: 12,
+    weekStart: 17,
+    weekEnd: 18,
     color: '#8a93a5',
     objective: 'Mantener el hábito de movimiento con retos cortos de movilidad, equilibrio y saltos suaves en casa.',
     loadRules: ['2-3 sesiones de 15-20 min sin material'],
     plioRule: 'Saltos suaves a la comba o en línea.',
-    weeklyProgressionNote: 'S11-S12: sesiones cortas en días alternos.',
+    weeklyProgressionNote: 'Dos semanas de sesiones cortas en días alternos.',
     weeklyLoads: [2, 2],
   },
   {
@@ -525,16 +525,16 @@ export const planPhases: PlanPhaseRecord[] = [
     planId: 'PLN0001',
     phaseOrder: 4,
     type: 'training',
-    name: 'Fase 3 · Velocidad de Reacción y Juegos (U12)',
-    weeksCount: 6,
-    weekStart: 13,
-    weekEnd: 18,
+    name: 'Período competitivo 2 · Velocidad de Reacción y Juegos (U12)',
+    weeksCount: 11,
+    weekStart: 19,
+    weekEnd: 29,
     color: '#c8742f',
     objective: 'Transferir el control postural a salidas rápidas, frenadas reactivas y cambios de dirección jugados.',
     loadRules: ['2-3 series dinámicas · pausas completas en sprints'],
     plioRule: 'Saltos reactivos cortos + sprint de 5-10 metros.',
-    weeklyProgressionNote: 'S13: reentrada · S14-S18: velocidad reactiva ante estímulo visual.',
-    weeklyLoads: [3, 5, 5, 6, 6, 6],
+    weeklyProgressionNote: 'Reentrada progresiva y velocidad reactiva; semana 29 de descarga.',
+    weeklyLoads: [3, 5, 5, 6, 6, 5, 6, 6, 6, 5, 3],
   },
 
   // --- PLN0002: INFANTIL (U14) ---
@@ -543,7 +543,7 @@ export const planPhases: PlanPhaseRecord[] = [
     planId: 'PLN0002',
     phaseOrder: 1,
     type: 'training',
-    name: 'Fase 1 · Control Postural y Patrones (U14)',
+    name: 'Pretemporada · Control Postural y Patrones (U14)',
     weeksCount: 4,
     weekStart: 1,
     weekEnd: 4,
@@ -559,26 +559,26 @@ export const planPhases: PlanPhaseRecord[] = [
     planId: 'PLN0002',
     phaseOrder: 2,
     type: 'training',
-    name: 'Fase 2 · Fuerza con Propio Peso y Gomas (U14)',
-    weeksCount: 6,
+    name: 'Período competitivo 1 · Fuerza con Propio Peso y Gomas (U14)',
+    weeksCount: 12,
     weekStart: 5,
-    weekEnd: 10,
+    weekEnd: 16,
     color: '#3b8f7f',
     objective: 'Introducir trabajo unilateral (split squat), tracciones con banda y cargas ligeras (mancuerna liviana/balón medicinal).',
     loadRules: ['3 series · 8-10 reps · Esfuerzo 6/10', 'Semana 10: descarga a 2 series'],
     plioRule: 'Nivel 1-2: contramovimiento controlado y frenadas en 2 tiempos.',
-    weeklyProgressionNote: 'S5-S9: progresión unilateral · S10: descarga para asimilar crecimiento.',
-    weeklyLoads: [5, 5, 6, 6, 6, 4],
+    weeklyProgressionNote: 'Progresión unilateral; descargas en las semanas 8 y 16 para asimilar crecimiento.',
+    weeklyLoads: [5, 5, 6, 6, 6, 4, 5, 6, 6, 6, 5, 4],
   },
   {
     id: 'FAS0007',
     planId: 'PLN0002',
     phaseOrder: 3,
     type: 'holiday',
-    name: 'Receso · Trabajo autónomo en casa (U14)',
+    name: 'Período transitorio Navidad · Trabajo autónomo en casa (U14)',
     weeksCount: 2,
-    weekStart: 11,
-    weekEnd: 12,
+    weekStart: 17,
+    weekEnd: 18,
     color: '#8a93a5',
     objective: 'Cuidar movilidad de cadera/tobillo y mantener tono de core durante el receso escolar.',
     loadRules: ['3 sesiones de 20 min sin material (A, B, C)'],
@@ -591,16 +591,16 @@ export const planPhases: PlanPhaseRecord[] = [
     planId: 'PLN0002',
     phaseOrder: 4,
     type: 'training',
-    name: 'Fase 3 · Saltos, Aceleración y COD (U14)',
-    weeksCount: 6,
-    weekStart: 13,
-    weekEnd: 18,
+    name: 'Período competitivo 2 · Saltos, Aceleración y COD (U14)',
+    weeksCount: 11,
+    weekStart: 19,
+    weekEnd: 29,
     color: '#c8742f',
     objective: 'Aplicar la estabilidad ganada a lanzamientos explosivos con balón medicinal, sprints y cambios de dirección.',
     loadRules: ['3 series · 6-8 reps dinámicas · Esfuerzo 6-7/10'],
     plioRule: 'Nivel 2: saltos encadenados controlados y salidas en diagonal.',
-    weeklyProgressionNote: 'S13: reentrada + tests · S14-S18: potencia y velocidad en pista.',
-    weeklyLoads: [4, 5, 6, 6, 7, 7],
+    weeklyProgressionNote: 'Reentrada, tests y progresión de potencia; semana 29 de descarga.',
+    weeklyLoads: [4, 5, 6, 6, 7, 5, 6, 6, 7, 7, 4],
   },
 
   // --- PLN0003: CADETE (U16) ---
@@ -609,7 +609,7 @@ export const planPhases: PlanPhaseRecord[] = [
     planId: 'PLN0003',
     phaseOrder: 1,
     type: 'training',
-    name: 'Fase 1 · Fundamentos (U16)',
+    name: 'Pretemporada · Fundamentos (U16)',
     weeksCount: 4,
     weekStart: 1,
     weekEnd: 4,
@@ -625,26 +625,26 @@ export const planPhases: PlanPhaseRecord[] = [
     planId: 'PLN0003',
     phaseOrder: 2,
     type: 'training',
-    name: 'Fase 2 · Fuerza Base (U16)',
-    weeksCount: 6,
+    name: 'Período competitivo 1 · Fuerza Base (U16)',
+    weeksCount: 12,
     weekStart: 5,
-    weekEnd: 10,
+    weekEnd: 16,
     color: '#3b8f7f',
     objective: 'Progresar al trabajo unilateral (1 pierna), añadir carga progresiva e introducir saltos con contramovimiento.',
     loadRules: ['3 series · 6-8 reps', 'Esfuerzo 6-7/10 (2-3 reps en reserva)', 'S6 (Semana 10): descarga a 2 series'],
     plioRule: 'Nivel 2: contramovimiento y recepciones estables.',
-    weeklyProgressionNote: 'S5-S6: 3 × 8 · S7-S9: 3 × 6 con más peso · S10: semana de descarga (2 series).',
-    weeklyLoads: [5, 6, 6, 7, 7, 4],
+    weeklyProgressionNote: '3 × 8 al inicio, progresión a 3 × 6 y descargas en las semanas 8 y 16.',
+    weeklyLoads: [5, 6, 6, 7, 7, 4, 6, 6, 7, 7, 6, 4],
   },
   {
     id: 'FAS0011',
     planId: 'PLN0003',
     phaseOrder: 3,
     type: 'holiday',
-    name: 'Receso · Trabajo en casa (U16)',
+    name: 'Período transitorio Navidad · Trabajo en casa (U16)',
     weeksCount: 2,
-    weekStart: 11,
-    weekEnd: 12,
+    weekStart: 17,
+    weekEnd: 18,
     color: '#8a93a5',
     objective: 'Descanso de pista manteniendo estímulo corto de fuerza corporal, saltos y movilidad en casa.',
     loadRules: ['3 sesiones cortas de 20-25 min sin material', 'Priorizar movilidad y técnica'],
@@ -657,16 +657,16 @@ export const planPhases: PlanPhaseRecord[] = [
     planId: 'PLN0003',
     phaseOrder: 4,
     type: 'training',
-    name: 'Fase 3 · Fuerza y Potencia (U16)',
-    weeksCount: 6,
-    weekStart: 13,
-    weekEnd: 18,
+    name: 'Período competitivo 2 · Fuerza y Potencia (U16)',
+    weeksCount: 11,
+    weekStart: 19,
+    weekEnd: 29,
     color: '#c8742f',
     objective: 'Reentrada tras receso, repetir batería de tests y transferir la fuerza ganada a gestos explosivos de pista.',
     loadRules: ['3-4 series · 5-6 reps', 'Esfuerzo 7-8/10 (1-2 reps en reserva)', 'S13: reentrada a 2 series + tests'],
     plioRule: 'Nivel 3: contactos rápidos y contraste de fuerza + salto.',
-    weeklyProgressionNote: 'S13: reentrada + tests · S14-S15: 3 × 6 · S16-S18: 4 × 5 explosivo.',
-    weeklyLoads: [4, 6, 7, 7, 8, 8],
+    weeklyProgressionNote: 'Reentrada y tests, seguido de fuerza-potencia; semana 29 de descarga.',
+    weeklyLoads: [4, 6, 7, 7, 8, 5, 6, 7, 8, 8, 4],
   },
 
   // --- PLN0004: JUVENIL (U18) ---
@@ -675,7 +675,7 @@ export const planPhases: PlanPhaseRecord[] = [
     planId: 'PLN0004',
     phaseOrder: 1,
     type: 'training',
-    name: 'Fase 1 · Capacidad de Trabajo y Tejido (U18)',
+    name: 'Pretemporada · Capacidad de Trabajo y Tejido (U18)',
     weeksCount: 4,
     weekStart: 1,
     weekEnd: 4,
@@ -691,26 +691,26 @@ export const planPhases: PlanPhaseRecord[] = [
     planId: 'PLN0004',
     phaseOrder: 2,
     type: 'training',
-    name: 'Fase 2 · Fuerza Máxima Relativa (U18)',
-    weeksCount: 6,
+    name: 'Período competitivo 1 · Fuerza Máxima Relativa (U18)',
+    weeksCount: 12,
     weekStart: 5,
-    weekEnd: 10,
+    weekEnd: 16,
     color: '#3b8f7f',
     objective: 'Desarrollar fuerza pesada unilateral y de cadena posterior (RDL, Split Squat, Nórdico) para producir más fuerza contra el suelo.',
     loadRules: ['3-4 series · 5-6 reps pesadas', 'Esfuerzo 7-8/10', 'Semana 10: descarga activa (2 series)'],
     plioRule: 'Nivel 2: CMJ máximo y desaceleraciones agresivas.',
-    weeklyProgressionNote: 'S5-S9: progresión de carga en tren inferior · S10: descarga.',
-    weeklyLoads: [6, 7, 7, 8, 8, 4],
+    weeklyProgressionNote: 'Progresión de carga en tren inferior; descargas en las semanas 8 y 16.',
+    weeklyLoads: [6, 7, 7, 8, 8, 4, 7, 7, 8, 8, 7, 4],
   },
   {
     id: 'FAS0015',
     planId: 'PLN0004',
     phaseOrder: 3,
     type: 'holiday',
-    name: 'Receso · Mantenimiento Neuromuscular (U18)',
+    name: 'Período transitorio Navidad · Mantenimiento Neuromuscular (U18)',
     weeksCount: 2,
-    weekStart: 11,
-    weekEnd: 12,
+    weekStart: 17,
+    weekEnd: 18,
     color: '#8a93a5',
     objective: 'Evitar pérdida de rigidez tendinosa y movilidad durante el parón de fiestas con sesiones autónomas.',
     loadRules: ['3 sesiones de 25 min (fuerza unilateral + isométricos + movilidad)'],
@@ -723,21 +723,213 @@ export const planPhases: PlanPhaseRecord[] = [
     planId: 'PLN0004',
     phaseOrder: 4,
     type: 'training',
-    name: 'Fase 3 · Contraste y Potencia Competitiva (U18)',
-    weeksCount: 6,
-    weekStart: 13,
-    weekEnd: 18,
+    name: 'Período competitivo 2 · Contraste y Potencia Competitiva (U18)',
+    weeksCount: 11,
+    weekStart: 19,
+    weekEnd: 29,
     color: '#c8742f',
     objective: 'Máxima transferencia a velocidad de sprint, salto vertical y potencia repetida en fase decisiva de liga.',
     loadRules: ['4 series · 4-5 reps explosivas (contraste fuerza + pliometría)', 'Esfuerzo 8/10 con máxima velocidad de barra/mancuerna'],
     plioRule: 'Nivel 3: pliometría reactiva de mínimo tiempo de contacto.',
-    weeklyProgressionNote: 'S13: reentrada + re-test · S14-S18: pico de potencia competitiva.',
-    weeklyLoads: [5, 7, 8, 8, 9, 8],
+    weeklyProgressionNote: 'Reentrada, re-test y pico de potencia competitiva; semana 29 de descarga.',
+    weeklyLoads: [5, 7, 8, 8, 9, 6, 7, 8, 8, 9, 5],
+  },
+  {
+    id: 'FAS0017',
+    planId: 'PLN0001',
+    phaseOrder: 5,
+    type: 'holiday',
+    name: 'Período transitorio Semana Santa · Movimiento autónomo (U12)',
+    weeksCount: 1,
+    weekStart: 30,
+    weekEnd: 30,
+    color: '#8a93a5',
+    objective: 'Mantener movilidad, equilibrio y un estímulo lúdico corto durante el receso.',
+    loadRules: ['2 sesiones de 15 min sin material'],
+    plioRule: 'Saltos bajos y controlados en superficie firme.',
+    weeklyProgressionNote: 'Ejemplos: sentadilla al banco, puente de glúteos y equilibrio a una pierna.',
+    weeklyLoads: [2],
+  },
+  {
+    id: 'FAS0018',
+    planId: 'PLN0001',
+    phaseOrder: 6,
+    type: 'training',
+    name: 'Período competitivo 3 · Velocidad y Juegos (U12)',
+    weeksCount: 11,
+    weekStart: 31,
+    weekEnd: 41,
+    color: '#c8742f',
+    objective: 'Transferir el control postural a salidas, frenadas y cambios de dirección con formato jugado.',
+    loadRules: ['2-3 series dinámicas', 'Descarga en la semana 41'],
+    plioRule: 'Saltos reactivos cortos con aterrizaje silencioso.',
+    weeklyProgressionNote: 'Ejemplos: carreras de persecución, salto y frenada, zancada asistida y plancha lateral.',
+    weeklyLoads: [4, 5, 6, 6, 6, 4, 5, 6, 6, 5, 3],
+  },
+  {
+    id: 'FAS0019',
+    planId: 'PLN0001',
+    phaseOrder: 7,
+    type: 'holiday',
+    name: 'Período transitorio final · Recuperación activa (U12)',
+    weeksCount: 4,
+    weekStart: 42,
+    weekEnd: 45,
+    color: '#8a93a5',
+    objective: 'Recuperar, mantener el gusto por moverse y cerrar la temporada sin fatiga acumulada.',
+    loadRules: ['2 sesiones lúdicas de 15 min por semana'],
+    plioRule: 'Sin progresión de impacto; priorizar juego y movilidad.',
+    weeklyProgressionNote: 'Ejemplos: movilidad de cadera, caminatas, juegos con balón y respiración.',
+    weeklyLoads: [2, 2, 1, 1],
+  },
+  {
+    id: 'FAS0020',
+    planId: 'PLN0002',
+    phaseOrder: 5,
+    type: 'holiday',
+    name: 'Período transitorio Semana Santa · Mantenimiento (U14)',
+    weeksCount: 1,
+    weekStart: 30,
+    weekEnd: 30,
+    color: '#8a93a5',
+    objective: 'Conservar movilidad y fuerza básica con bajo volumen durante el descanso.',
+    loadRules: ['2 sesiones de 20 min sin material'],
+    plioRule: 'Pocos contactos y técnica de recepción.',
+    weeklyProgressionNote: 'Ejemplos: split squat sin carga, remo con banda y elevación de gemelos.',
+    weeklyLoads: [2],
+  },
+  {
+    id: 'FAS0021',
+    planId: 'PLN0002',
+    phaseOrder: 6,
+    type: 'training',
+    name: 'Período competitivo 3 · Potencia y COD (U14)',
+    weeksCount: 11,
+    weekStart: 31,
+    weekEnd: 41,
+    color: '#c8742f',
+    objective: 'Desarrollar potencia coordinada, aceleración y cambios de dirección reactivos.',
+    loadRules: ['3 series de 6-8 repeticiones dinámicas', 'Descarga en la semana 41'],
+    plioRule: 'CMJ controlado, saltos laterales bajos y frenadas en dos tiempos.',
+    weeklyProgressionNote: 'Ejemplos: lanzamiento de balón medicinal, split squat, sprint 10 m y remo con banda.',
+    weeklyLoads: [5, 6, 6, 7, 7, 5, 6, 7, 7, 6, 4],
+  },
+  {
+    id: 'FAS0022',
+    planId: 'PLN0002',
+    phaseOrder: 7,
+    type: 'holiday',
+    name: 'Período transitorio final · Recuperación activa (U14)',
+    weeksCount: 4,
+    weekStart: 42,
+    weekEnd: 45,
+    color: '#8a93a5',
+    objective: 'Recuperar y preservar movilidad, tobillo y core antes de la pausa estival.',
+    loadRules: ['2 sesiones de 20 min por semana'],
+    plioRule: 'Volumen mínimo y sin fatiga residual.',
+    weeklyProgressionNote: 'Ejemplos: movilidad torácica, gemelos, plancha y paseo activo.',
+    weeklyLoads: [2, 2, 2, 1],
+  },
+  {
+    id: 'FAS0023',
+    planId: 'PLN0003',
+    phaseOrder: 5,
+    type: 'holiday',
+    name: 'Período transitorio Semana Santa · Mantenimiento (U16)',
+    weeksCount: 1,
+    weekStart: 30,
+    weekEnd: 30,
+    color: '#8a93a5',
+    objective: 'Mantener la fuerza útil y la movilidad con una semana de carga reducida.',
+    loadRules: ['2 sesiones de 20-25 min sin material'],
+    plioRule: 'Contactos bajos y sin buscar marcas.',
+    weeklyProgressionNote: 'Ejemplos: split squat, flexiones, puente de glúteos, gemelos y movilidad.',
+    weeklyLoads: [2],
+  },
+  {
+    id: 'FAS0024',
+    planId: 'PLN0003',
+    phaseOrder: 6,
+    type: 'training',
+    name: 'Período competitivo 3 · Contraste y Potencia (U16)',
+    weeksCount: 11,
+    weekStart: 31,
+    weekEnd: 41,
+    color: '#c8742f',
+    objective: 'Transferir fuerza a salto, sprint y cambios de dirección sin perder la calidad técnica.',
+    loadRules: ['3-4 series de 4-6 repeticiones', 'Descarga en la semana 41'],
+    plioRule: 'Contraste de fuerza y salto con descanso completo.',
+    weeklyProgressionNote: 'Ejemplos: split squat con mancuerna, CMJ, sprint reactivo, RDL y nórdico asistido.',
+    weeklyLoads: [6, 7, 7, 8, 8, 5, 6, 7, 8, 7, 4],
+  },
+  {
+    id: 'FAS0025',
+    planId: 'PLN0003',
+    phaseOrder: 7,
+    type: 'holiday',
+    name: 'Período transitorio final · Recuperación activa (U16)',
+    weeksCount: 4,
+    weekStart: 42,
+    weekEnd: 45,
+    color: '#8a93a5',
+    objective: 'Reducir fatiga y sostener hábitos de movilidad y fuerza básica en la transición.',
+    loadRules: ['2 sesiones cortas por semana'],
+    plioRule: 'Sin contrastes ni sprints máximos.',
+    weeklyProgressionNote: 'Ejemplos: movilidad, core anti-rotación, gemelos y caminata o bicicleta suave.',
+    weeklyLoads: [2, 2, 2, 1],
+  },
+  {
+    id: 'FAS0026',
+    planId: 'PLN0004',
+    phaseOrder: 5,
+    type: 'holiday',
+    name: 'Período transitorio Semana Santa · Mantenimiento (U18)',
+    weeksCount: 1,
+    weekStart: 30,
+    weekEnd: 30,
+    color: '#8a93a5',
+    objective: 'Preservar tejido, movilidad y fuerza sin acumular fatiga en el receso.',
+    loadRules: ['2 sesiones de 25 min sin material'],
+    plioRule: 'Contactos mínimos y controlados.',
+    weeklyProgressionNote: 'Ejemplos: RDL a una pierna sin carga, flexión, plancha lateral y gemelo.',
+    weeklyLoads: [2],
+  },
+  {
+    id: 'FAS0027',
+    planId: 'PLN0004',
+    phaseOrder: 6,
+    type: 'training',
+    name: 'Período competitivo 3 · Potencia competitiva (U18)',
+    weeksCount: 11,
+    weekStart: 31,
+    weekEnd: 41,
+    color: '#c8742f',
+    objective: 'Maximizar la transferencia de fuerza a velocidad, salto y potencia repetida con volumen controlado.',
+    loadRules: ['3-4 series de 3-5 repeticiones explosivas', 'Descarga en la semana 41'],
+    plioRule: 'Pliometría reactiva solo con técnica y recuperación completas.',
+    weeklyProgressionNote: 'Ejemplos: RDL, split squat pesado, CMJ, sprint 10-20 m y curl nórdico.',
+    weeklyLoads: [7, 8, 8, 9, 9, 6, 7, 8, 9, 8, 5],
+  },
+  {
+    id: 'FAS0028',
+    planId: 'PLN0004',
+    phaseOrder: 7,
+    type: 'holiday',
+    name: 'Período transitorio final · Recuperación activa (U18)',
+    weeksCount: 4,
+    weekStart: 42,
+    weekEnd: 45,
+    color: '#8a93a5',
+    objective: 'Cerrar la temporada recuperando, con actividad aeróbica suave y trabajo correctivo.',
+    loadRules: ['2 sesiones cortas por semana'],
+    plioRule: 'No se programan esfuerzos explosivos máximos.',
+    weeklyProgressionNote: 'Ejemplos: movilidad, core, gemelos, bicicleta suave y paseo activo.',
+    weeklyLoads: [2, 2, 2, 1],
   },
 ]
 
 // ============================================================================
-// TABLA 4: phase_sessions (36 sesiones: 3 días por cada fase de entrenamiento de las 4 categorías)
+// TABLA 4: sesiones_planificadas (sesiones por día y mesociclo)
 // ============================================================================
 export const phaseSessions: PhaseSessionRecord[] = [
   // --- PLN0001: ALEVÍN (U12) · Fases FAS0001, FAS0002, FAS0004 ---
@@ -1074,7 +1266,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
 ]
 
 // ============================================================================
-// TABLA 5: session_blocks (Bloques de tiempo dentro de cada sesión)
+// TABLA 5: bloques_sesion (bloques de tiempo dentro de cada sesión)
 // ============================================================================
 export const sessionBlocks: SessionBlockRecord[] = [
   // Bloques de SES0019 (7 + 8 + 20 + 5 = 40 min)
@@ -1309,7 +1501,7 @@ export const sessionBlocks: SessionBlockRecord[] = [
 ]
 
 // ============================================================================
-// TABLA 6: block_exercises (Tabla puente: qué ejercicio + dosis Formación y Liga en cada bloque)
+// TABLA 6: ejercicios_bloque (tabla puente: ejercicio y dosis por bloque)
 // ============================================================================
 export const blockExercises: BlockExerciseRecord[] = [
   // BLK0001 (Preparación)
@@ -1381,7 +1573,7 @@ export const blockExercises: BlockExerciseRecord[] = [
 ]
 
 // ============================================================================
-// TABLA 7: home_sessions (Sesiones sin material para vacaciones)
+// TABLA 7: sesiones_transitorias (sesiones sin material para vacaciones)
 // ============================================================================
 export const homeSessions: HomeSessionRecord[] = [
   {
@@ -1431,7 +1623,7 @@ export const homeSessions: HomeSessionRecord[] = [
 ]
 
 // ============================================================================
-// TABLA 8: tests (Batería de evaluaciones físicas de la temporada)
+// TABLA 8: evaluaciones (batería de evaluaciones físicas de la temporada)
 // ============================================================================
 export const tests: TestRecord[] = [
   {
@@ -1440,7 +1632,7 @@ export const tests: TestRecord[] = [
     testOrder: 1,
     name: 'Salto vertical (CMJ)',
     protocol: 'De lado a la pared, marcar alcance de pie y saltar con contramovimiento tocando lo más alto posible. Mejor de 3 intentos (diferencia en cm).',
-    milestoneWeeks: ['Semana 1 (Octubre)', 'Semana 13 (Reentrada Enero)', 'Semana 18 (Final)'],
+    milestoneWeeks: ['Semana 1 (Pretemporada)', 'Semana 19 (Reentrada enero)', 'Semana 31 (Competitivo 3)', 'Semana 41 (Cierre competitivo)'],
   },
   {
     id: 'TST0002',
@@ -1448,7 +1640,7 @@ export const tests: TestRecord[] = [
     testOrder: 2,
     name: 'Sprint 20 metros',
     protocol: 'Salida de pie a 30 cm de la línea. Cronometrar desde el primer movimiento hasta cruzar los 20 m. Mejor de 2 intentos con 2 min de pausa.',
-    milestoneWeeks: ['Semana 1 (Octubre)', 'Semana 13 (Reentrada Enero)', 'Semana 18 (Final)'],
+    milestoneWeeks: ['Semana 1 (Pretemporada)', 'Semana 19 (Reentrada enero)', 'Semana 31 (Competitivo 3)', 'Semana 41 (Cierre competitivo)'],
   },
   {
     id: 'TST0003',
@@ -1456,7 +1648,7 @@ export const tests: TestRecord[] = [
     testOrder: 3,
     name: 'Flexiones en 60 segundos',
     protocol: 'Pecho a un puño del suelo manteniendo el cuerpo en línea recta. Se cuentan solo las repeticiones técnicamente válidas.',
-    milestoneWeeks: ['Semana 1 (Octubre)', 'Semana 13 (Reentrada Enero)', 'Semana 18 (Final)'],
+    milestoneWeeks: ['Semana 1 (Pretemporada)', 'Semana 19 (Reentrada enero)', 'Semana 31 (Competitivo 3)', 'Semana 41 (Cierre competitivo)'],
   },
   {
     id: 'TST0004',
@@ -1464,7 +1656,7 @@ export const tests: TestRecord[] = [
     testOrder: 4,
     name: 'Plancha frontal / lateral (máx 90")',
     protocol: 'Tiempo máximo manteniendo cadera alineada sin hundirse ni rotar (tope de 90 segundos).',
-    milestoneWeeks: ['Semana 1 (Octubre)', 'Semana 13 (Reentrada Enero)', 'Semana 18 (Final)'],
+    milestoneWeeks: ['Semana 1 (Pretemporada)', 'Semana 19 (Reentrada enero)', 'Semana 31 (Competitivo 3)', 'Semana 41 (Cierre competitivo)'],
   },
 ]
 
@@ -1507,7 +1699,7 @@ export function resolvePlan(
       id: BASE_TEMPLATE_PLAN_ID,
       name: 'Plan Anual Cadete (U16)',
       ageCategory: 'cadete',
-      totalWeeks: 18,
+      totalWeeks: 45,
     }
   )
 }
@@ -1585,7 +1777,7 @@ export function getPhaseForWeek(
 ): PhaseWeekContext {
   const phases = getPlanPhases(planId, catalog)
   const plan = catalog.plans.find((item) => item.id === planId)
-  const maxWeeks = plan?.totalWeeks ?? 18
+  const maxWeeks = plan?.totalWeeks ?? 45
   const clampedWeek = Math.max(1, Math.min(maxWeeks, weekNumber))
   const phase =
     phases.find(
@@ -1634,9 +1826,19 @@ export function getWeeklySessionsForPhase(
         : phase?.phaseOrder === 4
           ? 'FAS0012'
           : 'FAS0010')
-    allDays = catalog.phaseSessions
+    const templateSessions = catalog.phaseSessions
       .filter((session) => session.phaseId === fallbackPhaseId)
       .sort((a, b) => a.order - b.order)
+    allDays = templateSessions.map((session) =>
+      phase
+        ? {
+            ...session,
+            phaseId,
+            name: `${phase.name} · Sesión ${session.order}`,
+            focus: `${phase.objective} Ejemplos: ${session.focus}`,
+          }
+        : session,
+    )
   }
 
   return allDays.slice(0, frequency)

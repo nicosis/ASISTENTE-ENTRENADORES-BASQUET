@@ -138,6 +138,21 @@ export interface SyncSheetsResult {
   }>
 }
 
+const SHEET_TITLES = {
+  plans: 'plantillas_macrociclo',
+  planPhases: 'mesociclos',
+  phaseSessions: 'sesiones_planificadas',
+  sessionBlocks: 'bloques_sesion',
+  blockExercises: 'ejercicios_bloque',
+  exercises: 'ejercicios',
+  homeSessions: 'sesiones_transitorias',
+  tests: 'evaluaciones',
+  coaches: 'entrenadores',
+  teams: 'equipos',
+  seasons: 'macrociclos',
+  weeklyReviews: 'revisiones_microciclo',
+} as const
+
 const defaultCoaches: SheetCoachInput[] = [
   {
     id: 'ENT0001',
@@ -256,7 +271,7 @@ export function buildTrainingSheetTables(
 
   return [
     {
-      title: 'plans',
+      title: SHEET_TITLES.plans,
       headers: [
         'id',
         'name',
@@ -272,7 +287,7 @@ export function buildTrainingSheetTables(
       rgbColor: { red: 0.23, green: 0.51, blue: 0.96 },
     },
     {
-      title: 'plan_phases',
+      title: SHEET_TITLES.planPhases,
       headers: [
         'id',
         'plan_id',
@@ -308,7 +323,7 @@ export function buildTrainingSheetTables(
       rgbColor: { red: 0.06, green: 0.73, blue: 0.51 },
     },
     {
-      title: 'phase_sessions',
+      title: SHEET_TITLES.phaseSessions,
       headers: [
         'id',
         'phase_id',
@@ -330,7 +345,7 @@ export function buildTrainingSheetTables(
       rgbColor: { red: 0.96, green: 0.62, blue: 0.04 },
     },
     {
-      title: 'session_blocks',
+      title: SHEET_TITLES.sessionBlocks,
       headers: ['id', 'session_id', 'block_order', 'name', 'minutes', 'format'],
       rows: sessionBlocks.map((item) => [
         item.id,
@@ -343,7 +358,7 @@ export function buildTrainingSheetTables(
       rgbColor: { red: 0.55, green: 0.36, blue: 0.96 },
     },
     {
-      title: 'block_exercises',
+      title: SHEET_TITLES.blockExercises,
       headers: [
         'id',
         'block_id',
@@ -365,7 +380,7 @@ export function buildTrainingSheetTables(
       rgbColor: { red: 0.94, green: 0.27, blue: 0.27 },
     },
     {
-      title: 'exercises',
+      title: SHEET_TITLES.exercises,
       headers: [
         'id',
         'slug',
@@ -395,7 +410,7 @@ export function buildTrainingSheetTables(
       rgbColor: { red: 0.93, green: 0.28, blue: 0.6 },
     },
     {
-      title: 'home_sessions',
+      title: SHEET_TITLES.homeSessions,
       headers: [
         'id',
         'plan_id',
@@ -421,7 +436,7 @@ export function buildTrainingSheetTables(
       rgbColor: { red: 0.02, green: 0.71, blue: 0.83 },
     },
     {
-      title: 'tests',
+      title: SHEET_TITLES.tests,
       headers: [
         'id',
         'plan_id',
@@ -441,13 +456,13 @@ export function buildTrainingSheetTables(
       rgbColor: { red: 0.39, green: 0.45, blue: 0.55 },
     },
     {
-      title: 'coaches',
+      title: SHEET_TITLES.coaches,
       headers: ['id', 'name', 'role'],
       rows: activeCoaches.map((coach) => [coach.id, coach.name, coach.role]),
       rgbColor: { red: 0.28, green: 0.33, blue: 0.41 },
     },
     {
-      title: 'teams',
+      title: SHEET_TITLES.teams,
       headers: [
         'id',
         'coach_id',
@@ -469,7 +484,7 @@ export function buildTrainingSheetTables(
       rgbColor: { red: 0.13, green: 0.53, blue: 0.38 },
     },
     {
-      title: 'seasons',
+      title: SHEET_TITLES.seasons,
       headers: [
         'id',
         'team_id',
@@ -512,7 +527,7 @@ export function buildTrainingSheetTables(
       rgbColor: { red: 0.16, green: 0.38, blue: 0.68 },
     },
     {
-      title: 'weekly_reviews',
+      title: SHEET_TITLES.weeklyReviews,
       headers: ['id', 'season_id', 'week_start', 'text', 'created_at'],
       rows: activeReviews.map((review) => [
         review.id,
@@ -527,10 +542,10 @@ export function buildTrainingSheetTables(
 }
 
 const OPERATIONAL_TABLE_TITLES = new Set([
-  'coaches',
-  'teams',
-  'seasons',
-  'weekly_reviews',
+  SHEET_TITLES.coaches,
+  SHEET_TITLES.teams,
+  SHEET_TITLES.seasons,
+  SHEET_TITLES.weeklyReviews,
 ])
 
 interface CachedDatabaseEntry {
@@ -679,20 +694,7 @@ export async function readDatabaseFromGoogleSheets(
   }
 
   const token = await getGoogleAccessToken(credentials)
-  const tabOrder = [
-    'plans',
-    'plan_phases',
-    'phase_sessions',
-    'session_blocks',
-    'block_exercises',
-    'exercises',
-    'home_sessions',
-    'tests',
-    'coaches',
-    'teams',
-    'seasons',
-    'weekly_reviews',
-  ] as const
+  const tabOrder = Object.values(SHEET_TITLES)
 
   const params = new URLSearchParams()
   for (const tab of tabOrder) {
@@ -724,7 +726,7 @@ export async function readDatabaseFromGoogleSheets(
     rowsByTab.set(tab, nonEmptyRows)
   })
 
-  const planRows = rowsByTab.get('plans') || []
+  const planRows = rowsByTab.get(SHEET_TITLES.plans) || []
   const parsedPlans: PlanRecord[] = planRows.length
     ? planRows.map((row) => ({
         id: cellString(row, 0),
@@ -734,7 +736,7 @@ export async function readDatabaseFromGoogleSheets(
       }))
     : defaultTrainingCatalog.plans
 
-  const phaseRows = rowsByTab.get('plan_phases') || []
+  const phaseRows = rowsByTab.get(SHEET_TITLES.planPhases) || []
   const parsedPhases: PlanPhaseRecord[] = phaseRows.length
     ? phaseRows.map((row) => ({
         id: cellString(row, 0),
@@ -754,7 +756,7 @@ export async function readDatabaseFromGoogleSheets(
       }))
     : defaultTrainingCatalog.planPhases
 
-  const sessionRows = rowsByTab.get('phase_sessions') || []
+  const sessionRows = rowsByTab.get(SHEET_TITLES.phaseSessions) || []
   const parsedSessions: PhaseSessionRecord[] = sessionRows.length
     ? sessionRows.map((row) => ({
         id: cellString(row, 0),
@@ -767,7 +769,7 @@ export async function readDatabaseFromGoogleSheets(
       }))
     : defaultTrainingCatalog.phaseSessions
 
-  const blockRows = rowsByTab.get('session_blocks') || []
+  const blockRows = rowsByTab.get(SHEET_TITLES.sessionBlocks) || []
   const parsedBlocks: SessionBlockRecord[] = blockRows.length
     ? blockRows.map((row) => ({
         id: cellString(row, 0),
@@ -779,7 +781,7 @@ export async function readDatabaseFromGoogleSheets(
       }))
     : defaultTrainingCatalog.sessionBlocks
 
-  const blockExerciseRows = rowsByTab.get('block_exercises') || []
+  const blockExerciseRows = rowsByTab.get(SHEET_TITLES.blockExercises) || []
   const parsedBlockExercises: BlockExerciseRecord[] = blockExerciseRows.length
     ? blockExerciseRows.map((row) => ({
         id: cellString(row, 0),
@@ -792,7 +794,7 @@ export async function readDatabaseFromGoogleSheets(
       }))
     : defaultTrainingCatalog.blockExercises
 
-  const exerciseRows = rowsByTab.get('exercises') || []
+  const exerciseRows = rowsByTab.get(SHEET_TITLES.exercises) || []
   const parsedExercises: ExerciseRecord[] = exerciseRows.length
     ? exerciseRows.map((row) => ({
         id: cellString(row, 0),
@@ -809,7 +811,7 @@ export async function readDatabaseFromGoogleSheets(
       }))
     : defaultTrainingCatalog.exercises
 
-  const homeRows = rowsByTab.get('home_sessions') || []
+  const homeRows = rowsByTab.get(SHEET_TITLES.homeSessions) || []
   const parsedHomeSessions: HomeSessionRecord[] = homeRows.length
     ? homeRows.map((row) => ({
         id: cellString(row, 0),
@@ -824,7 +826,7 @@ export async function readDatabaseFromGoogleSheets(
       }))
     : defaultTrainingCatalog.homeSessions
 
-  const testRows = rowsByTab.get('tests') || []
+  const testRows = rowsByTab.get(SHEET_TITLES.tests) || []
   const parsedTests: TestRecord[] = testRows.length
     ? testRows.map((row) => ({
         id: cellString(row, 0),
@@ -836,7 +838,7 @@ export async function readDatabaseFromGoogleSheets(
       }))
     : defaultTrainingCatalog.tests
 
-  const coachRows = rowsByTab.get('coaches') || []
+  const coachRows = rowsByTab.get(SHEET_TITLES.coaches) || []
   const parsedCoaches: SheetCoachInput[] = coachRows.length
     ? coachRows.map((row) => ({
         id: cellString(row, 0, 'ENT0001'),
@@ -845,7 +847,7 @@ export async function readDatabaseFromGoogleSheets(
       }))
     : defaultCoaches
 
-  const teamRows = rowsByTab.get('teams') || []
+  const teamRows = rowsByTab.get(SHEET_TITLES.teams) || []
   const parsedTeams: SheetTeamInput[] = teamRows.map((row) => {
     const col4 = cellString(row, 4)
     const hasStatusCol = col4 === 'active' || col4 === 'archived'
@@ -862,7 +864,7 @@ export async function readDatabaseFromGoogleSheets(
     }
   })
 
-  const seasonRows = rowsByTab.get('seasons') || []
+  const seasonRows = rowsByTab.get(SHEET_TITLES.seasons) || []
   const parsedSeasons: SheetSeasonInput[] = seasonRows.map((row) => {
     const ageCategory = parseAgeCategory(cellString(row, 5))
     return {
@@ -886,7 +888,7 @@ export async function readDatabaseFromGoogleSheets(
     }
   })
 
-  const reviewRows = rowsByTab.get('weekly_reviews') || []
+  const reviewRows = rowsByTab.get(SHEET_TITLES.weeklyReviews) || []
   const parsedReviews: SheetWeeklyReviewInput[] = reviewRows.map((row) => ({
     id: cellString(row, 0),
     seasonId: cellString(row, 1),

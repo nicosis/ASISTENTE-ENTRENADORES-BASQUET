@@ -105,7 +105,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           class="logout-button"
           type="button"
           :disabled="loadingDatabase"
-          title="Recargar las 12 tablas directamente desde Google Sheets"
+          title="Recargar las 12 planillas directamente desde Google Sheets"
           @click="refreshDatabaseFromSheets"
         >
           {{
@@ -123,7 +123,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             class="role-badge"
             :class="{ admin: isAdmin }"
             type="button"
-            title="Haz clic para alternar rol en tabla `coaches` (Admin / Entrenador)"
+            title="Haz clic para alternar rol en tabla `entrenadores` (Admin / Entrenador)"
             @click="toggleCoachRole"
           >
             {{ isAdmin ? 'ADMIN' : 'ENTRENADOR' }}
@@ -136,11 +136,11 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
     </header>
 
     <section v-if="!signedIn" class="page auth-page">
-      <p class="eyebrow">SESIÓN CERRADA · TABLA `coaches`</p>
+      <p class="eyebrow">SESIÓN CERRADA · TABLA `entrenadores`</p>
       <h1>Entra con tu perfil de entrenador.</h1>
       <p>
         El perfil y su rol (`admin` o `coach`) se sincronizan con la tabla
-        `coaches` en Google Sheets.
+        `entrenadores` en Google Sheets.
       </p>
       <form class="login-form" @submit.prevent="signIn">
         <label>
@@ -153,7 +153,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           />
         </label>
         <label>
-          Rol en el club (`coaches.role`)
+          Rol en el club (`entrenadores.role`)
           <select v-model="loginRole" class="form-select">
             <option value="coach">
               Entrenador (puede archivar equipos y cerrar temporadas)
@@ -349,7 +349,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       <h1>Define {{ activeTeam?.name }}.</h1>
       <p>
         Categoría, nivel competitivo y frecuencia semanal determinan el plan
-        anual reutilizable (`plans` → `plan_phases` → `phase_sessions`).
+        anual reutilizable (`plantillas_macrociclo` → `mesociclos` → `sesiones_planificadas`).
       </p>
       <form @submit.prevent="createSeason">
         <div class="form-grid">
@@ -540,11 +540,11 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         </div>
       </section>
 
-      <!-- Línea de tiempo de Fases del Año (`plan_phases`) -->
+      <!-- Línea de tiempo de mesociclos -->
       <section class="phases-strip">
         <div class="phases-header">
           <div>
-            <p class="eyebrow">ESTRUCTURA ANUAL · TABLA `plan_phases`</p>
+            <p class="eyebrow">ESTRUCTURA ANUAL · TABLA `mesociclos`</p>
             <h3>Fases de la temporada (haz clic en una fase o semana)</h3>
           </div>
           <span class="phase-badge" :style="{ background: currentPhase.color }">
@@ -664,7 +664,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           v-if="currentPhase.type === 'holiday'"
           class="holiday-notice-card"
         >
-          <p class="eyebrow">SEMANA DE RECESO · TABLA `home_sessions`</p>
+          <p class="eyebrow">SEMANA DE RECESO · TABLA `sesiones_transitorias`</p>
           <h3>Descanso de pista: trabajo autónomo en casa</h3>
           <p>
             Esta semana ({{ weekLabel }}) corresponde a vacaciones. Los
@@ -711,7 +711,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
                 type="button"
                 @click="inspectDayInTables(item.day)"
               >
-                Ver en tablas
+                Ver en planillas
               </button>
             </div>
           </article>
@@ -724,7 +724,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           <div class="explorer-intro">
             <div>
               <p class="eyebrow">ARQUITECTURA RELACIONAL EN VIVO</p>
-              <h2>Cómo se conectan las 6 tablas principales</h2>
+              <h2>Cómo se conectan las 6 planillas principales</h2>
               <p>
                 Cambia el día o haz clic en otro bloque para ver cómo viaja la
                 clave primaria (`id`) hacia la clave foránea (`*_id`) de la
@@ -746,10 +746,10 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           </div>
 
           <div class="relational-chain">
-            <!-- Tabla 1: plans -->
+            <!-- Tabla 1: plantillas_macrociclo -->
             <div class="table-box">
               <header>
-                <span class="table-num">TABLA 1 · `plans`</span>
+                <span class="table-num">TABLA 1 · `plantillas_macrociclo`</span>
                 <code>PK: id = "{{ activePlan.id }}"</code>
               </header>
               <div class="mini-table-wrap">
@@ -775,15 +775,15 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             </div>
 
             <div class="chain-arrow">
-              ↓ <code>plan_phases.plan_id = "{{ activePlan.id }}"</code> (y
+              ↓ <code>mesociclos.plan_id = "{{ activePlan.id }}"</code> (y
               Semana {{ currentWeekNumber }} está entre `week_start` y
               `week_end`)
             </div>
 
-            <!-- Tabla 2: plan_phases -->
+            <!-- Tabla 2: mesociclos -->
             <div class="table-box">
               <header>
-                <span class="table-num">TABLA 2 · `plan_phases`</span>
+                <span class="table-num">TABLA 2 · `mesociclos`</span>
                 <code>PK: id = "{{ currentPhase.id }}"</code>
               </header>
               <div class="mini-table-wrap">
@@ -818,17 +818,17 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             <div class="chain-arrow">
               ↓
               <code
-                >phase_sessions.phase_id = "{{
+                >sesiones_planificadas.phase_id = "{{
                   hydratedPreviewSession.session.phaseId
                 }}"</code
               >
               + <code>day = "{{ selectedDay }}"</code>
             </div>
 
-            <!-- Tabla 3: phase_sessions -->
+            <!-- Tabla 3: sesiones_planificadas -->
             <div class="table-box">
               <header>
-                <span class="table-num">TABLA 3 · `phase_sessions`</span>
+                <span class="table-num">TABLA 3 · `sesiones_planificadas`</span>
                 <code
                   >PK: id = "{{ hydratedPreviewSession.session.id }}"</code
                 >
@@ -868,17 +868,17 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             <div class="chain-arrow">
               ↓
               <code
-                >session_blocks.session_id = "{{
+                >bloques_sesion.session_id = "{{
                   hydratedPreviewSession.session.id
                 }}"</code
               >
               (haz clic en un bloque para ver sus ejercicios)
             </div>
 
-            <!-- Tabla 4: session_blocks -->
+            <!-- Tabla 4: bloques_sesion -->
             <div class="table-box">
               <header>
-                <span class="table-num">TABLA 4 · `session_blocks`</span>
+                <span class="table-num">TABLA 4 · `bloques_sesion`</span>
                 <code>PK seleccionada: "{{ activeExplorerBlock?.id }}"</code>
               </header>
               <div class="mini-table-wrap">
@@ -918,18 +918,18 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             <div class="chain-arrow">
               ↓
               <code
-                >block_exercises.block_id = "{{
+                >ejercicios_bloque.block_id = "{{
                   activeExplorerBlock?.id
                 }}"</code
               >
-              JOIN <code>exercises.id</code>
+              JOIN <code>ejercicios.id</code>
             </div>
 
-            <!-- Tabla 5 y 6: block_exercises + exercises -->
+            <!-- Tabla 5 y 6: ejercicios_bloque + ejercicios -->
             <div class="table-box">
               <header>
                 <span class="table-num">
-                  TABLA 5 (`block_exercises`) + TABLA 6 (`exercises`)
+                  TABLA 5 (`ejercicios_bloque`) + TABLA 6 (`ejercicios`)
                 </span>
                 <code>{{ activeExplorerBlock?.items.length || 0 }} filas</code>
               </header>
@@ -970,7 +970,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       <template v-else-if="activeTeamTab === 'holidays-tests'">
         <section class="holidays-tests-grid">
           <div class="panel-box">
-            <p class="eyebrow">TABLA 7 · `home_sessions` (VACACIONES)</p>
+            <p class="eyebrow">TABLA 7 · `sesiones_transitorias` (VACACIONES)</p>
             <h2>Trabajo autónomo en casa</h2>
             <p class="panel-lead">
               Sesiones sin material para los recesos de Navidad (Dosis 1) y
@@ -1003,7 +1003,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           </div>
 
           <div class="panel-box">
-            <p class="eyebrow">TABLA 8 · `tests` (CONTROL DE TEMPORADA)</p>
+            <p class="eyebrow">TABLA 8 · `evaluaciones` (CONTROL DE TEMPORADA)</p>
             <h2>Batería de evaluaciones</h2>
             <p class="panel-lead">
               Se realizan 3 veces al año (Semana 1, Semana 13 y Semana 18) para
@@ -1151,10 +1151,10 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       <h1>{{ session.objective }}</h1>
       <p class="session-rationale">{{ session.rationale }}</p>
 
-      <!-- Barra de distribución de minutos por bloque (`session_blocks`) -->
+      <!-- Barra de distribución de minutos por bloque (`bloques_sesion`) -->
       <div class="timebar-wrap">
         <span class="eyebrow">
-          DISTRIBUCIÓN DE BLOQUES (`session_blocks`)
+          DISTRIBUCIÓN DE BLOQUES (`bloques_sesion`)
         </span>
         <div class="session-timebar">
           <div
