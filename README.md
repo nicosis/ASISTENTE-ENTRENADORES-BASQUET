@@ -17,35 +17,67 @@ Está construida con Nuxt 4 y Vue 3. El catálogo de planificación vive en cód
 
 ## Modelo de datos
 
-El catálogo de entrenamiento se organiza en ocho planillas relacionadas:
+El catálogo de entrenamiento se organiza en nueve planillas relacionadas:
 
-1. `plantillas_macrociclo`
-2. `mesociclos`
-3. `sesiones_planificadas`
-4. `bloques_sesion`
-5. `ejercicios_bloque`
-6. `ejercicios`
-7. `sesiones_transitorias`
-8. `evaluaciones`
+1. `plans`
+2. `plan_phases`
+3. `phase_sessions`
+4. `session_variants`
+5. `session_blocks`
+6. `block_exercises`
+7. `exercises`
+8. `home_sessions`
+9. `tests`
 
-Los datos operativos se almacenan en otras cuatro planillas:
+Los datos operativos se almacenan en otras seis planillas:
 
-1. `entrenadores`
-2. `equipos`
-3. `macrociclos`
-4. `revisiones_microciclo`
+1. `coaches`
+2. `teams`
+3. `players`
+4. `team_players`
+5. `seasons`
+6. `weekly_reviews`
 
 Los identificadores siguen el formato de tres letras y cuatro dígitos, por ejemplo `PLN0001`, `EQU0001` y `OBS0001`.
 
 ### Periodización anual
 
-Una fila de `macrociclos` aplica una `plantillas_macrociclo` a un equipo. Esa instancia representa el **macrociclo**; `mesociclos` define sus fases y cada semana es un **microciclo**. Las sesiones se descomponen en bloques y ejercicios.
+Una fila de `seasons` aplica un registro de `plans` a un equipo. Esa instancia representa el **macrociclo**; `plan_phases` define sus fases y cada semana es un **microciclo**. Las sesiones se descomponen en bloques y ejercicios.
 
 ```text
 Equipo → Macrociclo (temporada) → Mesociclos (fases) → Microciclos (semanas) → Sesiones → Bloques → Ejercicios
 ```
 
-La duración total se configura con `plantillas_macrociclo.total_weeks`. Cada fila de `mesociclos` define su propio intervalo con `week_start`, `week_end` y `weeks_count`.
+### Variantes de sesión
+
+`session_variants` evita repetir exactamente los mismos ejercicios durante una
+fase. Cada sesión puede tener dos variantes (`A` y `B`) con estos campos:
+
+| Campo | Descripción |
+| --- | --- |
+| `id` | Identificador estable, por ejemplo `VAR0001`. |
+| `phase_session_id` | Sesión base a la que pertenece. |
+| `variant_code` | `A` o `B`. |
+| `name`, `focus` | Texto visible de la alternativa. |
+| `week_start`, `week_end` | Intervalo de semanas válido. |
+| `week_parity` | Rotación determinista: alterna por semana dentro del intervalo. |
+
+La selección usa la semana actual y su paridad (`A` en la primera semana, `B`
+en la siguiente, y vuelve a `A`). Los bloques se mantienen como estructura de
+la sesión y `block_exercises.variant_id` selecciona el ejercicio concreto de
+la variante. Si falta la variante o un ejercicio relacionado, la aplicación
+informa que no hay información disponible; nunca sustituye contenido de otra
+categoría.
+
+Ejemplo Cadete:
+
+```text
+SES0037 · Fase 3 · Día 1
+├── VAR00xx · Variante A · split squat + salto al cajón
+└── VAR00yy · Variante B · zancada atrás + salto vertical
+```
+
+La duración total se configura con `plans.total_weeks`. Cada fila de `plan_phases` define su propio intervalo con `week_start`, `week_end` y `weeks_count`.
 
 La periodización objetivo, basada en [ESTRUCTURA DE UNA TEMPORADA](https://docs.google.com/spreadsheets/d/1sXNf5-OCUkx607aGiFqyW0HwbXSMLMzVDMEDcgjUtIo/edit), consta de 45 semanas:
 
@@ -63,10 +95,10 @@ Las cuatro plantillas del catálogo ya están configuradas con 45 semanas y siet
 
 ### Configuración aplicada
 
-- Cada `plantillas_macrociclo` tiene `total_weeks = 45`.
-- Hay 28 filas en `mesociclos`: siete por categoría y sin huecos entre las semanas 1 y 45.
+- Cada `plans` tiene `total_weeks = 45`.
+- Hay siete filas en `plan_phases` para el plan Cadete, sin huecos entre las semanas 1 y 45.
 - `weekly_loads` contiene un valor por semana del mesociclo. La última semana de cada período competitivo es una descarga.
-- Los períodos de Navidad, Semana Santa y cierre de temporada usan `type = holiday`; la interfaz muestra entonces las sesiones autónomas de `sesiones_transitorias`.
+- Los períodos de Navidad, Semana Santa y cierre de temporada usan `type = holiday`; la interfaz muestra entonces las sesiones autónomas de `home_sessions`.
 - Las evaluaciones de Cadete (U16) se sitúan en las semanas 1, 19, 31 y 41.
 
 Los ejemplos incluidos deben validarse con el cuerpo técnico antes de utilizarlos como prescripción definitiva:
@@ -78,7 +110,9 @@ Los ejemplos incluidos deben validarse con el cuerpo técnico antes de utilizarl
 | U16 | Split squat con mancuerna, CMJ, sprint reactivo, RDL y nórdico asistido. |
 | U18 | RDL, split squat pesado, CMJ, sprint de 10–20 m y curl nórdico. |
 
-Las sesiones del tercer período competitivo reutilizan la plantilla de sesiones del primer período competitivo de su categoría y se muestran con el nombre y objetivo del mesociclo activo. Es una decisión transitoria: queda pendiente diseñar filas específicas en `sesiones_planificadas`, `bloques_sesion` y `ejercicios_bloque` para cada uno de esos cuatro mesociclos.
+Las sesiones de Cadete incluyen variantes A/B para alternar ejercicios dentro de
+cada fase. Las categorías que todavía no tienen variantes específicas conservan
+su plantilla base hasta que el cuerpo técnico las valide.
 
 ## Google Sheets
 
@@ -120,7 +154,7 @@ server/
     generate-training.post.ts          # Generación de una sesión
     sheets-db.get.ts                   # Lectura de Google Sheets o fallback local
     sheets-sync.post.ts                # Sincronización hacia Google Sheets
-  utils/googleSheets.ts                # Cliente y mapeo de las 12 planillas
+  utils/googleSheets.ts                # Cliente y mapeo de las planillas
 ```
 
 ## Ejecutar en local

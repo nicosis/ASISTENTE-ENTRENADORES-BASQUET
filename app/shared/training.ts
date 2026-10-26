@@ -52,6 +52,17 @@ export interface PhaseSessionRecord {
   totalMinutes: number
 }
 
+export interface SessionVariantRecord {
+  id: string
+  phaseSessionId: string
+  variantCode: 'A' | 'B'
+  name: string
+  focus: string
+  weekStart: number
+  weekEnd: number
+  weekParity: 0 | 1
+}
+
 export interface SessionBlockRecord {
   id: string
   sessionId: string
@@ -69,6 +80,7 @@ export interface BlockExerciseRecord {
   stationLabel: string
   doseFormacion: string
   doseLiga: string
+  variantId?: string
 }
 
 export interface HomeSessionRecord {
@@ -122,6 +134,7 @@ export interface HydratedPhaseSession {
   loadIndex: number
   isDeload: boolean
   session: PhaseSessionRecord
+  variant: SessionVariantRecord
   blocks: HydratedSessionBlock[]
 }
 
@@ -1263,7 +1276,87 @@ export const phaseSessions: PhaseSessionRecord[] = [
     focus: 'Chispa neural, bajo volumen y frescura competitiva',
     totalMinutes: 30,
   },
+
+  // --- PLN0003: CADETE (U16) · Fase 3 y periodos transitorios ---
+  {
+    id: 'SES0037', phaseId: 'FAS0014', day: 'dia1', order: 1,
+    name: 'Fuerza y potencia · Fase 3 (U16)',
+    focus: 'Fuerza unilateral y salto vertical', totalMinutes: 40,
+  },
+  {
+    id: 'SES0038', phaseId: 'FAS0014', day: 'dia2', order: 2,
+    name: 'Velocidad y cambio de dirección · Fase 3 (U16)',
+    focus: 'Aceleración, frenada y salida diagonal', totalMinutes: 40,
+  },
+  {
+    id: 'SES0039', phaseId: 'FAS0014', day: 'dia3', order: 3,
+    name: 'Prevención y activación · Fase 3 (U16)',
+    focus: 'Tobillo, isquios y core', totalMinutes: 30,
+  },
+  {
+    id: 'SES0040', phaseId: 'FAS0011', day: 'dia1', order: 1,
+    name: 'Trabajo en casa A · Navidad (U16)',
+    focus: 'Movilidad y fuerza con autocarga', totalMinutes: 20,
+  },
+  {
+    id: 'SES0041', phaseId: 'FAS0011', day: 'dia2', order: 2,
+    name: 'Trabajo en casa B · Navidad (U16)',
+    focus: 'Core y estabilidad', totalMinutes: 20,
+  },
+  {
+    id: 'SES0042', phaseId: 'FAS0011', day: 'dia3', order: 3,
+    name: 'Trabajo en casa C · Navidad (U16)',
+    focus: 'Movilidad y recuperación activa', totalMinutes: 20,
+  },
+  {
+    id: 'SES0043', phaseId: 'FAS0013', day: 'dia1', order: 1,
+    name: 'Mantenimiento A · Semana Santa (U16)',
+    focus: 'Fuerza básica con autocarga', totalMinutes: 20,
+  },
+  {
+    id: 'SES0044', phaseId: 'FAS0013', day: 'dia2', order: 2,
+    name: 'Mantenimiento B · Semana Santa (U16)',
+    focus: 'Movilidad y control postural', totalMinutes: 20,
+  },
+  {
+    id: 'SES0045', phaseId: 'FAS0013', day: 'dia3', order: 3,
+    name: 'Mantenimiento C · Semana Santa (U16)',
+    focus: 'Recuperación activa', totalMinutes: 20,
+  },
+  {
+    id: 'SES0046', phaseId: 'FAS0015', day: 'dia1', order: 1,
+    name: 'Recuperación activa A · Cierre (U16)',
+    focus: 'Movilidad global y core', totalMinutes: 20,
+  },
+  {
+    id: 'SES0047', phaseId: 'FAS0015', day: 'dia2', order: 2,
+    name: 'Recuperación activa B · Cierre (U16)',
+    focus: 'Fuerza básica y equilibrio', totalMinutes: 20,
+  },
+  {
+    id: 'SES0048', phaseId: 'FAS0015', day: 'dia3', order: 3,
+    name: 'Recuperación activa C · Cierre (U16)',
+    focus: 'Movilidad y respiración', totalMinutes: 20,
+  },
 ]
+
+export const sessionVariants: SessionVariantRecord[] = phaseSessions.flatMap(
+  (session) => {
+    const phase = planPhases.find((item) => item.id === session.phaseId)
+    const weekStart = phase?.weekStart ?? 1
+    const weekEnd = phase?.weekEnd ?? 45
+    return (['A', 'B'] as const).map((variantCode, index) => ({
+      id: `VAR${String(phaseSessions.indexOf(session) * 2 + index + 1).padStart(4, '0')}`,
+      phaseSessionId: session.id,
+      variantCode,
+      name: `${session.name} · Variante ${variantCode}`,
+      focus: `${session.focus} · Alternativa ${variantCode}`,
+      weekStart,
+      weekEnd,
+      weekParity: index as 0 | 1,
+    }))
+  },
+)
 
 // ============================================================================
 // TABLA 5: bloques_sesion (bloques de tiempo dentro de cada sesión)
@@ -1498,12 +1591,24 @@ export const sessionBlocks: SessionBlockRecord[] = [
     minutes: 30,
     format: 'Bajo volumen, máxima frescura para el partido',
   },
+  { id: 'BLK0028', sessionId: 'SES0037', blockOrder: 1, name: 'Fuerza y potencia', minutes: 20, format: '2 vueltas controladas · técnica prioritaria' },
+  { id: 'BLK0029', sessionId: 'SES0038', blockOrder: 1, name: 'Velocidad y cambios de dirección', minutes: 20, format: '4 repeticiones de calidad' },
+  { id: 'BLK0030', sessionId: 'SES0039', blockOrder: 1, name: 'Prevención', minutes: 20, format: '2 vueltas controladas' },
+  { id: 'BLK0031', sessionId: 'SES0040', blockOrder: 1, name: 'Movilidad', minutes: 15, format: '2 vueltas suaves' },
+  { id: 'BLK0032', sessionId: 'SES0041', blockOrder: 1, name: 'Core', minutes: 15, format: '2 vueltas suaves' },
+  { id: 'BLK0033', sessionId: 'SES0042', blockOrder: 1, name: 'Recuperación activa', minutes: 15, format: 'Trabajo continuo suave' },
+  { id: 'BLK0034', sessionId: 'SES0043', blockOrder: 1, name: 'Fuerza básica', minutes: 15, format: '2 vueltas suaves' },
+  { id: 'BLK0035', sessionId: 'SES0044', blockOrder: 1, name: 'Control postural', minutes: 15, format: '2 vueltas suaves' },
+  { id: 'BLK0036', sessionId: 'SES0045', blockOrder: 1, name: 'Recuperación activa', minutes: 15, format: 'Trabajo continuo suave' },
+  { id: 'BLK0037', sessionId: 'SES0046', blockOrder: 1, name: 'Movilidad global', minutes: 15, format: '2 vueltas suaves' },
+  { id: 'BLK0038', sessionId: 'SES0047', blockOrder: 1, name: 'Equilibrio y fuerza', minutes: 15, format: '2 vueltas suaves' },
+  { id: 'BLK0039', sessionId: 'SES0048', blockOrder: 1, name: 'Movilidad y respiración', minutes: 15, format: 'Trabajo continuo suave' },
 ]
 
 // ============================================================================
 // TABLA 6: ejercicios_bloque (tabla puente: ejercicio y dosis por bloque)
 // ============================================================================
-export const blockExercises: BlockExerciseRecord[] = [
+const baseBlockExercises: BlockExerciseRecord[] = [
   // BLK0001 (Preparación)
   { id: 'BEX0001', blockId: 'BLK0001', exerciseId: 'EJE0001', itemOrder: 1, stationLabel: 'Movilidad 1', doseFormacion: '2 por lado', doseLiga: '3 por lado' },
   { id: 'BEX0002', blockId: 'BLK0001', exerciseId: 'EJE0002', itemOrder: 2, stationLabel: 'Activación 2', doseFormacion: '8 reps · 2" arriba', doseLiga: '10 reps · 2" arriba' },
@@ -1570,6 +1675,64 @@ export const blockExercises: BlockExerciseRecord[] = [
   { id: 'BEX0047', blockId: 'BLK0026', exerciseId: 'EJE0015', itemOrder: 1, stationLabel: 'Fuerza cadera', doseFormacion: '3 × 6 reps carga moderada', doseLiga: '4 × 6 reps pesadas' },
   { id: 'BEX0048', blockId: 'BLK0027', exerciseId: 'EJE0017', itemOrder: 1, stationLabel: 'Activación', doseFormacion: '2 × 3 saltos controlados', doseLiga: '2 × 3 saltos rápidos' },
   { id: 'BEX0049', blockId: 'BLK0027', exerciseId: 'EJE0018', itemOrder: 2, stationLabel: 'Prevención', doseFormacion: '2 × 3 reps', doseLiga: '2 × 4 reps' },
+  { id: 'BEX0050', blockId: 'BLK0028', exerciseId: 'EJE0016', itemOrder: 1, stationLabel: 'Fuerza unilateral', doseFormacion: '2 series · 8 repeticiones', doseLiga: '3 series · 8 repeticiones' },
+  { id: 'BEX0051', blockId: 'BLK0029', exerciseId: 'EJE0014', itemOrder: 1, stationLabel: 'Aceleración', doseFormacion: '4 × 10 m', doseLiga: '6 × 10 m' },
+  { id: 'BEX0052', blockId: 'BLK0030', exerciseId: 'EJE0011', itemOrder: 1, stationLabel: 'Tobillo', doseFormacion: '2 × 8 por pierna', doseLiga: '2 × 10 por pierna' },
+  { id: 'BEX0053', blockId: 'BLK0031', exerciseId: 'EJE0001', itemOrder: 1, stationLabel: 'Movilidad', doseFormacion: '2 por lado', doseLiga: '3 por lado' },
+  { id: 'BEX0054', blockId: 'BLK0032', exerciseId: 'EJE0003', itemOrder: 1, stationLabel: 'Core', doseFormacion: '2 × 6 por lado', doseLiga: '3 × 6 por lado' },
+  { id: 'BEX0055', blockId: 'BLK0033', exerciseId: 'EJE0004', itemOrder: 1, stationLabel: 'Cadera', doseFormacion: '2 × 8 pasos', doseLiga: '3 × 8 pasos' },
+  { id: 'BEX0056', blockId: 'BLK0034', exerciseId: 'EJE0007', itemOrder: 1, stationLabel: 'Sentadilla', doseFormacion: '2 × 8 repeticiones', doseLiga: '3 × 8 repeticiones' },
+  { id: 'BEX0057', blockId: 'BLK0035', exerciseId: 'EJE0002', itemOrder: 1, stationLabel: 'Puente de glúteos', doseFormacion: '2 × 10 repeticiones', doseLiga: '3 × 10 repeticiones' },
+  { id: 'BEX0058', blockId: 'BLK0036', exerciseId: 'EJE0012', itemOrder: 1, stationLabel: 'Movilidad de cadera', doseFormacion: '25" por lado', doseLiga: '30" por lado' },
+  { id: 'BEX0059', blockId: 'BLK0037', exerciseId: 'EJE0001', itemOrder: 1, stationLabel: 'Movilidad', doseFormacion: '2 por lado', doseLiga: '3 por lado' },
+  { id: 'BEX0060', blockId: 'BLK0038', exerciseId: 'EJE0003', itemOrder: 1, stationLabel: 'Core', doseFormacion: '2 × 6 por lado', doseLiga: '3 × 6 por lado' },
+  { id: 'BEX0061', blockId: 'BLK0039', exerciseId: 'EJE0011', itemOrder: 1, stationLabel: 'Gemelos', doseFormacion: '2 × 10 por pierna', doseLiga: '3 × 10 por pierna' },
+]
+
+const variantExerciseMap: Record<string, string> = {
+  EJE0001: 'EJE0004',
+  EJE0002: 'EJE0003',
+  EJE0003: 'EJE0002',
+  EJE0004: 'EJE0001',
+  EJE0005: 'EJE0017',
+  EJE0006: 'EJE0005',
+  EJE0007: 'EJE0016',
+  EJE0008: 'EJE0009',
+  EJE0009: 'EJE0008',
+  EJE0010: 'EJE0003',
+  EJE0011: 'EJE0012',
+  EJE0012: 'EJE0011',
+  EJE0013: 'EJE0014',
+  EJE0014: 'EJE0013',
+  EJE0015: 'EJE0016',
+  EJE0016: 'EJE0007',
+  EJE0017: 'EJE0005',
+  EJE0018: 'EJE0015',
+}
+
+const variantBySessionId = new Map(
+  sessionVariants
+    .filter((variant) => variant.variantCode === 'B')
+    .map((variant) => [variant.phaseSessionId, variant]),
+)
+
+const variantBlockExercises: BlockExerciseRecord[] = baseBlockExercises.flatMap(
+  (item, index) => {
+    const block = sessionBlocks.find((candidate) => candidate.id === item.blockId)
+    const variant = block ? variantBySessionId.get(block.sessionId) : undefined
+    if (!variant) return []
+    return [{
+      ...item,
+      id: `BEX${String(1001 + index).padStart(4, '0')}`,
+      exerciseId: variantExerciseMap[item.exerciseId] ?? item.exerciseId,
+      variantId: variant.id,
+    }]
+  },
+)
+
+export const blockExercises: BlockExerciseRecord[] = [
+  ...baseBlockExercises,
+  ...variantBlockExercises,
 ]
 
 // ============================================================================
@@ -1668,6 +1831,7 @@ export interface TrainingCatalogTables {
   plans: PlanRecord[]
   planPhases: PlanPhaseRecord[]
   phaseSessions: PhaseSessionRecord[]
+  sessionVariants: SessionVariantRecord[]
   sessionBlocks: SessionBlockRecord[]
   blockExercises: BlockExerciseRecord[]
   exercises: ExerciseRecord[]
@@ -1679,6 +1843,7 @@ export const defaultTrainingCatalog: TrainingCatalogTables = {
   plans,
   planPhases,
   phaseSessions,
+  sessionVariants,
   sessionBlocks,
   blockExercises,
   exercises,
@@ -1686,21 +1851,178 @@ export const defaultTrainingCatalog: TrainingCatalogTables = {
   tests,
 }
 
-const BASE_TEMPLATE_PLAN_ID = 'PLN0003'
+export type TrainingDataIssueCode =
+  | 'missing-plan'
+  | 'missing-phase'
+  | 'missing-session'
+  | 'missing-session-variant'
+  | 'missing-block'
+  | 'missing-block-exercise'
+  | 'missing-exercise'
+
+export interface TrainingDataStatus {
+  available: boolean
+  code?: TrainingDataIssueCode
+  message?: string
+}
+
+/**
+ * Verifies the relational chain required to render one requested training
+ * session. Consumers must use this before hydrating a session so missing
+ * source data is never represented by another plan or exercise.
+ */
+export function getTrainingDataStatus(
+  params: {
+    ageCategory: AgeCategory
+    planId?: string
+    weekNumber: number
+    day: TrainingDay
+  },
+  catalog: TrainingCatalogTables = defaultTrainingCatalog,
+): TrainingDataStatus {
+  const plan = catalog.plans.find(
+    (item) =>
+      (params.planId !== undefined
+        ? item.id === params.planId
+        : item.ageCategory === params.ageCategory) &&
+      item.ageCategory === params.ageCategory,
+  )
+  if (!plan) {
+    return {
+      available: false,
+      code: 'missing-plan',
+      message: params.planId !== undefined
+        ? `No existe el plan ${params.planId} de esta temporada.`
+        : `No hay un plan disponible para la categoría ${params.ageCategory}.`,
+    }
+  }
+
+  const phase = catalog.planPhases.find(
+    (item) =>
+      item.planId === plan.id &&
+      params.weekNumber >= item.weekStart &&
+      params.weekNumber <= item.weekEnd,
+  )
+  if (!phase) {
+    return {
+      available: false,
+      code: 'missing-phase',
+      message: 'No hay una fase configurada para esta semana.',
+    }
+  }
+
+  const session = catalog.phaseSessions.find(
+    (item) => item.phaseId === phase.id && item.day === params.day,
+  )
+  if (!session) {
+    return {
+      available: false,
+      code: 'missing-session',
+      message: 'No hay una sesión configurada para el día seleccionado.',
+    }
+  }
+
+  let variant: SessionVariantRecord
+  try {
+    variant = selectSessionVariant(session.id, params.weekNumber, catalog)
+  } catch (error) {
+    if (error instanceof TrainingDataUnavailableError) {
+      return {
+        available: false,
+        code: error.code,
+        message: error.message,
+      }
+    }
+    throw error
+  }
+
+  const blocks = catalog.sessionBlocks.filter(
+    (item) => item.sessionId === session.id,
+  )
+  if (!blocks.length) {
+    return {
+      available: false,
+      code: 'missing-block',
+      message: 'No hay bloques configurados para esta sesión.',
+    }
+  }
+
+  for (const block of blocks) {
+    const blockItems = catalog.blockExercises.filter(
+      (item) =>
+        item.blockId === block.id &&
+        (item.variantId === variant.id ||
+          (variant.variantCode === 'A' && item.variantId === undefined)),
+    )
+    if (!blockItems.length) {
+      return {
+        available: false,
+        code: 'missing-block-exercise',
+        message: `No hay ejercicios configurados para el bloque ${block.name}.`,
+      }
+    }
+    const missingExercise = blockItems.find(
+      (item) => !catalog.exercises.some((exercise) => exercise.id === item.exerciseId),
+    )
+    if (missingExercise) {
+      return {
+        available: false,
+        code: 'missing-exercise',
+        message: `No existe el ejercicio ${missingExercise.exerciseId} referenciado por la sesión.`,
+      }
+    }
+  }
+
+  const missingHomeExercise = catalog.homeSessions
+    .filter((item) => item.planId === plan.id)
+    .find(
+      (item) =>
+        !catalog.exercises.some((exercise) => exercise.id === item.exerciseId),
+    )
+  if (missingHomeExercise) {
+    return {
+      available: false,
+      code: 'missing-exercise',
+      message: `No existe el ejercicio ${missingHomeExercise.exerciseId} referenciado por una sesión en casa.`,
+    }
+  }
+
+  return { available: true }
+}
+
+export class TrainingDataUnavailableError extends Error {
+  constructor(
+    public readonly code: TrainingDataIssueCode,
+    message: string,
+  ) {
+    super(message)
+    this.name = 'TrainingDataUnavailableError'
+  }
+}
+
+function unavailable(
+  code: TrainingDataIssueCode,
+  message: string,
+): never {
+  throw new TrainingDataUnavailableError(code, message)
+}
 
 export function resolvePlan(
   ageCategory: AgeCategory = 'cadete',
   catalog: TrainingCatalogTables = defaultTrainingCatalog,
+  planId?: string,
 ): PlanRecord {
-  const exact = catalog.plans.find((plan) => plan.ageCategory === ageCategory)
+  const exact = catalog.plans.find(
+    (plan) =>
+      (planId !== undefined ? plan.id === planId : plan.ageCategory === ageCategory) &&
+      plan.ageCategory === ageCategory,
+  )
   if (exact) return exact
-  return (
-    catalog.plans.find((plan) => plan.id === BASE_TEMPLATE_PLAN_ID) ?? {
-      id: BASE_TEMPLATE_PLAN_ID,
-      name: 'Plan Anual Cadete (U16)',
-      ageCategory: 'cadete',
-      totalWeeks: 45,
-    }
+  return unavailable(
+    'missing-plan',
+    planId !== undefined
+      ? `No existe el plan ${planId} de esta temporada.`
+      : `No hay un plan disponible para la categoría ${ageCategory}.`,
   )
 }
 
@@ -1716,58 +2038,12 @@ export interface HydratedHomeSessionRecord extends HomeSessionRecord {
   exercise: ExerciseRecord
 }
 
-const fallbackExercise: ExerciseRecord = {
-  id: 'EJE0001',
-  slug: 'worlds-greatest-stretch',
-  name: 'Estiramiento dinámico completo (WGS)',
-  category: 'Preparación y movilidad',
-  focus: 'Movilidad torácica y cadera',
-  material: 'Sin material',
-  how: ['Zancada larga hacia adelante y rotación torácica.'],
-  cue: 'El giro nace de la espalda alta.',
-  errors: ['Girar únicamente el brazo'],
-  easier: 'Apoyando la rodilla trasera.',
-  harder: 'Pausa de 2 segundos arriba.',
-}
-
-const fallbackPhase: PlanPhaseRecord = {
-  id: 'FAS0009',
-  planId: 'PLN0003',
-  phaseOrder: 1,
-  type: 'training',
-  name: 'Fase 1 · Fundamentos (U16)',
-  weeksCount: 4,
-  weekStart: 1,
-  weekEnd: 4,
-  color: '#4f7cac',
-  objective: 'Dominar patrones básicos.',
-  loadRules: ['2-3 series · 8-10 reps'],
-  plioRule: 'Saltar y congelar posición 2 segundos.',
-  weeklyProgressionNote: 'S1-S4 progresión básica.',
-  weeklyLoads: [4, 5, 5, 6],
-}
-
-const fallbackSession: PhaseSessionRecord = {
-  id: 'SES0019',
-  phaseId: 'FAS0009',
-  day: 'dia1',
-  order: 1,
-  name: 'Fuerza + Potencia (Fase 1 · U16)',
-  focus: 'Patrón de sentadilla, salto al cajón y empuje',
-  totalMinutes: 40,
-}
-
 export function getPlanPhases(
   planId: string,
   catalog: TrainingCatalogTables = defaultTrainingCatalog,
 ): PlanPhaseRecord[] {
   const direct = catalog.planPhases.filter((phase) => phase.planId === planId)
-  if (direct.length) {
-    return [...direct].sort((a, b) => a.phaseOrder - b.phaseOrder)
-  }
-  return catalog.planPhases
-    .filter((phase) => phase.planId === BASE_TEMPLATE_PLAN_ID)
-    .sort((a, b) => a.phaseOrder - b.phaseOrder)
+  return [...direct].sort((a, b) => a.phaseOrder - b.phaseOrder)
 }
 
 export function getPhaseForWeek(
@@ -1777,14 +2053,18 @@ export function getPhaseForWeek(
 ): PhaseWeekContext {
   const phases = getPlanPhases(planId, catalog)
   const plan = catalog.plans.find((item) => item.id === planId)
-  const maxWeeks = plan?.totalWeeks ?? 45
+  if (!plan) return unavailable('missing-plan', `No existe el plan ${planId}.`)
+  const maxWeeks = plan.totalWeeks
   const clampedWeek = Math.max(1, Math.min(maxWeeks, weekNumber))
-  const phase =
-    phases.find(
-      (item) => clampedWeek >= item.weekStart && clampedWeek <= item.weekEnd,
-    ) ??
-    phases[0] ??
-    fallbackPhase
+  const phase = phases.find(
+    (item) => clampedWeek >= item.weekStart && clampedWeek <= item.weekEnd,
+  )
+  if (!phase) {
+    return unavailable(
+      'missing-phase',
+      `No hay una fase configurada para la semana ${clampedWeek}.`,
+    )
+  }
   const weekInPhase = Math.max(1, clampedWeek - phase.weekStart + 1)
   const loadIndex =
     phase.weeklyLoads[weekInPhase - 1] ?? phase.weeklyLoads[0] ?? 5
@@ -1811,42 +2091,41 @@ export function getWeeklySessionsForPhase(
     .filter((session) => session.phaseId === phaseId)
     .sort((a, b) => a.order - b.order)
 
-  let allDays = direct
-  if (!allDays.length) {
-    const phase = catalog.planPhases.find((item) => item.id === phaseId)
-    const samePlanPhase2 = phase
-      ? catalog.planPhases.find(
-          (item) => item.planId === phase.planId && item.phaseOrder === 2,
-        )
-      : undefined
-    const fallbackPhaseId =
-      samePlanPhase2?.id ??
-      (phase?.phaseOrder === 1
-        ? 'FAS0009'
-        : phase?.phaseOrder === 4
-          ? 'FAS0012'
-          : 'FAS0010')
-    const templateSessions = catalog.phaseSessions
-      .filter((session) => session.phaseId === fallbackPhaseId)
-      .sort((a, b) => a.order - b.order)
-    allDays = templateSessions.map((session) =>
-      phase
-        ? {
-            ...session,
-            phaseId,
-            name: `${phase.name} · Sesión ${session.order}`,
-            focus: `${phase.objective} Ejemplos: ${session.focus}`,
-          }
-        : session,
+  if (!direct.length) {
+    return unavailable(
+      'missing-session',
+      `No hay sesiones configuradas para la fase ${phaseId}.`,
     )
   }
 
-  return allDays.slice(0, frequency)
+  return direct.slice(0, frequency)
+}
+
+function selectSessionVariant(
+  sessionId: string,
+  weekNumber: number,
+  catalog: TrainingCatalogTables,
+): SessionVariantRecord {
+  const variants = catalog.sessionVariants.filter(
+    (variant) =>
+      variant.phaseSessionId === sessionId &&
+      weekNumber >= variant.weekStart &&
+      weekNumber <= variant.weekEnd &&
+      (weekNumber - variant.weekStart) % 2 === variant.weekParity,
+  )
+  if (!variants.length) {
+    return unavailable(
+      'missing-session-variant',
+      `No hay una variante configurada para la sesión ${sessionId} en la semana ${weekNumber}.`,
+    )
+  }
+  return variants[0]
 }
 
 export function getHydratedSession(
   params: {
     ageCategory?: AgeCategory
+    planId?: string
     competitiveLevel?: CompetitiveLevel
     frequency: Frequency
     weekNumber?: number
@@ -1856,7 +2135,7 @@ export function getHydratedSession(
 ): HydratedPhaseSession {
   const ageCategory = params.ageCategory || 'cadete'
   const competitiveLevel = params.competitiveLevel || 'liga'
-  const plan = resolvePlan(ageCategory, catalog)
+  const plan = resolvePlan(ageCategory, catalog, params.planId)
   const { phase, weekNumber, weekInPhase, loadIndex, isDeload } =
     getPhaseForWeek(plan.id, params.weekNumber || 1, catalog)
 
@@ -1866,42 +2145,54 @@ export function getHydratedSession(
     competitiveLevel,
     catalog,
   )
-  const session =
-    weeklySessions.find((item) => item.day === params.day) ??
-    weeklySessions[0] ??
-    fallbackSession
+  const session = weeklySessions.find((item) => item.day === params.day)
+  if (!session) {
+    return unavailable(
+      'missing-session',
+      'No hay una sesión configurada para el día seleccionado.',
+    )
+  }
+
+  const variant = selectSessionVariant(session.id, params.weekNumber || 1, catalog)
 
   const directBlocks = catalog.sessionBlocks
     .filter((block) => block.sessionId === session.id)
     .sort((a, b) => a.blockOrder - b.blockOrder)
 
-  let rawBlocks = directBlocks
-  if (!rawBlocks.length) {
-    const templatePhaseId =
-      phase.phaseOrder === 1
-        ? 'FAS0009'
-        : phase.phaseOrder === 4
-          ? 'FAS0012'
-          : 'FAS0010'
-    const templateSession =
-      catalog.phaseSessions.find(
-        (item) => item.phaseId === templatePhaseId && item.day === session.day,
-      ) ?? fallbackSession
-    rawBlocks = catalog.sessionBlocks
-      .filter((block) => block.sessionId === templateSession.id)
-      .sort((a, b) => a.blockOrder - b.blockOrder)
+  if (!directBlocks.length) {
+    return unavailable(
+      'missing-block',
+      `No hay bloques configurados para la sesión ${session.id}.`,
+    )
   }
 
-  const blocks: HydratedSessionBlock[] = rawBlocks.map((block) => {
+  const blocks: HydratedSessionBlock[] = directBlocks.map((block) => {
     const rawItems = catalog.blockExercises
-      .filter((item) => item.blockId === block.id)
+      .filter(
+        (item) =>
+          item.blockId === block.id &&
+          (item.variantId === variant.id ||
+            (variant.variantCode === 'A' && item.variantId === undefined)),
+      )
       .sort((a, b) => a.itemOrder - b.itemOrder)
 
+    if (!rawItems.length) {
+      return unavailable(
+        'missing-block-exercise',
+        `No hay ejercicios configurados para el bloque ${block.name}.`,
+      )
+    }
+
     const items: HydratedBlockExercise[] = rawItems.map((item) => {
-      const exercise =
-        catalog.exercises.find((ex) => ex.id === item.exerciseId) ??
-        catalog.exercises[0] ??
-        fallbackExercise
+      const exercise = catalog.exercises.find(
+        (ex) => ex.id === item.exerciseId,
+      )
+      if (!exercise) {
+        return unavailable(
+          'missing-exercise',
+          `No existe el ejercicio ${item.exerciseId} referenciado por la sesión.`,
+        )
+      }
       const baseDose =
         competitiveLevel === 'formacion' ? item.doseFormacion : item.doseLiga
 
@@ -1926,6 +2217,7 @@ export function getHydratedSession(
     loadIndex,
     isDeload,
     session,
+    variant,
     blocks,
   }
 }
@@ -1935,29 +2227,28 @@ export function getPlanHomeSessions(
   catalog: TrainingCatalogTables = defaultTrainingCatalog,
 ): HydratedHomeSessionRecord[] {
   const direct = catalog.homeSessions.filter((item) => item.planId === planId)
-  const list = direct.length
-    ? direct
-    : catalog.homeSessions.filter(
-        (item) => item.planId === BASE_TEMPLATE_PLAN_ID,
+  return direct.map((item) => {
+    const exercise = catalog.exercises.find(
+      (ex) => ex.id === item.exerciseId,
+    )
+    if (!exercise) {
+      return unavailable(
+        'missing-exercise',
+        `No existe el ejercicio ${item.exerciseId} referenciado por una sesión en casa.`,
       )
-
-  return list.map((item) => ({
-    ...item,
-    exercise:
-      catalog.exercises.find((ex) => ex.id === item.exerciseId) ??
-      catalog.exercises[0] ??
-      fallbackExercise,
-  }))
+    }
+    return {
+      ...item,
+      exercise,
+    }
+  })
 }
 
 export function getPlanTests(
   planId: string,
   catalog: TrainingCatalogTables = defaultTrainingCatalog,
 ): TestRecord[] {
-  const direct = catalog.tests.filter((item) => item.planId === planId)
-  return direct.length
-    ? direct
-    : catalog.tests.filter((item) => item.planId === BASE_TEMPLATE_PLAN_ID)
+  return catalog.tests.filter((item) => item.planId === planId)
 }
 
 export function getWeeklyPlan(

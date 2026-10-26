@@ -1,6 +1,7 @@
 import { computed, type Ref } from 'vue'
 import {
   defaultTrainingCatalog,
+  getTrainingDataStatus,
   getHydratedSession,
   getPhaseForWeek,
   getPlanHomeSessions,
@@ -16,6 +17,7 @@ import {
 } from '~/shared/training'
 
 export interface SeasonPlanConfig {
+  planId?: string
   ageCategory: AgeCategory
   competitiveLevel: CompetitiveLevel
   frequency: Frequency
@@ -29,8 +31,24 @@ export function useTrainingPlan(
 ) {
   const catalog = computed(() => catalogRef?.value ?? defaultTrainingCatalog)
 
+  const trainingDataStatus = computed(() =>
+    getTrainingDataStatus(
+      {
+        ageCategory: config.value.ageCategory,
+        planId: config.value.planId,
+        weekNumber: config.value.weekNumber,
+        day: config.value.selectedDay,
+      },
+      catalog.value,
+    ),
+  )
+
   const activePlan = computed(() =>
-    resolvePlan(config.value.ageCategory, catalog.value),
+    resolvePlan(
+      config.value.ageCategory,
+      catalog.value,
+      config.value.planId,
+    ),
   )
 
   const phases = computed(() =>
@@ -60,6 +78,7 @@ export function useTrainingPlan(
     getHydratedSession(
       {
         ageCategory: config.value.ageCategory,
+        planId: config.value.planId,
         competitiveLevel: config.value.competitiveLevel,
         frequency: config.value.frequency,
         weekNumber: config.value.weekNumber,
@@ -113,12 +132,14 @@ export function useTrainingPlan(
     plans: catalog.value.plans,
     planPhases: catalog.value.planPhases,
     phaseSessions: catalog.value.phaseSessions,
+    sessionVariants: catalog.value.sessionVariants,
     sessionBlocks: catalog.value.sessionBlocks,
     blockExercises: catalog.value.blockExercises,
     exercises: catalog.value.exercises,
   }))
 
   return {
+    trainingDataStatus,
     activePlan,
     phases,
     currentWeekContext,

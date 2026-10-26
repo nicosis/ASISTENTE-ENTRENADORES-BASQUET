@@ -1,6 +1,8 @@
 import {
   defaultTrainingCatalog,
+  getTrainingDataStatus,
   getHydratedSession,
+  TrainingDataUnavailableError,
   type AgeCategory,
   type CompetitiveLevel,
   type Frequency,
@@ -63,6 +65,23 @@ export default defineEventHandler(async (event) => {
         ? body.competitiveLevel
         : 'liga'
 
+    const trainingDataStatus = getTrainingDataStatus(
+      {
+        ageCategory,
+        weekNumber,
+        day,
+      },
+      catalog,
+    )
+    if (!trainingDataStatus.available) {
+      throw createError({
+        statusCode: 422,
+        statusMessage:
+          trainingDataStatus.message ||
+          'No hay información suficiente para generar esta sesión.',
+      })
+    }
+
     const hydrated = getHydratedSession(
       {
         ageCategory,
@@ -95,6 +114,12 @@ export default defineEventHandler(async (event) => {
       sessionBlocks: hydrated.blocks,
     }
   } catch (error) {
+    if (error instanceof TrainingDataUnavailableError) {
+      throw createError({
+        statusCode: 422,
+        statusMessage: error.message,
+      })
+    }
     if (error && typeof error === 'object' && 'statusCode' in error) {
       throw error
     }

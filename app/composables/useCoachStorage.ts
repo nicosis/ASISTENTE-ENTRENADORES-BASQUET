@@ -30,6 +30,15 @@ export interface Player {
   name: string;
 }
 
+export interface TeamPlayer {
+  id: string;
+  teamId: string;
+  playerId: string;
+  status: "active" | "inactive";
+  joinedAt: string;
+  leftAt: string | null;
+}
+
 export interface Season {
   id: string;
   teamId: string;
@@ -50,7 +59,6 @@ export interface Team {
   coachId: string;
   name: string;
   club: string;
-  players: Player[];
   status: TeamStatus;
 }
 
@@ -150,10 +158,26 @@ function isTeam(value: unknown): value is Team {
     typeof value.coachId === "string" &&
     typeof value.name === "string" &&
     typeof value.club === "string" &&
-    Array.isArray(value.players) &&
-    value.players.every(isPlayer) &&
     (value.status === undefined || isTeamStatus(value.status))
   );
+}
+
+function isTeamPlayer(value: unknown): value is TeamPlayer {
+  return isRecord(value) &&
+    typeof value.id === "string" &&
+    typeof value.teamId === "string" &&
+    typeof value.playerId === "string" &&
+    (value.status === "active" || value.status === "inactive") &&
+    typeof value.joinedAt === "string" &&
+    (typeof value.leftAt === "string" || value.leftAt === null);
+}
+
+export function isPlayerArray(value: unknown): value is Player[] {
+  return Array.isArray(value) && value.every(isPlayer);
+}
+
+export function isTeamPlayerArray(value: unknown): value is TeamPlayer[] {
+  return Array.isArray(value) && value.every(isTeamPlayer);
 }
 
 export function isTeamArray(value: unknown): value is Team[] {

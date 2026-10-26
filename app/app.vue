@@ -22,11 +22,14 @@ const {
   activeTeams,
   archivedTeams,
   visibleTeams,
+  activeTeamPlayers,
+  playerCountByTeam,
   seasons,
   teamSeasons,
   activeTeam,
   activeSeason,
   frequency,
+  trainingDataStatus,
   activePlan,
   phases,
   currentWeekContext,
@@ -236,7 +239,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
                     item.teamId === team.id && item.status === 'active',
                 )?.category || 'Sin temporada activa (cerrada)'
               }}</strong>
-              <small>{{ team.players.length }} jugadores</small>
+              <small>{{ playerCountByTeam.get(team.id) || 0 }} jugadores</small>
             </div>
             <em>Abrir planificación anual →</em>
           </button>
@@ -438,7 +441,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             {{ activeTeam?.id }} · TEMPORADA {{ activeSeason?.name }} ({{
               activeSeason?.status === 'closed' ? 'CERRADA' : 'ACTIVA'
             }}) · PLAN ID:
-            {{ activePlan.id }}
+            {{ activeSeason?.planId || 'Sin plan' }}
           </p>
           <h1>{{ activeTeam?.name }}</h1>
           <p>{{ activeSeason?.category }} · {{ activeTeam?.club }}</p>
@@ -536,12 +539,21 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         </div>
         <div>
           <span>PLANTILLA</span>
-          <strong>{{ activeTeam?.players.length || 0 }} jugadores</strong>
+          <strong>{{ activeTeamPlayers.length }} jugadores</strong>
         </div>
       </section>
 
+      <section v-if="!trainingDataStatus.available" class="panel-box">
+        <p class="eyebrow">INFORMACIÓN NO DISPONIBLE</p>
+        <h2>No se puede mostrar este entrenamiento</h2>
+        <p class="panel-lead">
+          {{ trainingDataStatus.message }} Revisá los datos relacionados en la
+          base de datos antes de continuar.
+        </p>
+      </section>
+
       <!-- Línea de tiempo de mesociclos -->
-      <section class="phases-strip">
+      <section v-if="trainingDataStatus.available" class="phases-strip">
         <div class="phases-header">
           <div>
             <p class="eyebrow">ESTRUCTURA ANUAL · TABLA `mesociclos`</p>
@@ -589,7 +601,11 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       </section>
 
       <!-- Navegación de pestañas locales -->
-      <nav class="subtabs" aria-label="Vistas del plan">
+      <nav
+        v-if="trainingDataStatus.available"
+        class="subtabs"
+        aria-label="Vistas del plan"
+      >
         <button
           type="button"
           :class="{ active: activeTeamTab === 'week' }"
@@ -616,7 +632,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       </nav>
 
       <!-- PESTAÑA 1: SESIONES DE LA SEMANA -->
-      <template v-if="activeTeamTab === 'week'">
+      <template v-if="trainingDataStatus.available && activeTeamTab === 'week'">
         <section class="section-heading">
           <div>
             <p class="eyebrow">
@@ -719,7 +735,9 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       </template>
 
       <!-- PESTAÑA 2: EXPLORADOR DE TABLAS RELACIONALES EN VIVO -->
-      <template v-else-if="activeTeamTab === 'tables'">
+      <template
+        v-else-if="trainingDataStatus.available && activeTeamTab === 'tables'"
+      >
         <section class="tables-explorer">
           <div class="explorer-intro">
             <div>
@@ -967,7 +985,11 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       </template>
 
       <!-- PESTAÑA 3: VACACIONES Y TESTS -->
-      <template v-else-if="activeTeamTab === 'holidays-tests'">
+      <template
+        v-else-if="
+          trainingDataStatus.available && activeTeamTab === 'holidays-tests'
+        "
+      >
         <section class="holidays-tests-grid">
           <div class="panel-box">
             <p class="eyebrow">TABLA 7 · `sesiones_transitorias` (VACACIONES)</p>

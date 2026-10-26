@@ -21,8 +21,10 @@ import {
   isCoachProfile,
   isCoachRole,
   isCompetitiveLevel,
+  isPlayerArray,
   isSeasonArray,
   isTeamArray,
+  isTeamPlayerArray,
   isTeamStatus,
   isWeeklyReviewArray,
   mondayFor,
@@ -33,8 +35,10 @@ import {
   type CoachRole,
   type DayId,
   type GeneratedSessionResponse,
+  type Player,
   type Season,
   type Team,
+  type TeamPlayer,
   type TeamTab,
   type View,
   type WeeklyReview,
@@ -51,6 +55,8 @@ export interface SheetsDatabaseResponse {
   operational: {
     coaches: CoachProfile[]
     teams: Team[]
+    players: Player[]
+    teamPlayers: TeamPlayer[]
     seasons: Season[]
     reviews: WeeklyReview[]
   }
@@ -93,13 +99,17 @@ export function useCoachWorkspace() {
       name: 'Mike Jordan Team',
       club: 'Club Baloncesto Norte',
       status: 'active',
-      players: [
-        { id: 'JUG0001', name: 'Álex Martín' },
-        { id: 'JUG0002', name: 'Bruno López' },
-        { id: 'JUG0003', name: 'Dani Ruiz' },
-      ],
     },
   ]
+  const seedPlayers: Player[] = [
+    { id: 'JUG0001', name: 'Álex Martín' },
+    { id: 'JUG0002', name: 'Bruno López' },
+    { id: 'JUG0003', name: 'Dani Ruiz' },
+  ]
+  const seedTeamPlayers: TeamPlayer[] = seedPlayers.map((player, index) => ({
+    id: `EJU${String(index + 1).padStart(4, '0')}`,
+    teamId: 'EQU0001', playerId: player.id, status: 'active', joinedAt: '2026-10-12', leftAt: null,
+  }))
 
   const seedSeasons: Season[] = [
     {
@@ -145,6 +155,8 @@ export function useCoachWorkspace() {
   const loadingDatabase = ref(false)
   const lastSyncedAt = ref('')
   const teams = ref<Team[]>(seedTeams)
+  const players = ref<Player[]>(seedPlayers)
+  const teamPlayers = ref<TeamPlayer[]>(seedTeamPlayers)
   const seasons = ref<Season[]>(seedSeasons)
   const reviews = ref<WeeklyReview[]>(seedReviews)
   const activeTeamId = ref('EQU0001')
@@ -170,6 +182,12 @@ export function useCoachWorkspace() {
   const teamSeasons = computed(() =>
     seasons.value.filter((item) => item.teamId === activeTeamId.value),
   )
+  const activeTeamPlayers = computed(() =>
+    teamPlayers.value.filter((membership) => membership.teamId === activeTeamId.value && membership.status === 'active'),
+  )
+  const playerCountByTeam = computed(() => new Map(
+    teams.value.map((team) => [team.id, teamPlayers.value.filter((membership) => membership.teamId === team.id && membership.status === 'active').length]),
+  ))
 
   const teamDraft = ref({ name: '', club: '', players: '' })
   const seasonDraft = ref<{
@@ -206,6 +224,7 @@ export function useCoachWorkspace() {
   )
 
   const planConfig = computed(() => ({
+    planId: activeSeason.value?.planId,
     ageCategory: activeSeason.value?.ageCategory || 'cadete',
     competitiveLevel: activeSeason.value?.competitiveLevel || 'liga',
     frequency: frequency.value,
@@ -214,6 +233,7 @@ export function useCoachWorkspace() {
   }))
 
   const {
+    trainingDataStatus,
     activePlan,
     phases,
     currentWeekContext,
@@ -225,6 +245,7 @@ export function useCoachWorkspace() {
   } = useTrainingPlan(planConfig, catalog)
 
   const activeExplorerBlock = computed(() => {
+    if (!trainingDataStatus.value.available) return undefined
     const blocks = hydratedPreviewSession.value.blocks
     return (
       blocks.find((block) => block.id === selectedBlockIdForExplorer.value) ||
@@ -271,6 +292,8 @@ export function useCoachWorkspace() {
         body: {
           coaches: coaches.value,
           teams: teams.value,
+          players: players.value,
+          teamPlayers: teamPlayers.value,
           seasons: seasons.value,
           reviews: reviews.value,
           includeCatalog: false,
@@ -348,6 +371,10 @@ export function useCoachWorkspace() {
           status: isTeamStatus(item.status) ? item.status : 'active',
         }))
         writeStorageJson('pizarra-teams-v4', teams.value)
+        players.value = response.operational.players
+        teamPlayers.value = response.operational.teamPlayers
+        writeStorageJson('pizarra-players-v5', players.value)
+        writeStorageJson('pizarra-team-players-v5', teamPlayers.value)
 
         seasons.value = response.operational.seasons
         writeStorageJson('pizarra-seasons-v4', seasons.value)
@@ -367,6 +394,8 @@ export function useCoachWorkspace() {
   function saveState(): void {
     writeStorageJson('pizarra-coaches-v4', coaches.value)
     writeStorageJson('pizarra-teams-v4', teams.value)
+    writeStorageJson('pizarra-players-v5', players.value)
+    writeStorageJson('pizarra-team-players-v5', teamPlayers.value)
     writeStorageJson('pizarra-seasons-v4', seasons.value)
     writeStorageJson('pizarra-reviews-v4', reviews.value)
     void syncToGoogleSheets()
@@ -396,6 +425,8 @@ export function useCoachWorkspace() {
   function loadState(): void {
     const storedCoaches = readStorageJson('pizarra-coaches-v4', isCoachArray)
     const storedTeams = readStorageJson('pizarra-teams-v4', isTeamArray)
+    const storedPlayers = readStorageJson('pizarra-players-v5', isPlayerArray)
+    const storedTeamPlayers = readStorageJson('pizarra-team-players-v5', isTeamPlayerArray)
     const storedSeasons = readStorageJson('pizarra-seasons-v4', isSeasonArray)
     const storedReviews = readStorageJson(
       'pizarra-reviews-v4',
@@ -413,7 +444,26 @@ export function useCoachWorkspace() {
         ...item,
         status: isTeamStatus(item.status) ? item.status : 'active',
       }))
+      if (!storedPlayers && !storedTeamPlayers) {
+        const legacyTeams = storedTeams as Array<Team & { players?: Player[] }>
+        const legacyPlayers = legacyTeams.flatMap((team) => team.players || [])
+        if (legacyPlayers.length > 0) {
+          players.value = Array.from(new Map(legacyPlayers.map((player) => [player.id, player])).values())
+          teamPlayers.value = legacyTeams.flatMap((team, teamIndex) =>
+            (team.players || []).map((player, playerIndex) => ({
+              id: `EJU${String(teamIndex * 1000 + playerIndex + 1).padStart(4, '0')}`,
+              teamId: team.id,
+              playerId: player.id,
+              status: 'active' as const,
+              joinedAt: '',
+              leftAt: null,
+            })),
+          )
+        }
+      }
     }
+    if (storedPlayers) players.value = storedPlayers
+    if (storedTeamPlayers) teamPlayers.value = storedTeamPlayers
     if (storedSeasons) {
       seasons.value = storedSeasons.map((item) => ({
         ...item,
@@ -541,6 +591,7 @@ export function useCoachWorkspace() {
         .map((season) => season.id),
     )
     teams.value = teams.value.filter((team) => team.id !== teamId)
+    teamPlayers.value = teamPlayers.value.filter((membership) => membership.teamId !== teamId)
     seasons.value = seasons.value.filter((season) => season.teamId !== teamId)
     reviews.value = reviews.value.filter(
       (review) => !removedSeasonIds.has(review.seasonId),
@@ -609,12 +660,14 @@ export function useCoachWorkspace() {
       'EQU',
       teams.value.map((item) => item.id),
     )
-    const players = teamDraft.value.players
+    const nextPlayerNumber = players.value.reduce((max, player) => Math.max(max, Number(player.id.slice(3)) || 0), 0)
+    const nextMembershipNumber = teamPlayers.value.reduce((max, membership) => Math.max(max, Number(membership.id.slice(3)) || 0), 0)
+    const draftedPlayers = teamDraft.value.players
       .split('\n')
       .map((name) => name.trim())
       .filter(Boolean)
       .map((name, index) => ({
-        id: `JUG${String(teams.value.flatMap((team) => team.players).length + index + 1).padStart(4, '0')}`,
+        id: `JUG${String(nextPlayerNumber + index + 1).padStart(4, '0')}`,
         name,
       }))
     teams.value.push({
@@ -623,8 +676,16 @@ export function useCoachWorkspace() {
       name: teamDraft.value.name.trim(),
       club: teamDraft.value.club.trim() || 'Sin club',
       status: 'active',
-      players,
     })
+    players.value.push(...draftedPlayers)
+    teamPlayers.value.push(...draftedPlayers.map((player, index) => ({
+      id: `EJU${String(nextMembershipNumber + index + 1).padStart(4, '0')}`,
+      teamId,
+      playerId: player.id,
+      status: 'active' as const,
+      joinedAt: new Date().toISOString().slice(0, 10),
+      leftAt: null,
+    })))
     activeTeamId.value = teamId
     seasonDraft.value = {
       name: '2026-27',
@@ -775,6 +836,10 @@ export function useCoachWorkspace() {
     loadingDatabase,
     lastSyncedAt,
     teams,
+    players,
+    teamPlayers,
+    activeTeamPlayers,
+    playerCountByTeam,
     activeTeams,
     archivedTeams,
     visibleTeams,
@@ -784,6 +849,7 @@ export function useCoachWorkspace() {
     activeTeam,
     activeSeason,
     frequency,
+    trainingDataStatus,
     activePlan,
     phases,
     currentWeekContext,

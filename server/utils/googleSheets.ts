@@ -7,8 +7,8 @@ import {
   phaseSessions,
   planPhases,
   plans,
-  resolvePlan,
   sessionBlocks,
+  sessionVariants,
   tests,
   type AgeCategory,
   type BlockExerciseRecord,
@@ -21,6 +21,7 @@ import {
   type PlanPhaseRecord,
   type PlanRecord,
   type SessionBlockRecord,
+  type SessionVariantRecord,
   type TestRecord,
   type TrainingCatalogTables,
   type TrainingDay,
@@ -43,12 +44,20 @@ export interface SheetPlayerInput {
   name: string
 }
 
+export interface SheetTeamPlayerInput {
+  id: string
+  teamId: string
+  playerId: string
+  status: 'active' | 'inactive'
+  joinedAt: string
+  leftAt: string | null
+}
+
 export interface SheetTeamInput {
   id: string
   coachId: string
   name: string
   club: string
-  players: SheetPlayerInput[]
   status: 'active' | 'archived'
 }
 
@@ -78,6 +87,8 @@ export interface SheetWeeklyReviewInput {
 export interface OperationalTablesPayload {
   coaches?: SheetCoachInput[]
   teams?: SheetTeamInput[]
+  players?: SheetPlayerInput[]
+  teamPlayers?: SheetTeamPlayerInput[]
   seasons?: SheetSeasonInput[]
   reviews?: SheetWeeklyReviewInput[]
   includeCatalog?: boolean
@@ -92,6 +103,8 @@ export interface SheetsDatabaseSnapshot {
   operational: {
     coaches: SheetCoachInput[]
     teams: SheetTeamInput[]
+    players: SheetPlayerInput[]
+    teamPlayers: SheetTeamPlayerInput[]
     seasons: SheetSeasonInput[]
     reviews: SheetWeeklyReviewInput[]
   }
@@ -139,19 +152,57 @@ export interface SyncSheetsResult {
 }
 
 const SHEET_TITLES = {
-  plans: 'plantillas_macrociclo',
-  planPhases: 'mesociclos',
-  phaseSessions: 'sesiones_planificadas',
-  sessionBlocks: 'bloques_sesion',
-  blockExercises: 'ejercicios_bloque',
-  exercises: 'ejercicios',
-  homeSessions: 'sesiones_transitorias',
-  tests: 'evaluaciones',
-  coaches: 'entrenadores',
-  teams: 'equipos',
-  seasons: 'macrociclos',
-  weeklyReviews: 'revisiones_microciclo',
+  plans: 'plans',
+  planPhases: 'plan_phases',
+  phaseSessions: 'phase_sessions',
+  sessionBlocks: 'session_blocks',
+  blockExercises: 'block_exercises',
+  sessionVariants: 'session_variants',
+  exercises: 'exercises',
+  homeSessions: 'home_sessions',
+  tests: 'tests',
+  coaches: 'coaches',
+  teams: 'teams',
+  players: 'players',
+  teamPlayers: 'team_players',
+  seasons: 'seasons',
+  weeklyReviews: 'weekly_reviews',
 } as const
+
+type SheetKey = keyof typeof SHEET_TITLES
+
+const LEGACY_SHEET_TITLES: Record<SheetKey, readonly string[]> = {
+  plans: ['plantillas_macrociclo'],
+  planPhases: ['mesociclos'],
+  phaseSessions: ['sesiones_planificadas'],
+  sessionBlocks: ['bloques_sesion'],
+  blockExercises: ['ejercicios_bloque'],
+  sessionVariants: ['variantes_sesion'],
+  exercises: ['ejercicios'],
+  homeSessions: ['sesiones_transitorias'],
+  tests: ['evaluaciones'],
+  coaches: ['entrenadores'],
+  teams: ['equipos'],
+  players: ['jugadores'],
+  teamPlayers: ['equipo_jugadores'],
+  seasons: ['macrociclos'],
+  weeklyReviews: ['revisiones_microciclo'],
+}
+
+function findExistingSheetTitle(
+  key: SheetKey,
+  existingTitles: ReadonlySet<string>,
+): string | undefined {
+  return [SHEET_TITLES[key], ...LEGACY_SHEET_TITLES[key]].find((title) =>
+    existingTitles.has(title),
+  )
+}
+
+function getSheetKeyForTitle(title: string): SheetKey | undefined {
+  return (Object.keys(SHEET_TITLES) as SheetKey[]).find(
+    (key) => SHEET_TITLES[key] === title,
+  )
+}
 
 const defaultCoaches: SheetCoachInput[] = [
   {
@@ -173,13 +224,17 @@ const defaultTeams: SheetTeamInput[] = [
     name: 'Mike Jordan Team',
     club: 'Club Baloncesto Norte',
     status: 'active',
-    players: [
-      { id: 'JUG0001', name: 'Álex Martín' },
-      { id: 'JUG0002', name: 'Bruno López' },
-      { id: 'JUG0003', name: 'Dani Ruiz' },
-    ],
   },
 ]
+const defaultPlayers: SheetPlayerInput[] = [
+  { id: 'JUG0001', name: 'Álex Martín' },
+  { id: 'JUG0002', name: 'Bruno López' },
+  { id: 'JUG0003', name: 'Dani Ruiz' },
+]
+const defaultTeamPlayers: SheetTeamPlayerInput[] = defaultPlayers.map((player, index) => ({
+  id: `EJU${String(index + 1).padStart(4, '0')}`,
+  teamId: 'EQU0001', playerId: player.id, status: 'active', joinedAt: '2026-10-12', leftAt: null,
+}))
 
 const defaultSeasons: SheetSeasonInput[] = [
   {
@@ -264,6 +319,10 @@ export function buildTrainingSheetTables(
     operational?.coaches !== undefined ? operational.coaches : defaultCoaches
   const activeTeams =
     operational?.teams !== undefined ? operational.teams : defaultTeams
+  const activePlayers =
+    operational?.players !== undefined ? operational.players : defaultPlayers
+  const activeTeamPlayers =
+    operational?.teamPlayers !== undefined ? operational.teamPlayers : defaultTeamPlayers
   const activeSeasons =
     operational?.seasons !== undefined ? operational.seasons : defaultSeasons
   const activeReviews =
@@ -345,6 +404,30 @@ export function buildTrainingSheetTables(
       rgbColor: { red: 0.96, green: 0.62, blue: 0.04 },
     },
     {
+      title: SHEET_TITLES.sessionVariants,
+      headers: [
+        'id',
+        'phase_session_id',
+        'variant_code',
+        'name',
+        'focus',
+        'week_start',
+        'week_end',
+        'week_parity',
+      ],
+      rows: sessionVariants.map((item) => [
+        item.id,
+        item.phaseSessionId,
+        item.variantCode,
+        item.name,
+        item.focus,
+        item.weekStart,
+        item.weekEnd,
+        item.weekParity,
+      ]),
+      rgbColor: { red: 0.17, green: 0.55, blue: 0.68 },
+    },
+    {
       title: SHEET_TITLES.sessionBlocks,
       headers: ['id', 'session_id', 'block_order', 'name', 'minutes', 'format'],
       rows: sessionBlocks.map((item) => [
@@ -367,6 +450,7 @@ export function buildTrainingSheetTables(
         'station_label',
         'dose_formacion',
         'dose_liga',
+        'variant_id',
       ],
       rows: blockExercises.map((item) => [
         item.id,
@@ -376,6 +460,7 @@ export function buildTrainingSheetTables(
         item.stationLabel,
         item.doseFormacion,
         item.doseLiga,
+        item.variantId || '',
       ]),
       rgbColor: { red: 0.94, green: 0.27, blue: 0.27 },
     },
@@ -469,8 +554,6 @@ export function buildTrainingSheetTables(
         'name',
         'club',
         'status',
-        'players_count',
-        'players',
       ],
       rows: activeTeams.map((team) => [
         team.id,
@@ -478,10 +561,23 @@ export function buildTrainingSheetTables(
         team.name,
         team.club,
         team.status === 'archived' ? 'archived' : 'active',
-        team.players.length,
-        team.players.map((p) => `${p.id}: ${p.name}`).join(' | '),
       ]),
       rgbColor: { red: 0.13, green: 0.53, blue: 0.38 },
+    },
+    {
+      title: SHEET_TITLES.players,
+      headers: ['id', 'name'],
+      rows: activePlayers.map((player) => [player.id, player.name]),
+      rgbColor: { red: 0.72, green: 0.35, blue: 0.18 },
+    },
+    {
+      title: SHEET_TITLES.teamPlayers,
+      headers: ['id', 'team_id', 'player_id', 'status', 'joined_at', 'left_at'],
+      rows: activeTeamPlayers.map((membership) => [
+        membership.id, membership.teamId, membership.playerId, membership.status,
+        membership.joinedAt, membership.leftAt || '',
+      ]),
+      rgbColor: { red: 0.72, green: 0.35, blue: 0.18 },
     },
     {
       title: SHEET_TITLES.seasons,
@@ -505,9 +601,7 @@ export function buildTrainingSheetTables(
           3,
           Math.max(1, season.trainingDays.length || 1),
         ) as Frequency
-        const planId =
-          season.planId ||
-          resolvePlan(season.ageCategory).id
+        const planId = season.planId
         return [
           season.id,
           season.teamId,
@@ -544,6 +638,8 @@ export function buildTrainingSheetTables(
 const OPERATIONAL_TABLE_TITLES = new Set([
   SHEET_TITLES.coaches,
   SHEET_TITLES.teams,
+  SHEET_TITLES.players,
+  SHEET_TITLES.teamPlayers,
   SHEET_TITLES.seasons,
   SHEET_TITLES.weeklyReviews,
 ])
@@ -574,6 +670,8 @@ export function getFallbackDatabaseSnapshot(
     operational: {
       coaches: defaultCoaches,
       teams: defaultTeams,
+      players: defaultPlayers,
+      teamPlayers: defaultTeamPlayers,
       seasons: defaultSeasons,
       reviews: defaultReviews,
     },
@@ -694,18 +792,36 @@ export async function readDatabaseFromGoogleSheets(
   }
 
   const token = await getGoogleAccessToken(credentials)
-  const tabOrder = Object.values(SHEET_TITLES)
-
-  const params = new URLSearchParams()
-  for (const tab of tabOrder) {
-    params.append('ranges', `${tab}!A2:Z500`)
+  const baseUrl = `https://sheets.googleapis.com/v4/spreadsheets/${credentials.spreadsheetId}`
+  const authHeaders = { Authorization: `Bearer ${token}` }
+  const metadataRes = await fetch(baseUrl, { headers: authHeaders })
+  const metadata = (await metadataRes.json()) as SpreadsheetMetadata
+  if (!metadataRes.ok) {
+    throw new Error(
+      metadata.error?.message ||
+        `Unable to read spreadsheet (${metadataRes.status}).`,
+    )
   }
 
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${credentials.spreadsheetId}/values:batchGet?${params.toString()}`
+  const existingTitles = new Set(
+    (metadata.sheets || [])
+      .map((sheet) => sheet.properties?.title)
+      .filter((title): title is string => Boolean(title)),
+  )
+  const sheetKeys = Object.keys(SHEET_TITLES) as SheetKey[]
+  const rangesToRead = sheetKeys.flatMap((key) => {
+    const title = findExistingSheetTitle(key, existingTitles)
+    return title ? [{ key, title }] : []
+  })
+
+  const params = new URLSearchParams()
+  for (const range of rangesToRead) {
+    params.append('ranges', `${range.title}!A2:Z500`)
+  }
+
+  const url = `${baseUrl}/values:batchGet?${params.toString()}`
   const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: authHeaders,
   })
 
   const data = (await res.json()) as BatchGetResponse
@@ -718,12 +834,12 @@ export async function readDatabaseFromGoogleSheets(
 
   const rowsByTab = new Map<string, string[][]>()
   const ranges = data.valueRanges || []
-  tabOrder.forEach((tab, idx) => {
+  rangesToRead.forEach((range, idx) => {
     const rawValues = ranges[idx]?.values || []
     const nonEmptyRows = rawValues.filter((row) =>
       row.some((cell) => typeof cell === 'string' && cell.trim().length > 0),
     )
-    rowsByTab.set(tab, nonEmptyRows)
+    rowsByTab.set(SHEET_TITLES[range.key], nonEmptyRows)
   })
 
   const planRows = rowsByTab.get(SHEET_TITLES.plans) || []
@@ -769,6 +885,20 @@ export async function readDatabaseFromGoogleSheets(
       }))
     : defaultTrainingCatalog.phaseSessions
 
+  const variantRows = rowsByTab.get(SHEET_TITLES.sessionVariants) || []
+  const parsedVariants: SessionVariantRecord[] = variantRows.length
+    ? variantRows.map((row) => ({
+        id: cellString(row, 0),
+        phaseSessionId: cellString(row, 1),
+        variantCode: cellString(row, 2) === 'B' ? 'B' : 'A',
+        name: cellString(row, 3),
+        focus: cellString(row, 4),
+        weekStart: cellNumber(row, 5, 1),
+        weekEnd: cellNumber(row, 6, 45),
+        weekParity: cellNumber(row, 7, 0) === 1 ? 1 : 0,
+      }))
+    : defaultTrainingCatalog.sessionVariants
+
   const blockRows = rowsByTab.get(SHEET_TITLES.sessionBlocks) || []
   const parsedBlocks: SessionBlockRecord[] = blockRows.length
     ? blockRows.map((row) => ({
@@ -791,6 +921,7 @@ export async function readDatabaseFromGoogleSheets(
         stationLabel: cellString(row, 4),
         doseFormacion: cellString(row, 5),
         doseLiga: cellString(row, 6, cellString(row, 5)),
+        variantId: cellString(row, 7) || undefined,
       }))
     : defaultTrainingCatalog.blockExercises
 
@@ -853,16 +984,55 @@ export async function readDatabaseFromGoogleSheets(
     const hasStatusCol = col4 === 'active' || col4 === 'archived'
     const status: 'active' | 'archived' =
       col4 === 'archived' ? 'archived' : 'active'
-    const playersCell = hasStatusCol ? cellString(row, 6) : cellString(row, 5)
     return {
       id: cellString(row, 0),
       coachId: cellString(row, 1, 'ENT0001'),
       name: cellString(row, 2),
       club: cellString(row, 3),
       status,
-      players: parsePlayersCell(playersCell),
     }
   })
+
+  const playerRows = rowsByTab.get(SHEET_TITLES.players) || []
+  const parsedPlayers: SheetPlayerInput[] = playerRows.map((row) => ({
+    id: cellString(row, 0), name: cellString(row, 1),
+  })).filter((player) => player.id && player.name)
+  const membershipRows = rowsByTab.get(SHEET_TITLES.teamPlayers) || []
+  const parsedTeamPlayers: SheetTeamPlayerInput[] = membershipRows.map((row) => ({
+    id: cellString(row, 0), teamId: cellString(row, 1), playerId: cellString(row, 2),
+    status: cellString(row, 3) === 'inactive' ? 'inactive' : 'active',
+    joinedAt: cellString(row, 4), leftAt: cellString(row, 5) || null,
+  })).filter((membership) => membership.id && membership.teamId && membership.playerId)
+
+  // Legacy `equipos.players` data is read once and projected into the normalized
+  // tables when the new tabs have not yet been written to the spreadsheet.
+  const legacyPlayersByTeam = teamRows.map((row, index) => ({
+    teamId: parsedTeams[index]?.id || '',
+    players: parsePlayersCell(
+      cellString(row, 4) === 'active' || cellString(row, 4) === 'archived'
+        ? cellString(row, 6)
+        : cellString(row, 5),
+    ),
+  }))
+  const legacyPlayers = legacyPlayersByTeam.flatMap((item) => item.players)
+  // Mixed migrations are expected while Sheets is being upgraded. Merge both
+  // representations and let the normalized table win for duplicate IDs.
+  const uniquePlayers = Array.from(
+    new Map([...legacyPlayers, ...parsedPlayers].map((player) => [player.id, player])).values(),
+  )
+  const legacyTeamPlayers = legacyPlayersByTeam.flatMap((item, teamIndex) =>
+    item.players.map((player, playerIndex) => ({ id: `EJU${String(teamIndex * 1000 + playerIndex + 1).padStart(4, '0')}`, teamId: item.teamId, playerId: player.id, status: 'active' as const, joinedAt: '', leftAt: null })),
+  )
+  const validPlayerIds = new Set(uniquePlayers.map((player) => player.id))
+  const validTeamIds = new Set(parsedTeams.map((team) => team.id))
+  const migratedTeamPlayers = Array.from(
+    new Map(
+      [...legacyTeamPlayers, ...parsedTeamPlayers].map((membership) => [
+        `${membership.teamId}:${membership.playerId}`,
+        membership,
+      ]),
+    ).values(),
+  ).filter((membership) => validPlayerIds.has(membership.playerId) && validTeamIds.has(membership.teamId))
 
   const seasonRows = rowsByTab.get(SHEET_TITLES.seasons) || []
   const parsedSeasons: SheetSeasonInput[] = seasonRows.map((row) => {
@@ -870,12 +1040,7 @@ export async function readDatabaseFromGoogleSheets(
     return {
       id: cellString(row, 0),
       teamId: cellString(row, 1),
-      planId:
-        cellString(row, 2) ||
-        resolvePlan(ageCategory, {
-          ...defaultTrainingCatalog,
-          plans: parsedPlans,
-        }).id,
+      planId: cellString(row, 2),
       name: cellString(row, 3),
       category: cellString(row, 4),
       ageCategory,
@@ -906,6 +1071,7 @@ export async function readDatabaseFromGoogleSheets(
       plans: parsedPlans,
       planPhases: parsedPhases,
       phaseSessions: parsedSessions,
+      sessionVariants: parsedVariants,
       sessionBlocks: parsedBlocks,
       blockExercises: parsedBlockExercises,
       exercises: parsedExercises,
@@ -915,6 +1081,8 @@ export async function readDatabaseFromGoogleSheets(
     operational: {
       coaches: parsedCoaches,
       teams: parsedTeams,
+      players: uniquePlayers,
+      teamPlayers: migratedTeamPlayers,
       seasons: parsedSeasons,
       reviews: parsedReviews,
     },
@@ -954,6 +1122,8 @@ export async function syncTrainingTablesToGoogleSheets(
     !(
       operational?.coaches ||
       operational?.teams ||
+      operational?.players ||
+      operational?.teamPlayers ||
       operational?.seasons ||
       operational?.reviews
     )
@@ -964,6 +1134,39 @@ export async function syncTrainingTablesToGoogleSheets(
     const id = sheet.properties?.sheetId
     if (title && typeof id === 'number') {
       existingByTitle.set(title, id)
+    }
+  }
+
+  const renameRequests: Array<Record<string, unknown>> = []
+  for (const table of allTables) {
+    if (existingByTitle.has(table.title)) continue
+    const tableKey = getSheetKeyForTitle(table.title)
+    if (!tableKey) continue
+    const legacyTitle = findExistingSheetTitle(tableKey, new Set(existingByTitle.keys()))
+    const legacySheetId = legacyTitle ? existingByTitle.get(legacyTitle) : undefined
+    if (legacyTitle && typeof legacySheetId === 'number') {
+      renameRequests.push({
+        updateSheetProperties: {
+          properties: { sheetId: legacySheetId, title: table.title },
+          fields: 'title',
+        },
+      })
+      existingByTitle.delete(legacyTitle)
+      existingByTitle.set(table.title, legacySheetId)
+    }
+  }
+
+  if (renameRequests.length > 0) {
+    const renameRes = await fetch(`${baseUrl}:batchUpdate`, {
+      method: 'POST',
+      headers: authHeaders,
+      body: JSON.stringify({ requests: renameRequests }),
+    })
+    if (!renameRes.ok) {
+      const errBody = (await renameRes.json()) as SpreadsheetMetadata
+      throw new Error(
+        errBody.error?.message || 'Failed to rename legacy sheets.',
+      )
     }
   }
 
