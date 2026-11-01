@@ -654,7 +654,26 @@ function normalizeMacrocycleId(value: string): string {
 }
 
 function normalizeMesocycleId(value: string): string {
-  return value.replace(/^FAS(?=\d{4}$)/, 'MES')
+  const normalized = value.replace(/^FAS(?=\d{4}$)/, 'MES')
+  const legacyMatch = normalized.match(/^MES01(\d{2})$/)
+  const legacyNumber = legacyMatch ? Number(legacyMatch[1]) : 0
+
+  // The live catalog uses MES0001..MES0007. Keep the former MES0101..MES0107
+  // range readable only as a compatibility fallback while the sheet is migrated.
+  return legacyNumber >= 1 && legacyNumber <= 7
+    ? `MES00${legacyMatch?.[1]}`
+    : normalized
+}
+
+function normalizeTrainingBlockId(value: string): string {
+  const legacyMatch = value.match(/^BLK01(\d{2})$/)
+  const legacyNumber = legacyMatch ? Number(legacyMatch[1]) : 0
+
+  // The live catalog uses BLK0001..BLK0063. Do not synthesize missing blocks;
+  // this only normalizes an old persisted key when its row is actually read.
+  return legacyNumber >= 1 && legacyNumber <= 63
+    ? `BLK00${legacyMatch?.[1]}`
+    : value
 }
 
 function normalizeMicrocycleId(value: string): string {
@@ -862,32 +881,14 @@ export async function readDatabaseFromGoogleSheets(
     ? variantRows.map((row) => {
         const mesocycleSessionId = cellString(row, 1)
         const variantCode = cellString(row, 2) === 'B' ? 'B' : 'A'
-        const session = parsedMesocycleSessions.find(
-          (item) => item.id === mesocycleSessionId,
-        )
-        const phase = session
-          ? parsedMesocycles.find((item) => item.id === session.mesocycleId)
-          : undefined
-        const firstBlockEnd = phase
-          ? phase.weekStart + Math.ceil(phase.weeksCount / 2) - 1
-          : 1
-        const legacyParityColumn = cellString(row, 7) !== ''
         return {
           id: cellString(row, 0),
           mesocycleSessionId,
           variantCode,
           name: cellString(row, 3),
           focus: cellString(row, 4),
-          weekStart: legacyParityColumn
-            ? variantCode === 'A'
-              ? phase?.weekStart || 1
-              : firstBlockEnd + 1
-            : cellNumber(row, 5, 1),
-          weekEnd: legacyParityColumn
-            ? variantCode === 'A'
-              ? firstBlockEnd
-              : phase?.weekEnd || 45
-            : cellNumber(row, 6, 45),
+          weekStart: cellNumber(row, 5, 1),
+          weekEnd: cellNumber(row, 6, 45),
         }
       })
     : []
@@ -909,7 +910,7 @@ export async function readDatabaseFromGoogleSheets(
   const trainingBlockRows = rowsByTab.get(SHEET_TITLES.trainingBlocks) || []
   const parsedTrainingBlocks: TrainingBlockRecord[] = trainingBlockRows.length
     ? trainingBlockRows.map((row) => ({
-        id: cellString(row, 0),
+        id: normalizeTrainingBlockId(cellString(row, 0)),
         sessionId: cellString(row, 1),
         blockOrder: cellNumber(row, 2, 1),
         name: cellString(row, 3),
@@ -922,7 +923,7 @@ export async function readDatabaseFromGoogleSheets(
   const parsedSheetBlockExercises: BlockExerciseRecord[] = blockExerciseRows.length
     ? blockExerciseRows.map((row) => ({
         id: cellString(row, 0),
-        blockId: cellString(row, 1),
+        blockId: normalizeTrainingBlockId(cellString(row, 1)),
         exerciseId: cellString(row, 2),
         itemOrder: cellNumber(row, 3, 1),
         stationLabel: cellString(row, 4),

@@ -1753,7 +1753,7 @@ const variantBlockExercises: BlockExerciseRecord[] = baseBlockExercisesWithVaria
     if (!variant) return []
     return [{
       ...item,
-      id: `BEX${String(1001 + index).padStart(4, '0')}`,
+      id: `BEX${String(baseBlockExercisesWithVariant.length + index + 1).padStart(4, '0')}`,
       exerciseId: variantExerciseMap[item.exerciseId] ?? item.exerciseId,
       variantId: variant.id,
     }]
