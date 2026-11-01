@@ -55,7 +55,6 @@ const {
   teamDraft,
   seasonDraft,
   session,
-  genericExerciseImage,
   loadingSession,
   error,
   signIn,
@@ -921,19 +920,10 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
               :key="item.id"
               class="exercise-card"
             >
-              <a
-                class="exercise-image"
-                :href="genericExerciseImage"
-                target="_blank"
-                rel="noopener"
-                :aria-label="`Ver imagen grande de ${item.exercise.name}`"
-              >
-                <img
-                  :src="genericExerciseImage"
-                  alt="Ilustración genérica de ejercicio"
-                />
-                <span>{{ item.exercise.id }}</span>
-              </a>
+              <ExerciseImages
+                :exercise-id="item.exercise.id"
+                :exercise-name="item.exercise.name"
+              />
               <div class="exercise-content">
                 <div class="exercise-meta-top">
                   <span>
@@ -1911,35 +1901,11 @@ legend {
 }
 .exercise-card {
   display: grid;
-  grid-template-columns: 136px 1fr;
+  grid-template-columns: minmax(220px, 38%) 1fr;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 11px;
   background: #fffefa;
-}
-.exercise-image {
-  position: relative;
-  display: block;
-  min-height: 100%;
-  background: var(--soft);
-}
-.exercise-image img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  min-height: 136px;
-  object-fit: cover;
-}
-.exercise-image span {
-  position: absolute;
-  right: 7px;
-  bottom: 7px;
-  border-radius: 4px;
-  padding: 3px 6px;
-  color: #fff;
-  background: rgba(30, 56, 43, 0.86);
-  font-size: 10px;
-  font-weight: 750;
 }
 .exercise-content {
   padding: 14px 18px;
@@ -2062,9 +2028,6 @@ legend {
   }
   .exercise-card {
     grid-template-columns: 1fr;
-  }
-  .exercise-image img {
-    max-height: 140px;
   }
   .review-buttons {
     justify-items: start;
