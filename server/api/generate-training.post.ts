@@ -1,5 +1,4 @@
 import {
-  defaultTrainingCatalog,
   getTrainingDataStatus,
   getHydratedSession,
   TrainingDataUnavailableError,
@@ -15,6 +14,8 @@ interface GenerateTrainingBody {
   day?: TrainingDay
   frequency?: Frequency
   weekNumber?: number
+  macrocycleId?: string
+  mesocycleId?: string
   ageCategory?: AgeCategory
   competitiveLevel?: CompetitiveLevel
 }
@@ -26,18 +27,30 @@ export default defineEventHandler(async (event) => {
     const clientEmail = config.googleServiceAccountEmail
     const privateKey = config.googlePrivateKey
 
-    let catalog: TrainingCatalogTables = defaultTrainingCatalog
-    if (spreadsheetId && clientEmail && privateKey) {
-      try {
-        const db = await readDatabaseFromGoogleSheets({
-          spreadsheetId,
-          clientEmail,
-          privateKey,
-        })
-        catalog = db.catalog
-      } catch {
-        catalog = defaultTrainingCatalog
-      }
+    if (!spreadsheetId || !clientEmail || !privateKey) {
+      throw createError({
+        statusCode: 503,
+        statusMessage:
+          'Google Sheets no está configurado. No se puede generar una sesión sin datos de planificación.',
+      })
+    }
+    let catalog: TrainingCatalogTables
+    try {
+      const db = await readDatabaseFromGoogleSheets({
+        spreadsheetId,
+        clientEmail,
+        privateKey,
+      })
+      catalog = db.catalog
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'No se pudieron leer los datos de Google Sheets.'
+      throw createError({
+        statusCode: 503,
+        statusMessage: `No se puede generar una sesión: ${message}`,
+      })
     }
 
     const body = await readBody<GenerateTrainingBody>(event)
@@ -53,6 +66,8 @@ export default defineEventHandler(async (event) => {
       typeof body.weekNumber === 'number' && Number.isFinite(body.weekNumber)
         ? body.weekNumber
         : 1
+    const macrocycleId = typeof body.macrocycleId === 'string' ? body.macrocycleId : undefined
+    const mesocycleId = typeof body.mesocycleId === 'string' ? body.mesocycleId : undefined
     const ageCategory: AgeCategory =
       body.ageCategory === 'alevin' ||
       body.ageCategory === 'infantil' ||
@@ -68,6 +83,8 @@ export default defineEventHandler(async (event) => {
     const trainingDataStatus = getTrainingDataStatus(
       {
         ageCategory,
+        macrocycleId,
+        mesocycleId,
         weekNumber,
         day,
       },
@@ -85,6 +102,8 @@ export default defineEventHandler(async (event) => {
     const hydrated = getHydratedSession(
       {
         ageCategory,
+        macrocycleId,
+        mesocycleId,
         competitiveLevel,
         frequency,
         weekNumber,
@@ -111,7 +130,7 @@ export default defineEventHandler(async (event) => {
       objective: hydrated.session.name,
       duration: hydrated.session.totalMinutes,
       rationale: `${hydrated.phase.name} (Semana ${hydrated.weekNumber} · Carga ${hydrated.loadIndex}/10): ${hydrated.phase.objective}`,
-      sessionBlocks: hydrated.blocks,
+      trainingBlocks: hydrated.blocks,
     }
   } catch (error) {
     if (error instanceof TrainingDataUnavailableError) {

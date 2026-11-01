@@ -1,13 +1,12 @@
 import { createSign } from 'node:crypto'
 import {
   blockExercises,
-  defaultTrainingCatalog,
   exercises,
   homeSessions,
-  phaseSessions,
-  planPhases,
-  plans,
-  sessionBlocks,
+  mesocycleSessions,
+  mesocycles,
+  macrocycles,
+  trainingBlocks,
   sessionVariants,
   tests,
   type AgeCategory,
@@ -16,11 +15,12 @@ import {
   type ExerciseRecord,
   type Frequency,
   type HomeSessionRecord,
-  type PhaseSessionRecord,
+  type MicrocycleRecord,
+  type MesocycleSessionRecord,
   type PhaseType,
-  type PlanPhaseRecord,
-  type PlanRecord,
-  type SessionBlockRecord,
+  type MesocycleRecord,
+  type MacrocycleRecord,
+  type TrainingBlockRecord,
   type SessionVariantRecord,
   type TestRecord,
   type TrainingCatalogTables,
@@ -64,7 +64,7 @@ export interface SheetTeamInput {
 export interface SheetSeasonInput {
   id: string
   teamId: string
-  planId?: string
+  macrocycleId?: string
   name: string
   category: string
   ageCategory: AgeCategory
@@ -84,6 +84,8 @@ export interface SheetWeeklyReviewInput {
   createdAt: string
 }
 
+export type SheetMicrocycleInput = MicrocycleRecord
+
 export interface OperationalTablesPayload {
   coaches?: SheetCoachInput[]
   teams?: SheetTeamInput[]
@@ -91,11 +93,12 @@ export interface OperationalTablesPayload {
   teamPlayers?: SheetTeamPlayerInput[]
   seasons?: SheetSeasonInput[]
   reviews?: SheetWeeklyReviewInput[]
+  microcycles?: SheetMicrocycleInput[]
   includeCatalog?: boolean
 }
 
 export interface SheetsDatabaseSnapshot {
-  source: 'google-sheets' | 'local-fallback'
+  source: 'google-sheets'
   fetchedAt: string
   spreadsheetId: string
   spreadsheetUrl: string
@@ -107,6 +110,7 @@ export interface SheetsDatabaseSnapshot {
     teamPlayers: SheetTeamPlayerInput[]
     seasons: SheetSeasonInput[]
     reviews: SheetWeeklyReviewInput[]
+    microcycles: SheetMicrocycleInput[]
   }
 }
 
@@ -152,10 +156,10 @@ export interface SyncSheetsResult {
 }
 
 const SHEET_TITLES = {
-  plans: 'plans',
-  planPhases: 'plan_phases',
-  phaseSessions: 'phase_sessions',
-  sessionBlocks: 'session_blocks',
+  macrocycles: 'macrocycles',
+  mesocycles: 'mesocycles',
+  mesocycleSessions: 'mesocycle_sessions',
+  trainingBlocks: 'training_blocks',
   blockExercises: 'block_exercises',
   sessionVariants: 'session_variants',
   exercises: 'exercises',
@@ -167,15 +171,16 @@ const SHEET_TITLES = {
   teamPlayers: 'team_players',
   seasons: 'seasons',
   weeklyReviews: 'weekly_reviews',
+  microcycles: 'microcycles',
 } as const
 
 type SheetKey = keyof typeof SHEET_TITLES
 
 const LEGACY_SHEET_TITLES: Record<SheetKey, readonly string[]> = {
-  plans: ['plantillas_macrociclo'],
-  planPhases: ['mesociclos'],
-  phaseSessions: ['sesiones_planificadas'],
-  sessionBlocks: ['bloques_sesion'],
+  macrocycles: ['plans', 'plantillas_macrociclo'],
+  mesocycles: ['plan_phases', 'mesociclos'],
+  mesocycleSessions: ['phase_sessions', 'sesiones_planificadas'],
+  trainingBlocks: ['session_blocks', 'bloques_sesion'],
   blockExercises: ['ejercicios_bloque'],
   sessionVariants: ['variantes_sesion'],
   exercises: ['ejercicios'],
@@ -187,6 +192,7 @@ const LEGACY_SHEET_TITLES: Record<SheetKey, readonly string[]> = {
   teamPlayers: ['equipo_jugadores'],
   seasons: ['macrociclos'],
   weeklyReviews: ['revisiones_microciclo'],
+  microcycles: ['microciclos'],
 }
 
 function findExistingSheetTitle(
@@ -203,65 +209,6 @@ function getSheetKeyForTitle(title: string): SheetKey | undefined {
     (key) => SHEET_TITLES[key] === title,
   )
 }
-
-const defaultCoaches: SheetCoachInput[] = [
-  {
-    id: 'ENT0001',
-    name: 'Nicolás',
-    role: 'admin',
-  },
-  {
-    id: 'ENT0002',
-    name: 'Entrenador Invitado',
-    role: 'coach',
-  },
-]
-
-const defaultTeams: SheetTeamInput[] = [
-  {
-    id: 'EQU0001',
-    coachId: 'ENT0001',
-    name: 'Mike Jordan Team',
-    club: 'Club Baloncesto Norte',
-    status: 'active',
-  },
-]
-const defaultPlayers: SheetPlayerInput[] = [
-  { id: 'JUG0001', name: 'Álex Martín' },
-  { id: 'JUG0002', name: 'Bruno López' },
-  { id: 'JUG0003', name: 'Dani Ruiz' },
-]
-const defaultTeamPlayers: SheetTeamPlayerInput[] = defaultPlayers.map((player, index) => ({
-  id: `EJU${String(index + 1).padStart(4, '0')}`,
-  teamId: 'EQU0001', playerId: player.id, status: 'active', joinedAt: '2026-10-12', leftAt: null,
-}))
-
-const defaultSeasons: SheetSeasonInput[] = [
-  {
-    id: 'TEM0001',
-    teamId: 'EQU0001',
-    planId: 'PLN0003',
-    name: '2026-27',
-    category: 'Cadete (U16) · Equipo Liga',
-    ageCategory: 'cadete',
-    competitiveLevel: 'liga',
-    startsAt: '2026-10-12',
-    endsAt: '2027-05-30',
-    trainingDays: ['Lunes', 'Miércoles', 'Viernes'],
-    context: 'Plan anual periodizado por fases según metodología MBSC.',
-    status: 'active',
-  },
-]
-
-const defaultReviews: SheetWeeklyReviewInput[] = [
-  {
-    id: 'OBS0001',
-    seasonId: 'TEM0001',
-    weekStart: '2026-10-12',
-    text: 'Semana 1: Evaluación inicial de patrones básicos y batería de tests CMJ/Sprint.',
-    createdAt: '2026-10-12T18:00:00.000Z',
-  },
-]
 
 function normalizePrivateKey(rawKey: string): string {
   return rawKey.replace(/\\n/g, '\n').trim()
@@ -316,28 +263,30 @@ export function buildTrainingSheetTables(
   operational?: OperationalTablesPayload,
 ): SheetTableDefinition[] {
   const activeCoaches =
-    operational?.coaches !== undefined ? operational.coaches : defaultCoaches
+    operational?.coaches !== undefined ? operational.coaches : []
   const activeTeams =
-    operational?.teams !== undefined ? operational.teams : defaultTeams
+    operational?.teams !== undefined ? operational.teams : []
   const activePlayers =
-    operational?.players !== undefined ? operational.players : defaultPlayers
+    operational?.players !== undefined ? operational.players : []
   const activeTeamPlayers =
-    operational?.teamPlayers !== undefined ? operational.teamPlayers : defaultTeamPlayers
+    operational?.teamPlayers !== undefined ? operational.teamPlayers : []
   const activeSeasons =
-    operational?.seasons !== undefined ? operational.seasons : defaultSeasons
+    operational?.seasons !== undefined ? operational.seasons : []
   const activeReviews =
-    operational?.reviews !== undefined ? operational.reviews : defaultReviews
+    operational?.reviews !== undefined ? operational.reviews : []
+  const activeMicrocycles =
+    operational?.microcycles !== undefined ? operational.microcycles : []
 
   return [
     {
-      title: SHEET_TITLES.plans,
+      title: SHEET_TITLES.macrocycles,
       headers: [
         'id',
         'name',
         'age_category',
         'total_weeks',
       ],
-      rows: plans.map((item) => [
+      rows: macrocycles.map((item) => [
         item.id,
         item.name,
         item.ageCategory,
@@ -346,10 +295,10 @@ export function buildTrainingSheetTables(
       rgbColor: { red: 0.23, green: 0.51, blue: 0.96 },
     },
     {
-      title: SHEET_TITLES.planPhases,
+      title: SHEET_TITLES.mesocycles,
       headers: [
         'id',
-        'plan_id',
+        'macrocycle_id',
         'phase_order',
         'type',
         'name',
@@ -363,9 +312,9 @@ export function buildTrainingSheetTables(
         'weekly_progression_note',
         'weekly_loads',
       ],
-      rows: planPhases.map((item) => [
+      rows: mesocycles.map((item) => [
         item.id,
-        item.planId,
+        item.macrocycleId,
         item.phaseOrder,
         item.type,
         item.name,
@@ -382,19 +331,19 @@ export function buildTrainingSheetTables(
       rgbColor: { red: 0.06, green: 0.73, blue: 0.51 },
     },
     {
-      title: SHEET_TITLES.phaseSessions,
+      title: SHEET_TITLES.mesocycleSessions,
       headers: [
         'id',
-        'phase_id',
+        'mesocycle_id',
         'day',
         'order',
         'name',
         'focus',
         'total_minutes',
       ],
-      rows: phaseSessions.map((item) => [
+      rows: mesocycleSessions.map((item) => [
         item.id,
-        item.phaseId,
+        item.mesocycleId,
         item.day,
         item.order,
         item.name,
@@ -407,30 +356,28 @@ export function buildTrainingSheetTables(
       title: SHEET_TITLES.sessionVariants,
       headers: [
         'id',
-        'phase_session_id',
+        'mesocycle_session_id',
         'variant_code',
         'name',
         'focus',
         'week_start',
         'week_end',
-        'week_parity',
       ],
       rows: sessionVariants.map((item) => [
         item.id,
-        item.phaseSessionId,
+        item.mesocycleSessionId,
         item.variantCode,
         item.name,
         item.focus,
         item.weekStart,
         item.weekEnd,
-        item.weekParity,
       ]),
       rgbColor: { red: 0.17, green: 0.55, blue: 0.68 },
     },
     {
-      title: SHEET_TITLES.sessionBlocks,
-      headers: ['id', 'session_id', 'block_order', 'name', 'minutes', 'format'],
-      rows: sessionBlocks.map((item) => [
+      title: SHEET_TITLES.trainingBlocks,
+      headers: ['id', 'mesocycle_session_id', 'block_order', 'name', 'minutes', 'format'],
+      rows: trainingBlocks.map((item) => [
         item.id,
         item.sessionId,
         item.blockOrder,
@@ -498,7 +445,7 @@ export function buildTrainingSheetTables(
       title: SHEET_TITLES.homeSessions,
       headers: [
         'id',
-        'plan_id',
+        'macrocycle_id',
         'code',
         'name',
         'minutes',
@@ -509,7 +456,7 @@ export function buildTrainingSheetTables(
       ],
       rows: homeSessions.map((item) => [
         item.id,
-        item.planId,
+        item.macrocycleId,
         item.code,
         item.name,
         item.minutes,
@@ -524,7 +471,7 @@ export function buildTrainingSheetTables(
       title: SHEET_TITLES.tests,
       headers: [
         'id',
-        'plan_id',
+        'macrocycle_id',
         'test_order',
         'name',
         'protocol',
@@ -532,7 +479,7 @@ export function buildTrainingSheetTables(
       ],
       rows: tests.map((item) => [
         item.id,
-        item.planId,
+        item.macrocycleId,
         item.testOrder,
         item.name,
         item.protocol,
@@ -584,7 +531,7 @@ export function buildTrainingSheetTables(
       headers: [
         'id',
         'team_id',
-        'plan_id',
+        'macrocycle_id',
         'name',
         'category',
         'age_category',
@@ -601,11 +548,11 @@ export function buildTrainingSheetTables(
           3,
           Math.max(1, season.trainingDays.length || 1),
         ) as Frequency
-        const planId = season.planId
+        const macrocycleId = season.macrocycleId
         return [
           season.id,
           season.teamId,
-          planId,
+          macrocycleId,
           season.name,
           season.category,
           season.ageCategory,
@@ -632,6 +579,34 @@ export function buildTrainingSheetTables(
       ]),
       rgbColor: { red: 0.78, green: 0.45, blue: 0.18 },
     },
+    {
+      title: SHEET_TITLES.microcycles,
+      headers: [
+        'id',
+        'season_id',
+        'macrocycle_id',
+        'mesocycle_id',
+        'week_number',
+        'week_start',
+        'week_end',
+        'objective',
+        'load_index',
+        'status',
+      ],
+      rows: activeMicrocycles.map((item) => [
+        item.id,
+        item.seasonId,
+        item.macrocycleId,
+        item.mesocycleId,
+        item.weekNumber,
+        item.weekStart,
+        item.weekEnd,
+        item.objective,
+        item.loadIndex,
+        item.status,
+      ]),
+      rgbColor: { red: 0.18, green: 0.56, blue: 0.42 },
+    },
   ]
 }
 
@@ -642,6 +617,7 @@ const OPERATIONAL_TABLE_TITLES = new Set([
   SHEET_TITLES.teamPlayers,
   SHEET_TITLES.seasons,
   SHEET_TITLES.weeklyReviews,
+  SHEET_TITLES.microcycles,
 ])
 
 interface CachedDatabaseEntry {
@@ -654,28 +630,6 @@ const CACHE_TTL_MS = 15_000
 
 export function invalidateSheetsDatabaseCache(): void {
   cachedDatabase = null
-}
-
-export function getFallbackDatabaseSnapshot(
-  spreadsheetId = '',
-): SheetsDatabaseSnapshot {
-  return {
-    source: 'local-fallback',
-    fetchedAt: new Date().toISOString(),
-    spreadsheetId,
-    spreadsheetUrl: spreadsheetId
-      ? `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`
-      : '',
-    catalog: defaultTrainingCatalog,
-    operational: {
-      coaches: defaultCoaches,
-      teams: defaultTeams,
-      players: defaultPlayers,
-      teamPlayers: defaultTeamPlayers,
-      seasons: defaultSeasons,
-      reviews: defaultReviews,
-    },
-  }
 }
 
 interface BatchGetValueRange {
@@ -693,6 +647,19 @@ interface BatchGetResponse {
 function cellString(row: string[], index: number, fallback = ''): string {
   const val = row[index]
   return typeof val === 'string' ? val.trim() : fallback
+}
+
+function normalizeMacrocycleId(value: string): string {
+  return value.replace(/^PLN(?=\d{4}$)/, 'MAC')
+}
+
+function normalizeMesocycleId(value: string): string {
+  return value.replace(/^FAS(?=\d{4}$)/, 'MES')
+}
+
+function normalizeMicrocycleId(value: string): string {
+  const legacyMatch = value.match(/^MIC(\d{4})$/)
+  return legacyMatch ? `MIC${legacyMatch[1].padStart(6, '0')}` : value
 }
 
 function cellNumber(row: string[], index: number, fallback = 0): number {
@@ -744,6 +711,11 @@ function parseCompetitiveLevel(raw: string): CompetitiveLevel {
 
 function parsePhaseType(raw: string): PhaseType {
   return raw === 'holiday' ? 'holiday' : 'training'
+}
+
+function parseMicrocycleStatus(raw: string): MicrocycleRecord['status'] {
+  if (raw === 'active' || raw === 'completed') return raw
+  return 'planned'
 }
 
 function parseTrainingDay(raw: string): TrainingDay {
@@ -842,21 +814,21 @@ export async function readDatabaseFromGoogleSheets(
     rowsByTab.set(SHEET_TITLES[range.key], nonEmptyRows)
   })
 
-  const planRows = rowsByTab.get(SHEET_TITLES.plans) || []
-  const parsedPlans: PlanRecord[] = planRows.length
-    ? planRows.map((row) => ({
-        id: cellString(row, 0),
+  const macrocycleRows = rowsByTab.get(SHEET_TITLES.macrocycles) || []
+  const parsedMacrocycles: MacrocycleRecord[] = macrocycleRows.length
+    ? macrocycleRows.map((row) => ({
+        id: normalizeMacrocycleId(cellString(row, 0)),
         name: cellString(row, 1),
         ageCategory: parseAgeCategory(cellString(row, 2)),
         totalWeeks: cellNumber(row, 3, 18),
       }))
-    : defaultTrainingCatalog.plans
+    : []
 
-  const phaseRows = rowsByTab.get(SHEET_TITLES.planPhases) || []
-  const parsedPhases: PlanPhaseRecord[] = phaseRows.length
-    ? phaseRows.map((row) => ({
-        id: cellString(row, 0),
-        planId: cellString(row, 1),
+  const mesocycleRows = rowsByTab.get(SHEET_TITLES.mesocycles) || []
+  const parsedMesocycles: MesocycleRecord[] = mesocycleRows.length
+    ? mesocycleRows.map((row) => ({
+        id: normalizeMesocycleId(cellString(row, 0)),
+        macrocycleId: normalizeMacrocycleId(cellString(row, 1)),
         phaseOrder: cellNumber(row, 2, 1),
         type: parsePhaseType(cellString(row, 3)),
         name: cellString(row, 4),
@@ -870,38 +842,73 @@ export async function readDatabaseFromGoogleSheets(
         weeklyProgressionNote: cellString(row, 12),
         weeklyLoads: splitCommaNumbers(cellString(row, 13)),
       }))
-    : defaultTrainingCatalog.planPhases
+    : []
 
-  const sessionRows = rowsByTab.get(SHEET_TITLES.phaseSessions) || []
-  const parsedSessions: PhaseSessionRecord[] = sessionRows.length
-    ? sessionRows.map((row) => ({
+  const mesocycleSessionRows = rowsByTab.get(SHEET_TITLES.mesocycleSessions) || []
+  const parsedMesocycleSessions: MesocycleSessionRecord[] = mesocycleSessionRows.length
+    ? mesocycleSessionRows.map((row) => ({
         id: cellString(row, 0),
-        phaseId: cellString(row, 1),
+        mesocycleId: normalizeMesocycleId(cellString(row, 1)),
         day: parseTrainingDay(cellString(row, 2)),
         order: cellNumber(row, 3, 1),
         name: cellString(row, 4),
         focus: cellString(row, 5),
         totalMinutes: cellNumber(row, 6, 40),
       }))
-    : defaultTrainingCatalog.phaseSessions
+    : []
 
   const variantRows = rowsByTab.get(SHEET_TITLES.sessionVariants) || []
-  const parsedVariants: SessionVariantRecord[] = variantRows.length
-    ? variantRows.map((row) => ({
-        id: cellString(row, 0),
-        phaseSessionId: cellString(row, 1),
-        variantCode: cellString(row, 2) === 'B' ? 'B' : 'A',
-        name: cellString(row, 3),
-        focus: cellString(row, 4),
-        weekStart: cellNumber(row, 5, 1),
-        weekEnd: cellNumber(row, 6, 45),
-        weekParity: cellNumber(row, 7, 0) === 1 ? 1 : 0,
-      }))
-    : defaultTrainingCatalog.sessionVariants
+  const parsedSheetVariants: SessionVariantRecord[] = variantRows.length
+    ? variantRows.map((row) => {
+        const mesocycleSessionId = cellString(row, 1)
+        const variantCode = cellString(row, 2) === 'B' ? 'B' : 'A'
+        const session = parsedMesocycleSessions.find(
+          (item) => item.id === mesocycleSessionId,
+        )
+        const phase = session
+          ? parsedMesocycles.find((item) => item.id === session.mesocycleId)
+          : undefined
+        const firstBlockEnd = phase
+          ? phase.weekStart + Math.ceil(phase.weeksCount / 2) - 1
+          : 1
+        const legacyParityColumn = cellString(row, 7) !== ''
+        return {
+          id: cellString(row, 0),
+          mesocycleSessionId,
+          variantCode,
+          name: cellString(row, 3),
+          focus: cellString(row, 4),
+          weekStart: legacyParityColumn
+            ? variantCode === 'A'
+              ? phase?.weekStart || 1
+              : firstBlockEnd + 1
+            : cellNumber(row, 5, 1),
+          weekEnd: legacyParityColumn
+            ? variantCode === 'A'
+              ? firstBlockEnd
+              : phase?.weekEnd || 45
+            : cellNumber(row, 6, 45),
+        }
+      })
+    : []
+  const parsedVariantKeys = new Set(
+    parsedSheetVariants.map(
+      (variant) => `${variant.mesocycleSessionId}:${variant.variantCode}`,
+    ),
+  )
+  const parsedVariants: SessionVariantRecord[] = [
+    ...parsedSheetVariants,
+    ...sessionVariants.filter(
+      (variant) =>
+        !parsedVariantKeys.has(
+          `${variant.mesocycleSessionId}:${variant.variantCode}`,
+        ),
+    ),
+  ]
 
-  const blockRows = rowsByTab.get(SHEET_TITLES.sessionBlocks) || []
-  const parsedBlocks: SessionBlockRecord[] = blockRows.length
-    ? blockRows.map((row) => ({
+  const trainingBlockRows = rowsByTab.get(SHEET_TITLES.trainingBlocks) || []
+  const parsedTrainingBlocks: TrainingBlockRecord[] = trainingBlockRows.length
+    ? trainingBlockRows.map((row) => ({
         id: cellString(row, 0),
         sessionId: cellString(row, 1),
         blockOrder: cellNumber(row, 2, 1),
@@ -909,10 +916,10 @@ export async function readDatabaseFromGoogleSheets(
         minutes: cellNumber(row, 4, 8),
         format: cellString(row, 5),
       }))
-    : defaultTrainingCatalog.sessionBlocks
+    : []
 
   const blockExerciseRows = rowsByTab.get(SHEET_TITLES.blockExercises) || []
-  const parsedBlockExercises: BlockExerciseRecord[] = blockExerciseRows.length
+  const parsedSheetBlockExercises: BlockExerciseRecord[] = blockExerciseRows.length
     ? blockExerciseRows.map((row) => ({
         id: cellString(row, 0),
         blockId: cellString(row, 1),
@@ -921,9 +928,59 @@ export async function readDatabaseFromGoogleSheets(
         stationLabel: cellString(row, 4),
         doseFormacion: cellString(row, 5),
         doseLiga: cellString(row, 6, cellString(row, 5)),
-        variantId: cellString(row, 7) || undefined,
+        variantId:
+          cellString(row, 7) ||
+          blockExercises.find((item) => item.id === cellString(row, 0))?.variantId ||
+          parsedVariants.find((variant) => {
+            const block = parsedTrainingBlocks.find(
+              (candidate) => candidate.id === cellString(row, 1),
+            )
+            return (
+              variant.variantCode === 'A' &&
+              block?.sessionId === variant.mesocycleSessionId
+            )
+          })?.id,
       }))
-    : defaultTrainingCatalog.blockExercises
+    : []
+  const parsedBlockExerciseIds = new Set(
+    parsedSheetBlockExercises.map((item) => item.id),
+  )
+  const migratedVariantExercises = parsedVariants
+    .filter((variant) => variant.variantCode === 'B')
+    .flatMap((variant) => {
+      const defaultVariant = sessionVariants.find(
+        (candidate) =>
+          candidate.mesocycleSessionId === variant.mesocycleSessionId &&
+          candidate.variantCode === 'B',
+      )
+      const assignedBlocks = new Set(
+        parsedSheetBlockExercises
+          .filter((item) => item.variantId === variant.id)
+          .map((item) => item.blockId),
+      )
+      return parsedTrainingBlocks
+        .filter((block) => block.sessionId === variant.mesocycleSessionId)
+        .filter((block) => !assignedBlocks.has(block.id))
+        .flatMap((block) => {
+          const bibleItems = blockExercises.filter(
+            (item) => item.blockId === block.id && item.variantId === defaultVariant?.id,
+          )
+          const baseItems = parsedSheetBlockExercises.filter(
+            (item) => item.blockId === block.id,
+          )
+          const sourceItems = bibleItems.length ? bibleItems : baseItems
+          return sourceItems.map((item) => ({
+            ...item,
+            id: bibleItems.length ? item.id : `${item.id}-${variant.id}`,
+            variantId: variant.id,
+          }))
+        })
+    })
+    .filter((item) => !parsedBlockExerciseIds.has(item.id))
+  const parsedBlockExercises: BlockExerciseRecord[] = [
+    ...parsedSheetBlockExercises,
+    ...migratedVariantExercises,
+  ]
 
   const exerciseRows = rowsByTab.get(SHEET_TITLES.exercises) || []
   const parsedExercises: ExerciseRecord[] = exerciseRows.length
@@ -940,13 +997,13 @@ export async function readDatabaseFromGoogleSheets(
         easier: cellString(row, 9),
         harder: cellString(row, 10),
       }))
-    : defaultTrainingCatalog.exercises
+    : []
 
   const homeRows = rowsByTab.get(SHEET_TITLES.homeSessions) || []
   const parsedHomeSessions: HomeSessionRecord[] = homeRows.length
     ? homeRows.map((row) => ({
         id: cellString(row, 0),
-        planId: cellString(row, 1),
+        macrocycleId: normalizeMacrocycleId(cellString(row, 1)),
         code: parseHomeCode(cellString(row, 2)),
         name: cellString(row, 3),
         minutes: cellNumber(row, 4, 20),
@@ -955,19 +1012,19 @@ export async function readDatabaseFromGoogleSheets(
         doseHoliday1: cellString(row, 7),
         doseHoliday2: cellString(row, 8),
       }))
-    : defaultTrainingCatalog.homeSessions
+    : []
 
   const testRows = rowsByTab.get(SHEET_TITLES.tests) || []
   const parsedTests: TestRecord[] = testRows.length
     ? testRows.map((row) => ({
         id: cellString(row, 0),
-        planId: cellString(row, 1),
+        macrocycleId: normalizeMacrocycleId(cellString(row, 1)),
         testOrder: cellNumber(row, 2, 1),
         name: cellString(row, 3),
         protocol: cellString(row, 4),
         milestoneWeeks: splitPipeList(cellString(row, 5)),
       }))
-    : defaultTrainingCatalog.tests
+    : []
 
   const coachRows = rowsByTab.get(SHEET_TITLES.coaches) || []
   const parsedCoaches: SheetCoachInput[] = coachRows.length
@@ -976,7 +1033,7 @@ export async function readDatabaseFromGoogleSheets(
         name: cellString(row, 1, 'Nicolás'),
         role: cellString(row, 2) === 'admin' ? 'admin' : 'coach',
       }))
-    : defaultCoaches
+    : []
 
   const teamRows = rowsByTab.get(SHEET_TITLES.teams) || []
   const parsedTeams: SheetTeamInput[] = teamRows.map((row) => {
@@ -1040,7 +1097,7 @@ export async function readDatabaseFromGoogleSheets(
     return {
       id: cellString(row, 0),
       teamId: cellString(row, 1),
-      planId: cellString(row, 2),
+      macrocycleId: normalizeMacrocycleId(cellString(row, 2)),
       name: cellString(row, 3),
       category: cellString(row, 4),
       ageCategory,
@@ -1062,17 +1119,31 @@ export async function readDatabaseFromGoogleSheets(
     createdAt: cellString(row, 4),
   }))
 
+  const microcycleRows = rowsByTab.get(SHEET_TITLES.microcycles) || []
+  const parsedMicrocycles: SheetMicrocycleInput[] = microcycleRows.map((row) => ({
+    id: normalizeMicrocycleId(cellString(row, 0)),
+    seasonId: cellString(row, 1),
+    macrocycleId: normalizeMacrocycleId(cellString(row, 2)),
+    mesocycleId: normalizeMesocycleId(cellString(row, 3)),
+    weekNumber: cellNumber(row, 4, 1),
+    weekStart: cellString(row, 5),
+    weekEnd: cellString(row, 6),
+    objective: cellString(row, 7),
+    loadIndex: cellNumber(row, 8, 0),
+    status: parseMicrocycleStatus(cellString(row, 9)),
+  }))
+
   const snapshot: SheetsDatabaseSnapshot = {
     source: 'google-sheets',
     fetchedAt: new Date().toISOString(),
     spreadsheetId: credentials.spreadsheetId,
     spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${credentials.spreadsheetId}/edit`,
     catalog: {
-      plans: parsedPlans,
-      planPhases: parsedPhases,
-      phaseSessions: parsedSessions,
+      macrocycles: parsedMacrocycles,
+      mesocycles: parsedMesocycles,
+      mesocycleSessions: parsedMesocycleSessions,
       sessionVariants: parsedVariants,
-      sessionBlocks: parsedBlocks,
+      trainingBlocks: parsedTrainingBlocks,
       blockExercises: parsedBlockExercises,
       exercises: parsedExercises,
       homeSessions: parsedHomeSessions,
@@ -1085,6 +1156,7 @@ export async function readDatabaseFromGoogleSheets(
       teamPlayers: migratedTeamPlayers,
       seasons: parsedSeasons,
       reviews: parsedReviews,
+      microcycles: parsedMicrocycles,
     },
   }
 

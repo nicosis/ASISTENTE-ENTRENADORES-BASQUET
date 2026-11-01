@@ -1,7 +1,4 @@
-import {
-  getFallbackDatabaseSnapshot,
-  readDatabaseFromGoogleSheets,
-} from '../utils/googleSheets'
+import { readDatabaseFromGoogleSheets } from '../utils/googleSheets'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
@@ -13,7 +10,11 @@ export default defineEventHandler(async (event) => {
   const forceRefresh = query.refresh === '1' || query.refresh === 'true'
 
   if (!spreadsheetId || !clientEmail || !privateKey) {
-    return getFallbackDatabaseSnapshot(spreadsheetId)
+    throw createError({
+      statusCode: 503,
+      statusMessage:
+        'Google Sheets no está configurado. Revisá las credenciales del servidor.',
+    })
   }
 
   try {
@@ -25,7 +26,14 @@ export default defineEventHandler(async (event) => {
       },
       { forceRefresh },
     )
-  } catch {
-    return getFallbackDatabaseSnapshot(spreadsheetId)
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'No se pudieron leer los datos de Google Sheets.'
+    throw createError({
+      statusCode: 503,
+      statusMessage: `No se pudieron cargar los datos de Google Sheets: ${message}`,
+    })
   }
 })

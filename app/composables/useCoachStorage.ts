@@ -2,9 +2,9 @@ import {
   type AgeCategory,
   type CompetitiveLevel,
   type HydratedSessionBlock,
-  type PhaseSessionRecord,
-  type PlanPhaseRecord,
-  type PlanRecord,
+  type MesocycleSessionRecord,
+  type MesocycleRecord,
+  type MacrocycleRecord,
   type TrainingDay,
 } from "~/shared/training";
 
@@ -15,7 +15,7 @@ export type View =
   | "create-team"
   | "create-season"
   | "session";
-export type TeamTab = "week" | "tables" | "holidays-tests";
+export type TeamTab = "week" | "annual" | "roster";
 export type CoachRole = "admin" | "coach";
 export type TeamStatus = "active" | "archived";
 
@@ -42,7 +42,7 @@ export interface TeamPlayer {
 export interface Season {
   id: string;
   teamId: string;
-  planId?: string;
+  macrocycleId?: string;
   name: string;
   category: string;
   ageCategory: AgeCategory;
@@ -71,17 +71,17 @@ export interface WeeklyReview {
 }
 
 export interface GeneratedSessionResponse {
-  plan: PlanRecord;
-  phase: PlanPhaseRecord;
+  plan: MacrocycleRecord;
+  phase: MesocycleRecord;
   weekNumber: number;
   weekInPhase: number;
   loadIndex: number;
   isDeload: boolean;
-  session: PhaseSessionRecord;
+  session: MesocycleSessionRecord;
   objective: string;
   duration: number;
   rationale: string;
-  sessionBlocks: HydratedSessionBlock[];
+  trainingBlocks: HydratedSessionBlock[];
 }
 
 export interface SelectOption<T extends string> {
@@ -330,13 +330,21 @@ export function coachIdFor(name: string): string {
   return `ENT${String(Math.max(1, hash)).padStart(4, "0")}`;
 }
 
-export function nextId(prefix: string, existing: string[]): string {
+export function nextId(
+  prefix: string,
+  existing: string[],
+  digits = 4,
+): string {
   const maxNum = existing.reduce((max, id) => {
     const match = id.match(/(\d+)$/);
     const num = match ? Number.parseInt(match[1] || "0", 10) : 0;
     return Number.isFinite(num) && num > max ? num : max;
   }, 0);
-  return `${prefix.slice(0, 3).toUpperCase()}${String(maxNum + 1).padStart(4, "0")}`;
+  return `${prefix.slice(0, 3).toUpperCase()}${String(maxNum + 1).padStart(digits, "0")}`;
+}
+
+export function nextMicrocycleId(existing: string[]): string {
+  return nextId('MIC', existing, 6)
 }
 
 export function formattedDate(value: string): string {

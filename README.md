@@ -2,7 +2,7 @@
 
 Aplicación web para que entrenadores de baloncesto organicen equipos y temporadas, recorran una planificación física por fases y generen sesiones semanales de una, dos o tres jornadas.
 
-Está construida con Nuxt 4 y Vue 3. El catálogo de planificación vive en código como fuente de respaldo y puede cargarse y sincronizarse con una hoja de cálculo de Google Sheets.
+Está construida con Nuxt 4 y Vue 3. Google Sheets es la única fuente de datos; si no está disponible, la aplicación queda vacía y muestra un aviso en lugar de usar información local antigua.
 
 ## Funcionalidad actual
 
@@ -13,23 +13,25 @@ Está construida con Nuxt 4 y Vue 3. El catálogo de planificación vive en cód
 - Nivel competitivo de formación o liga y frecuencia de uno, dos o tres entrenamientos semanales.
 - Navegación por semanas, fases, cargas, semanas de descarga, trabajo en vacaciones y tests.
 - Generación de sesiones desde el mismo catálogo que utiliza la interfaz. Cada bloque define objetivo, ejercicios, dosis y duración.
-- Persistencia local en el navegador como respaldo y sincronización de catálogo y datos operativos con Google Sheets cuando existen credenciales configuradas.
+- Base Cadete de 45 semanas, organizada en siete mesociclos, con dos variantes (`A`/`B`) por sesión.
+- La sesión del `día 1` es la principal; los días 2 y 3 son refuerzos. La frecuencia del equipo determina si se muestra uno, dos o tres días.
+- Lectura exclusiva desde Google Sheets. Cuando Sheets no está disponible, se bloquean las acciones dependientes y se muestra el estado de datos no disponibles.
 
 ## Modelo de datos
 
 El catálogo de entrenamiento se organiza en nueve planillas relacionadas:
 
-1. `plans`
-2. `plan_phases`
-3. `phase_sessions`
+1. `macrocycles`
+2. `mesocycles`
+3. `mesocycle_sessions`
 4. `session_variants`
-5. `session_blocks`
+5. `training_blocks`
 6. `block_exercises`
 7. `exercises`
 8. `home_sessions`
 9. `tests`
 
-Los datos operativos se almacenan en otras seis planillas:
+Los datos operativos se almacenan en otras siete planillas:
 
 1. `coaches`
 2. `teams`
@@ -37,12 +39,13 @@ Los datos operativos se almacenan en otras seis planillas:
 4. `team_players`
 5. `seasons`
 6. `weekly_reviews`
+7. `microcycles`
 
-Los identificadores siguen el formato de tres letras y cuatro dígitos, por ejemplo `PLN0001`, `EQU0001` y `OBS0001`.
+Los identificadores siguen el formato de tres letras y cuatro dígitos, por ejemplo `MAC0001`, `MES0001`, `EQU0001` y `OBS0001`.
 
 ### Periodización anual
 
-Una fila de `seasons` aplica un registro de `plans` a un equipo. Esa instancia representa el **macrociclo**; `plan_phases` define sus fases y cada semana es un **microciclo**. Las sesiones se descomponen en bloques y ejercicios.
+Una fila de `seasons` aplica un registro de `macrocycles` a un equipo. Esa instancia representa el **macrociclo**; `mesocycles` define sus bloques de varias semanas y `microcycles` representa cada semana concreta. Las sesiones se descomponen en bloques de entrenamiento y ejercicios.
 
 ```text
 Equipo → Macrociclo (temporada) → Mesociclos (fases) → Microciclos (semanas) → Sesiones → Bloques → Ejercicios
@@ -56,14 +59,14 @@ fase. Cada sesión puede tener dos variantes (`A` y `B`) con estos campos:
 | Campo | Descripción |
 | --- | --- |
 | `id` | Identificador estable, por ejemplo `VAR0001`. |
-| `phase_session_id` | Sesión base a la que pertenece. |
+| `mesocycle_session_id` | Sesión base a la que pertenece. |
 | `variant_code` | `A` o `B`. |
 | `name`, `focus` | Texto visible de la alternativa. |
-| `week_start`, `week_end` | Intervalo de semanas válido. |
-| `week_parity` | Rotación determinista: alterna por semana dentro del intervalo. |
+| `week_start`, `week_end` | Intervalo de semanas del mesociclo en el que se aplica la variante. |
 
-La selección usa la semana actual y su paridad (`A` en la primera semana, `B`
-en la siguiente, y vuelve a `A`). Los bloques se mantienen como estructura de
+La selección usa el número de semana del microciclo y el intervalo configurado
+en la variante. Por ejemplo, un mesociclo de cuatro semanas puede usar `A` en
+las semanas 1–2 y `B` en las semanas 3–4. Los bloques se mantienen como estructura de
 la sesión y `block_exercises.variant_id` selecciona el ejercicio concreto de
 la variante. Si falta la variante o un ejercicio relacionado, la aplicación
 informa que no hay información disponible; nunca sustituye contenido de otra
@@ -77,7 +80,7 @@ SES0037 · Fase 3 · Día 1
 └── VAR00yy · Variante B · zancada atrás + salto vertical
 ```
 
-La duración total se configura con `plans.total_weeks`. Cada fila de `plan_phases` define su propio intervalo con `week_start`, `week_end` y `weeks_count`.
+La duración total se configura con `macrocycles.total_weeks`. Cada fila de `mesocycles` define su propio intervalo con `week_start`, `week_end` y `weeks_count`. Cada fila de `microcycles` representa una semana, con fechas reales, carga y objetivo.
 
 La periodización objetivo, basada en [ESTRUCTURA DE UNA TEMPORADA](https://docs.google.com/spreadsheets/d/1sXNf5-OCUkx607aGiFqyW0HwbXSMLMzVDMEDcgjUtIo/edit), consta de 45 semanas:
 
@@ -91,12 +94,14 @@ La periodización objetivo, basada en [ESTRUCTURA DE UNA TEMPORADA](https://docs
 | Período competitivo 3 | 31–41 | 11 semanas |
 | Período transitorio final | 42–45 | 4 semanas |
 
-Las cuatro plantillas del catálogo ya están configuradas con 45 semanas y siete mesociclos. Los períodos competitivos incluyen ejemplos de ejercicios y los transitorios proponen trabajo autónomo de baja carga.
+La base Cadete del catálogo está configurada con 45 semanas y siete mesociclos. Los períodos competitivos incluyen ejemplos de ejercicios y los transitorios proponen trabajo autónomo de baja carga.
 
 ### Configuración aplicada
 
-- Cada `plans` tiene `total_weeks = 45`.
-- Hay siete filas en `plan_phases` para el plan Cadete, sin huecos entre las semanas 1 y 45.
+- El macrociclo Cadete de referencia tiene `total_weeks = 45`.
+- Hay siete filas en `mesocycles` para ese macrociclo, sin huecos entre las semanas 1 y 45.
+- Cada mesociclo tiene tres sesiones base: día 1 principal y días 2 y 3 de refuerzo.
+- Cada sesión tiene dos variantes y la rotación se realiza por paridad semanal.
 - `weekly_loads` contiene un valor por semana del mesociclo. La última semana de cada período competitivo es una descarga.
 - Los períodos de Navidad, Semana Santa y cierre de temporada usan `type = holiday`; la interfaz muestra entonces las sesiones autónomas de `home_sessions`.
 - Las evaluaciones de Cadete (U16) se sitúan en las semanas 1, 19, 31 y 41.
@@ -114,9 +119,26 @@ Las sesiones de Cadete incluyen variantes A/B para alternar ejercicios dentro de
 cada fase. Las categorías que todavía no tienen variantes específicas conservan
 su plantilla base hasta que el cuerpo técnico las valide.
 
+### Creación de una temporada
+
+Al crear una temporada, la aplicación **no duplica ni genera nuevos mesociclos**.
+Busca el macrociclo de referencia correspondiente a la categoría y lo vincula a
+la nueva fila de `seasons`. Los mesociclos, sesiones, variantes y bloques siguen
+siendo datos reutilizables de la Biblia.
+
+Los `microcycles` sí son datos propios de cada temporada porque contienen fechas
+reales, carga, objetivo y estado semanal. Al crear una temporada se generan
+automáticamente exactamente `macrocycles.total_weeks` filas, normalmente 45,
+con lunes como inicio y domingo como cierre. Cada fila se vincula al mesociclo
+cuyo intervalo incluye esa semana y comienza en estado `planned`.
+
+Los microciclos usan IDs globalmente únicos de seis dígitos (`MIC000001`). Se
+aceptan IDs antiguos de cuatro dígitos durante la lectura y se normalizan al
+nuevo formato; los IDs `MAC####` y `MES####` conservan cuatro dígitos.
+
 ## Google Sheets
 
-La aplicación puede usar un spreadsheet de Google como almacenamiento compartido. Si las credenciales no están disponibles o falla la conexión, la API usa el catálogo local de respaldo y la interfaz conserva el estado local del navegador.
+La aplicación usa un spreadsheet de Google como almacenamiento compartido. Google Sheets es la fuente única del catálogo, las temporadas y los microciclos. Si la lectura falla, el backend devuelve un error y la interfaz no muestra datos de respaldo.
 
 ### Hoja vinculada
 
@@ -152,7 +174,7 @@ app/
 server/
   api/
     generate-training.post.ts          # Generación de una sesión
-    sheets-db.get.ts                   # Lectura de Google Sheets o fallback local
+    sheets-db.get.ts                   # Lectura exclusiva de Google Sheets
     sheets-sync.post.ts                # Sincronización hacia Google Sheets
   utils/googleSheets.ts                # Cliente y mapeo de las planillas
 ```
@@ -179,7 +201,7 @@ npm run build
 | Método | Ruta | Descripción |
 | --- | --- | --- |
 | `POST` | `/api/generate-training` | Compone una sesión según día, frecuencia, semana, categoría y nivel competitivo. |
-| `GET` | `/api/sheets-db` | Carga las doce planillas desde Google Sheets; acepta `?refresh=1` para ignorar la caché breve. |
+| `GET` | `/api/sheets-db` | Carga las planillas de catálogo, microciclos y operación desde Google Sheets; acepta `?refresh=1` para ignorar la caché breve. |
 | `POST` | `/api/sheets-sync` | Crea o actualiza las planillas en Google Sheets. Requiere credenciales configuradas. |
 
 ## Limitaciones y próximos pasos

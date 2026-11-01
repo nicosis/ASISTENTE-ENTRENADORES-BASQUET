@@ -22,12 +22,14 @@ const {
   activeTeams,
   archivedTeams,
   visibleTeams,
-  activeTeamPlayers,
+  activeTeamRoster,
   playerCountByTeam,
   seasons,
   teamSeasons,
   activeTeam,
   activeSeason,
+  activeSeasonEndDate,
+  seasonDraftEndDate,
   frequency,
   trainingDataStatus,
   activePlan,
@@ -36,12 +38,8 @@ const {
   currentPhase,
   weeklySessions,
   hydratedPreviewSession,
-  homeWorkouts,
-  seasonTests,
-  activeExplorerBlock,
   currentWeekNumber,
   selectedDay,
-  selectedBlockIdForExplorer,
   displayedWeekStart,
   canGoToPreviousWeek,
   canGoToNextWeek,
@@ -82,7 +80,6 @@ const {
   openHistory,
   closeHistory,
   generateSession,
-  inspectDayInTables,
   refreshDatabaseFromSheets,
 } = useCoachWorkspace()
 
@@ -116,7 +113,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
               ? 'Sincronizando Sheets…'
               : dbSource === 'google-sheets'
                 ? '● Sheets DB conectado (Actualizar)'
-                : '○ Modo local (Conectar Sheets)'
+                : '○ Sheets no disponible (Reintentar)'
           }}
         </button>
         <template v-if="signedIn">
@@ -137,6 +134,21 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         </template>
       </div>
     </header>
+
+    <section
+      v-if="!loadingDatabase && dbSource === 'unavailable'"
+      class="data-unavailable-banner"
+      role="alert"
+    >
+      <strong>Datos no disponibles.</strong>
+      <span>
+        No se pudo cargar Google Sheets. La aplicación no mostrará datos locales
+        antiguos ni permitirá crear o modificar información hasta recuperar la conexión.
+      </span>
+      <button class="secondary-button" type="button" @click="refreshDatabaseFromSheets">
+        Reintentar conexión
+      </button>
+    </section>
 
     <section v-if="!signedIn" class="page auth-page">
       <p class="eyebrow">SESIÓN CERRADA · TABLA `entrenadores`</p>
@@ -185,7 +197,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             {{
               showArchivedTeams
                 ? 'Estos equipos están ocultos del panel principal conservando todo su historial de temporadas y observaciones.'
-                : 'Abre una temporada para explorar las fases del año, o archiva equipos y temporadas cerradas para mantener limpio tu panel.'
+                : 'Abre una temporada para explorar los mesociclos del año, o archiva equipos y temporadas cerradas para mantener limpio tu panel.'
             }}
           </p>
         </div>
@@ -206,6 +218,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             v-if="!showArchivedTeams"
             class="primary-button"
             type="button"
+            :disabled="dbSource !== 'google-sheets'"
             @click="openCreateTeam"
           >
             + Crear equipo
@@ -300,6 +313,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           v-else
           class="primary-button"
           type="button"
+          :disabled="dbSource !== 'google-sheets'"
           @click="openCreateTeam"
         >
           Crear equipo
@@ -330,14 +344,6 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             placeholder="Ej. Club Baloncesto Norte"
           />
         </label>
-        <label>
-          Jugadores <small>Uno por línea. Puedes completarlo después.</small>
-          <textarea
-            v-model="teamDraft.players"
-            rows="6"
-            placeholder="Álex Martín&#10;Bruno López&#10;Dani Ruiz"
-          ></textarea>
-        </label>
         <button class="primary-button" type="submit">
           Continuar a la temporada →
         </button>
@@ -352,7 +358,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       <h1>Define {{ activeTeam?.name }}.</h1>
       <p>
         Categoría, nivel competitivo y frecuencia semanal determinan el plan
-        anual reutilizable (`plantillas_macrociclo` → `mesociclos` → `sesiones_planificadas`).
+        anual reutilizable (`macrocycles` → `mesocycles` → `mesocycle_sessions`).
       </p>
       <form @submit.prevent="createSeason">
         <div class="form-grid">
@@ -386,16 +392,23 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           </label>
           <label>
             Inicio de temporada
-            <input v-model="seasonDraft.startsAt" type="date" required />
+            <input
+              v-model="seasonDraft.startsAt"
+              type="date"
+              min="2026-01-05"
+              step="7"
+              required
+            />
+            <small>La temporada debe comenzar un lunes.</small>
           </label>
           <label>
             Final de temporada
             <input
-              v-model="seasonDraft.endsAt"
+              :value="seasonDraftEndDate"
               type="date"
-              :min="seasonDraft.startsAt"
-              required
+              readonly
             />
+            <small>Calculado para {{ activePlan.totalWeeks }} semanas.</small>
           </label>
         </div>
         <fieldset>
@@ -426,7 +439,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           ></textarea>
         </label>
         <button class="primary-button" type="submit">
-          Generar plan anual →
+          Generar macrociclo anual →
         </button>
       </form>
     </section>
@@ -440,8 +453,8 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           <p class="eyebrow">
             {{ activeTeam?.id }} · TEMPORADA {{ activeSeason?.name }} ({{
               activeSeason?.status === 'closed' ? 'CERRADA' : 'ACTIVA'
-            }}) · PLAN ID:
-            {{ activeSeason?.planId || 'Sin plan' }}
+            }}) · MACROCYCLE ID:
+            {{ activeSeason?.macrocycleId || 'Sin plan' }}
           </p>
           <h1>{{ activeTeam?.name }}</h1>
           <p>{{ activeSeason?.category }} · {{ activeTeam?.club }}</p>
@@ -533,13 +546,9 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           <span>PERIODO</span>
           <strong>{{
             activeSeason
-              ? `${formattedDate(activeSeason.startsAt)} – ${formattedDate(activeSeason.endsAt)}`
+              ? `${formattedDate(activeSeason.startsAt)} – ${formattedDate(activeSeasonEndDate)}`
               : '—'
           }}</strong>
-        </div>
-        <div>
-          <span>PLANTILLA</span>
-          <strong>{{ activeTeamPlayers.length }} jugadores</strong>
         </div>
       </section>
 
@@ -550,61 +559,21 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           {{ trainingDataStatus.message }} Revisá los datos relacionados en la
           base de datos antes de continuar.
         </p>
-      </section>
-
-      <!-- Línea de tiempo de mesociclos -->
-      <section v-if="trainingDataStatus.available" class="phases-strip">
-        <div class="phases-header">
-          <div>
-            <p class="eyebrow">ESTRUCTURA ANUAL · TABLA `mesociclos`</p>
-            <h3>Fases de la temporada (haz clic en una fase o semana)</h3>
-          </div>
-          <span class="phase-badge" :style="{ background: currentPhase.color }">
-            {{ currentPhase.name }} · Semana {{ currentWeekNumber }} (Carga
-            {{ currentWeekContext.loadIndex }}/10{{
-              currentWeekContext.isDeload ? ' · Descarga' : ''
-            }})
-          </span>
-        </div>
-
-        <div class="phase-cards-row">
-          <button
-            v-for="ph in phases"
-            :key="ph.id"
-            type="button"
-            class="phase-pill-card"
-            :class="{ active: ph.id === currentPhase.id }"
-            :style="{ '--phase-color': ph.color }"
-            @click="selectPhaseWeek(ph.weekStart)"
-          >
-            <div class="phase-pill-top">
-              <strong>{{ ph.name }}</strong>
-              <small>Sem {{ ph.weekStart }}–{{ ph.weekEnd }}</small>
-            </div>
-            <p>{{ ph.objective }}</p>
-            <div class="week-dots">
-              <span
-                v-for="(load, idx) in ph.weeklyLoads"
-                :key="idx"
-                class="week-dot"
-                :class="{
-                  current: ph.weekStart + idx === currentWeekNumber,
-                }"
-                :title="`Semana ${ph.weekStart + idx} · Carga ${load}/10`"
-                @click.stop="selectPhaseWeek(ph.weekStart + idx)"
-              >
-                S{{ ph.weekStart + idx }}
-              </span>
-            </div>
+        <nav class="week-navigation" aria-label="Cambiar de semana">
+          <button type="button" :disabled="!canGoToPreviousWeek" @click="moveWeek(-1)">
+            ← Semana anterior
           </button>
-        </div>
+          <button type="button" :disabled="!canGoToNextWeek" @click="moveWeek(1)">
+            Siguiente semana →
+          </button>
+        </nav>
       </section>
 
       <!-- Navegación de pestañas locales -->
       <nav
         v-if="trainingDataStatus.available"
         class="subtabs"
-        aria-label="Vistas del plan"
+        aria-label="Vistas del macrociclo"
       >
         <button
           type="button"
@@ -615,19 +584,17 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         </button>
         <button
           type="button"
-          :class="{ active: activeTeamTab === 'tables' }"
-          @click="activeTeamTab = 'tables'"
+          :class="{ active: activeTeamTab === 'annual' }"
+          @click="activeTeamTab = 'annual'"
         >
-          Conexión de Tablas (PK → FK en vivo)
+          Estructura anual
         </button>
         <button
           type="button"
-          :class="{ active: activeTeamTab === 'holidays-tests' }"
-          @click="activeTeamTab = 'holidays-tests'"
+          :class="{ active: activeTeamTab === 'roster' }"
+          @click="activeTeamTab = 'roster'"
         >
-          Vacaciones ({{ homeWorkouts.length }}) y Tests ({{
-            seasonTests.length
-          }})
+          Plantilla
         </button>
       </nav>
 
@@ -680,19 +647,12 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           v-if="currentPhase.type === 'holiday'"
           class="holiday-notice-card"
         >
-          <p class="eyebrow">SEMANA DE RECESO · TABLA `sesiones_transitorias`</p>
+          <p class="eyebrow">SEMANA DE RECESO</p>
           <h3>Descanso de pista: trabajo autónomo en casa</h3>
           <p>
             Esta semana ({{ weekLabel }}) corresponde a vacaciones. Los
             jugadores realizan las 3 sesiones sin material (A, B y C).
           </p>
-          <button
-            class="primary-button"
-            type="button"
-            @click="activeTeamTab = 'holidays-tests'"
-          >
-            Ver sesiones en casa →
-          </button>
         </section>
 
         <section v-else class="session-grid">
@@ -722,334 +682,80 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
                     : 'Abrir bloques y ejercicios →'
                 }}
               </button>
-              <button
-                class="secondary-button"
-                type="button"
-                @click="inspectDayInTables(item.day)"
-              >
-                Ver en planillas
-              </button>
             </div>
           </article>
         </section>
       </template>
 
-      <!-- PESTAÑA 2: EXPLORADOR DE TABLAS RELACIONALES EN VIVO -->
-      <template
-        v-else-if="trainingDataStatus.available && activeTeamTab === 'tables'"
-      >
-        <section class="tables-explorer">
-          <div class="explorer-intro">
+      <!-- PESTAÑA 3: PLANTILLA DEL EQUIPO -->
+      <template v-else-if="trainingDataStatus.available && activeTeamTab === 'roster'">
+        <section class="panel-box roster-panel">
+          <div class="section-heading">
             <div>
-              <p class="eyebrow">ARQUITECTURA RELACIONAL EN VIVO</p>
-              <h2>Cómo se conectan las 6 planillas principales</h2>
-              <p>
-                Cambia el día o haz clic en otro bloque para ver cómo viaja la
-                clave primaria (`id`) hacia la clave foránea (`*_id`) de la
-                siguiente tabla.
-              </p>
-            </div>
-            <div class="day-selector-inline">
-              <span>Día activo:</span>
-              <button
-                v-for="(sess, idx) in weeklySessions"
-                :key="sess.id"
-                type="button"
-                :class="{ active: selectedDay === sess.day }"
-                @click="selectedDay = sess.day"
-              >
-                Día {{ idx + 1 }} ({{ sess.day }})
-              </button>
+              <p class="eyebrow">PLANTILLA DEL EQUIPO</p>
+              <h2>Jugadores</h2>
+              <span>
+                {{ activeTeamRoster.length }}
+                {{ activeTeamRoster.length === 1 ? 'jugador activo' : 'jugadores activos' }}
+              </span>
             </div>
           </div>
-
-          <div class="relational-chain">
-            <!-- Tabla 1: plantillas_macrociclo -->
-            <div class="table-box">
-              <header>
-                <span class="table-num">TABLA 1 · `plantillas_macrociclo`</span>
-                <code>PK: id = "{{ activePlan.id }}"</code>
-              </header>
-              <div class="mini-table-wrap">
-                <table class="mini-table">
-                  <thead>
-                    <tr>
-                      <th>id (PK)</th>
-                      <th>age_category</th>
-                      <th>total_weeks</th>
-                      <th>name</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr class="highlighted-row">
-                      <td><code>{{ activePlan.id }}</code></td>
-                      <td>{{ activePlan.ageCategory }}</td>
-                      <td>{{ activePlan.totalWeeks }}</td>
-                      <td>{{ activePlan.name }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="chain-arrow">
-              ↓ <code>mesociclos.plan_id = "{{ activePlan.id }}"</code> (y
-              Semana {{ currentWeekNumber }} está entre `week_start` y
-              `week_end`)
-            </div>
-
-            <!-- Tabla 2: mesociclos -->
-            <div class="table-box">
-              <header>
-                <span class="table-num">TABLA 2 · `mesociclos`</span>
-                <code>PK: id = "{{ currentPhase.id }}"</code>
-              </header>
-              <div class="mini-table-wrap">
-                <table class="mini-table">
-                  <thead>
-                    <tr>
-                      <th>id (PK)</th>
-                      <th>plan_id (FK)</th>
-                      <th>name</th>
-                      <th>week_start..end</th>
-                      <th>weekly_loads</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="ph in phases"
-                      :key="ph.id"
-                      :class="{ 'highlighted-row': ph.id === currentPhase.id }"
-                      @click="selectPhaseWeek(ph.weekStart)"
-                    >
-                      <td><code>{{ ph.id }}</code></td>
-                      <td><code>{{ ph.planId }}</code></td>
-                      <td>{{ ph.name }}</td>
-                      <td>Sem {{ ph.weekStart }} a {{ ph.weekEnd }}</td>
-                      <td>{{ ph.weeklyLoads.join(', ') }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="chain-arrow">
-              ↓
-              <code
-                >sesiones_planificadas.phase_id = "{{
-                  hydratedPreviewSession.session.phaseId
-                }}"</code
-              >
-              + <code>day = "{{ selectedDay }}"</code>
-            </div>
-
-            <!-- Tabla 3: sesiones_planificadas -->
-            <div class="table-box">
-              <header>
-                <span class="table-num">TABLA 3 · `sesiones_planificadas`</span>
-                <code
-                  >PK: id = "{{ hydratedPreviewSession.session.id }}"</code
-                >
-              </header>
-              <div class="mini-table-wrap">
-                <table class="mini-table">
-                  <thead>
-                    <tr>
-                      <th>id (PK)</th>
-                      <th>phase_id (FK)</th>
-                      <th>day</th>
-                      <th>name</th>
-                      <th>total_minutes</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="sess in weeklySessions"
-                      :key="sess.id"
-                      :class="{
-                        'highlighted-row':
-                          sess.id === hydratedPreviewSession.session.id,
-                      }"
-                      @click="selectedDay = sess.day"
-                    >
-                      <td><code>{{ sess.id }}</code></td>
-                      <td><code>{{ sess.phaseId }}</code></td>
-                      <td>{{ sess.day }}</td>
-                      <td>{{ sess.name }}</td>
-                      <td>{{ sess.totalMinutes }} min</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="chain-arrow">
-              ↓
-              <code
-                >bloques_sesion.session_id = "{{
-                  hydratedPreviewSession.session.id
-                }}"</code
-              >
-              (haz clic en un bloque para ver sus ejercicios)
-            </div>
-
-            <!-- Tabla 4: bloques_sesion -->
-            <div class="table-box">
-              <header>
-                <span class="table-num">TABLA 4 · `bloques_sesion`</span>
-                <code>PK seleccionada: "{{ activeExplorerBlock?.id }}"</code>
-              </header>
-              <div class="mini-table-wrap">
-                <table class="mini-table">
-                  <thead>
-                    <tr>
-                      <th>id (PK)</th>
-                      <th>session_id (FK)</th>
-                      <th>order</th>
-                      <th>name</th>
-                      <th>minutes</th>
-                      <th>format</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="blk in hydratedPreviewSession.blocks"
-                      :key="blk.id"
-                      :class="{
-                        'highlighted-row':
-                          blk.id === activeExplorerBlock?.id,
-                      }"
-                      @click="selectedBlockIdForExplorer = blk.id"
-                    >
-                      <td><code>{{ blk.id }}</code></td>
-                      <td><code>{{ blk.sessionId }}</code></td>
-                      <td>{{ blk.blockOrder }}</td>
-                      <td>{{ blk.name }}</td>
-                      <td>{{ blk.minutes }}'</td>
-                      <td>{{ blk.format }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="chain-arrow">
-              ↓
-              <code
-                >ejercicios_bloque.block_id = "{{
-                  activeExplorerBlock?.id
-                }}"</code
-              >
-              JOIN <code>ejercicios.id</code>
-            </div>
-
-            <!-- Tabla 5 y 6: ejercicios_bloque + ejercicios -->
-            <div class="table-box">
-              <header>
-                <span class="table-num">
-                  TABLA 5 (`ejercicios_bloque`) + TABLA 6 (`ejercicios`)
-                </span>
-                <code>{{ activeExplorerBlock?.items.length || 0 }} filas</code>
-              </header>
-              <div class="mini-table-wrap">
-                <table class="mini-table">
-                  <thead>
-                    <tr>
-                      <th>block_id (FK)</th>
-                      <th>station_label</th>
-                      <th>dose_formacion</th>
-                      <th>dose_liga</th>
-                      <th>exercise_id (FK → PK)</th>
-                      <th>exercise.name (Catálogo)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="item in activeExplorerBlock?.items"
-                      :key="item.id"
-                      class="highlighted-row"
-                    >
-                      <td><code>{{ item.blockId }}</code></td>
-                      <td>{{ item.stationLabel }}</td>
-                      <td>{{ item.doseFormacion }}</td>
-                      <td><strong>{{ item.doseLiga }}</strong></td>
-                      <td><code>{{ item.exerciseId }}</code></td>
-                      <td>{{ item.exercise.name }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+          <div v-if="activeTeamRoster.length" class="roster-grid">
+            <article v-for="membership in activeTeamRoster" :key="membership.id" class="roster-card">
+              <strong>{{ membership.player?.name || membership.playerId }}</strong>
+              <small>{{ membership.playerId }}</small>
+            </article>
           </div>
+          <p v-else class="panel-lead">
+            Todavía no hay jugadores cargados en este equipo.
+          </p>
         </section>
       </template>
 
-      <!-- PESTAÑA 3: VACACIONES Y TESTS -->
-      <template
-        v-else-if="
-          trainingDataStatus.available && activeTeamTab === 'holidays-tests'
-        "
-      >
-        <section class="holidays-tests-grid">
-          <div class="panel-box">
-            <p class="eyebrow">TABLA 7 · `sesiones_transitorias` (VACACIONES)</p>
-            <h2>Trabajo autónomo en casa</h2>
-            <p class="panel-lead">
-              Sesiones sin material para los recesos de Navidad (Dosis 1) y
-              Semana Santa (Dosis 2, más exigente).
-            </p>
-            <div class="home-cards">
-              <article
-                v-for="item in homeWorkouts"
-                :key="item.id"
-                class="home-card"
-              >
-                <div class="home-card-top">
-                  <span>{{ item.name }} · {{ item.minutes }}'</span>
-                  <code>FK: {{ item.exerciseId }}</code>
-                </div>
-                <h3>{{ item.exercise.name }}</h3>
-                <p class="home-format">{{ item.format }}</p>
-                <div class="dose-comparison">
-                  <div>
-                    <small>Receso 1 (Navidad)</small>
-                    <strong>{{ item.doseHoliday1 }}</strong>
-                  </div>
-                  <div>
-                    <small>Receso 2 (Semana Santa)</small>
-                    <strong>{{ item.doseHoliday2 }}</strong>
-                  </div>
-                </div>
-              </article>
+      <!-- PESTAÑA 2: ESTRUCTURA ANUAL -->
+      <template v-else-if="trainingDataStatus.available && activeTeamTab === 'annual'">
+        <section class="phases-strip">
+          <div class="phases-header">
+            <div>
+              <p class="eyebrow">ESTRUCTURA ANUAL</p>
+              <h3>Mesociclos de la temporada (haz clic en una fase o semana)</h3>
             </div>
+            <span class="phase-badge" :style="{ background: currentPhase.color }">
+              {{ currentPhase.name }} · Semana {{ currentWeekNumber }} (Carga
+              {{ currentWeekContext.loadIndex }}/10{{
+                currentWeekContext.isDeload ? ' · Descarga' : ''
+              }})
+            </span>
           </div>
 
-          <div class="panel-box">
-            <p class="eyebrow">TABLA 8 · `evaluaciones` (CONTROL DE TEMPORADA)</p>
-            <h2>Batería de evaluaciones</h2>
-            <p class="panel-lead">
-              Se realizan 3 veces al año (Semana 1, Semana 13 y Semana 18) para
-              medir el progreso real del equipo.
-            </p>
-            <div class="test-cards">
-              <article
-                v-for="test in seasonTests"
-                :key="test.id"
-                class="test-card"
-              >
-                <div class="home-card-top">
-                  <span>TEST 0{{ test.testOrder }}</span>
-                  <code>PK: {{ test.id }}</code>
-                </div>
-                <h3>{{ test.name }}</h3>
-                <p>{{ test.protocol }}</p>
-                <div class="milestone-chips">
-                  <span v-for="mw in test.milestoneWeeks" :key="mw">
-                    {{ mw }}
-                  </span>
-                </div>
-              </article>
-            </div>
+          <div class="phase-cards-row">
+            <button
+              v-for="ph in phases"
+              :key="ph.id"
+              type="button"
+              class="phase-pill-card"
+              :class="{ active: ph.id === currentPhase.id }"
+              :style="{ '--phase-color': ph.color }"
+              @click="selectPhaseWeek(ph.weekStart)"
+            >
+              <div class="phase-pill-top">
+                <strong>{{ ph.name }}</strong>
+                <small>Sem {{ ph.weekStart }}–{{ ph.weekEnd }}</small>
+              </div>
+              <p>{{ ph.objective }}</p>
+              <div class="week-dots">
+                <span
+                  v-for="(load, idx) in ph.weeklyLoads"
+                  :key="idx"
+                  class="week-dot"
+                  :class="{ current: ph.weekStart + idx === currentWeekNumber }"
+                  :title="'Semana ' + (ph.weekStart + idx) + ' · Carga ' + load + '/10'"
+                  @click.stop="selectPhaseWeek(ph.weekStart + idx)"
+                >
+                  S{{ ph.weekStart + idx }}
+                </span>
+              </div>
+            </button>
           </div>
         </section>
       </template>
@@ -1173,14 +879,14 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       <h1>{{ session.objective }}</h1>
       <p class="session-rationale">{{ session.rationale }}</p>
 
-      <!-- Barra de distribución de minutos por bloque (`bloques_sesion`) -->
+      <!-- Barra de distribución de minutos por bloque (`training_blocks`) -->
       <div class="timebar-wrap">
         <span class="eyebrow">
-          DISTRIBUCIÓN DE BLOQUES (`bloques_sesion`)
+            DISTRIBUCIÓN DE BLOQUES (`training_blocks`)
         </span>
         <div class="session-timebar">
           <div
-            v-for="(blk, idx) in session.sessionBlocks"
+            v-for="(blk, idx) in session.trainingBlocks"
             :key="blk.id"
             :style="{
               flex: blk.minutes,
@@ -1194,7 +900,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
 
       <div class="blocks-stack">
         <section
-          v-for="blk in session.sessionBlocks"
+          v-for="blk in session.trainingBlocks"
           :key="blk.id"
           class="session-block-card"
         >
@@ -1704,7 +1410,7 @@ legend {
 
 .season-summary {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   overflow: hidden;
   margin: 26px 0;
   border: 1px solid var(--line);
@@ -1731,7 +1437,7 @@ legend {
     serif;
 }
 
-/* Fases de la temporada */
+/* Mesociclos de la temporada */
 .phases-strip {
   margin: 22px 0 30px;
   padding: 18px;
@@ -1961,119 +1667,7 @@ legend {
     serif;
 }
 
-/* Explorador de tablas relacionales */
-.tables-explorer {
-  margin-bottom: 48px;
-}
-.explorer-intro {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-.explorer-intro h2 {
-  margin: 0 0 6px;
-  font:
-    600 30px Georgia,
-    serif;
-}
-.explorer-intro p {
-  margin: 0;
-  max-width: 620px;
-  color: var(--muted);
-  font-size: 13.5px;
-}
-.day-selector-inline {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 700;
-}
-.day-selector-inline button {
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  padding: 6px 10px;
-  background: var(--surface);
-  font-size: 12px;
-}
-.day-selector-inline button.active {
-  background: var(--button);
-  color: #fff;
-  border-color: var(--button);
-}
-.relational-chain {
-  display: grid;
-  gap: 10px;
-}
-.table-box {
-  border: 1px solid var(--line);
-  border-radius: 11px;
-  overflow: hidden;
-  background: var(--surface);
-}
-.table-box > header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 14px;
-  background: var(--soft);
-  border-bottom: 1px solid var(--line);
-}
-.table-num {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  color: var(--ink);
-}
-.mini-table-wrap {
-  overflow-x: auto;
-}
-.mini-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12.5px;
-}
-.mini-table th,
-.mini-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--line);
-  text-align: left;
-}
-.mini-table th {
-  font-size: 11px;
-  color: var(--muted);
-  background: #faf9f5;
-}
-.mini-table tbody tr {
-  cursor: pointer;
-}
-.mini-table tbody tr.highlighted-row {
-  background: #fff3ec;
-}
-.mini-table code {
-  padding: 2px 5px;
-  border-radius: 4px;
-  background: rgba(32, 61, 48, 0.08);
-  font-weight: 700;
-  color: var(--button);
-}
-.chain-arrow {
-  padding: 4px 12px;
-  color: var(--accent);
-  font-size: 12.5px;
-  font-weight: 700;
-}
-
-/* Vacaciones y Tests */
-.holidays-tests-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-  margin-bottom: 48px;
-}
+/* Team detail panels */
 .panel-box {
   padding: 20px;
   border: 1px solid var(--line);
@@ -2091,62 +1685,26 @@ legend {
   color: var(--muted);
   font-size: 13px;
 }
-.home-cards,
-.test-cards {
-  display: grid;
-  gap: 10px;
+.roster-panel {
+  margin-bottom: 48px;
 }
-.home-card,
-.test-card {
+.roster-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.roster-card {
+  display: grid;
+  gap: 4px;
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: 9px;
   background: var(--bg);
 }
-.home-card-top {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  font-weight: 700;
-  color: #69806f;
-}
-.home-card h3,
-.test-card h3 {
-  margin: 4px 0;
-  font-size: 16px;
-}
-.home-format,
-.test-card p {
-  margin: 4px 0 10px;
+.roster-card small {
   color: var(--muted);
-  font-size: 12.5px;
-}
-.dose-comparison {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--line);
-  font-size: 12px;
-}
-.dose-comparison small {
-  display: block;
-  color: var(--muted);
-  font-size: 10.5px;
-}
-.milestone-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.milestone-chips span {
-  border-radius: 999px;
-  padding: 3px 9px;
-  background: var(--soft);
   font-size: 11px;
-  font-weight: 600;
 }
-
 .review-section {
   display: grid;
   grid-template-columns: 0.8fr 1.2fr;
@@ -2440,6 +1998,22 @@ legend {
 .error {
   color: #be4527;
 }
+.data-unavailable-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px auto 0;
+  padding: 12px 16px;
+  max-width: 1320px;
+  border: 1px solid #e2b49f;
+  border-radius: 10px;
+  color: #7f321f;
+  background: #fff3ed;
+}
+.data-unavailable-banner span {
+  flex: 1;
+  font-size: 13px;
+}
 .empty-state {
   margin-top: 34px;
   padding: 35px;
@@ -2462,8 +2036,7 @@ legend {
   .review-section,
   .note-editor,
   .season-summary,
-  .phase-cards-row,
-  .holidays-tests-grid {
+  .phase-cards-row {
     grid-template-columns: 1fr;
     display: grid;
     align-items: start;
@@ -2473,8 +2046,13 @@ legend {
     border-left: 0;
   }
   .team-grid,
-  .session-grid {
+  .session-grid,
+  .roster-grid {
     grid-template-columns: 1fr;
+  }
+  .data-unavailable-banner {
+    align-items: flex-start;
+    flex-direction: column;
   }
   .form-grid {
     grid-template-columns: 1fr;

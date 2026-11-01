@@ -1,10 +1,9 @@
 import { computed, onMounted, ref } from 'vue'
 import {
-  defaultTrainingCatalog,
-  resolvePlan,
   type AgeCategory,
   type CompetitiveLevel,
   type Frequency,
+  type MicrocycleRecord,
   type TrainingCatalogTables,
 } from '~/shared/training'
 import {
@@ -29,6 +28,7 @@ import {
   isWeeklyReviewArray,
   mondayFor,
   nextId,
+  nextMicrocycleId,
   useCoachStorage,
   weekdays,
   type CoachProfile,
@@ -47,7 +47,7 @@ import { useTrainingPlan } from '~/composables/useTrainingPlan'
 import { useWeeklyReviews } from '~/composables/useWeeklyReviews'
 
 export interface SheetsDatabaseResponse {
-  source: 'google-sheets' | 'local-fallback'
+  source: 'google-sheets'
   fetchedAt: string
   spreadsheetId: string
   spreadsheetUrl: string
@@ -59,6 +59,7 @@ export interface SheetsDatabaseResponse {
     teamPlayers: TeamPlayer[]
     seasons: Season[]
     reviews: WeeklyReview[]
+    microcycles: MicrocycleRecord[]
   }
 }
 
@@ -79,66 +80,12 @@ export function useCoachWorkspace() {
     removeStorageKey,
   } = useCoachStorage()
 
-  const seedCoaches: CoachProfile[] = [
-    {
-      id: 'ENT0001',
-      name: 'Nicolás',
-      role: 'admin',
-    },
-    {
-      id: 'ENT0002',
-      name: 'Entrenador Invitado',
-      role: 'coach',
-    },
-  ]
+  const emptyTrainingCatalog: TrainingCatalogTables = {
+    macrocycles: [], mesocycles: [], mesocycleSessions: [], sessionVariants: [],
+    trainingBlocks: [], blockExercises: [], exercises: [], homeSessions: [], tests: [],
+  }
 
-  const seedTeams: Team[] = [
-    {
-      id: 'EQU0001',
-      coachId: 'ENT0001',
-      name: 'Mike Jordan Team',
-      club: 'Club Baloncesto Norte',
-      status: 'active',
-    },
-  ]
-  const seedPlayers: Player[] = [
-    { id: 'JUG0001', name: 'Álex Martín' },
-    { id: 'JUG0002', name: 'Bruno López' },
-    { id: 'JUG0003', name: 'Dani Ruiz' },
-  ]
-  const seedTeamPlayers: TeamPlayer[] = seedPlayers.map((player, index) => ({
-    id: `EJU${String(index + 1).padStart(4, '0')}`,
-    teamId: 'EQU0001', playerId: player.id, status: 'active', joinedAt: '2026-10-12', leftAt: null,
-  }))
-
-  const seedSeasons: Season[] = [
-    {
-      id: 'TEM0001',
-      teamId: 'EQU0001',
-      planId: 'PLN0003',
-      name: '2026-27',
-      category: 'Cadete (U16) · Equipo Liga',
-      ageCategory: 'cadete',
-      competitiveLevel: 'liga',
-      startsAt: '2026-10-12',
-      endsAt: '2027-05-30',
-      trainingDays: ['Lunes', 'Miércoles', 'Viernes'],
-      context: 'Plan anual periodizado por fases según metodología MBSC.',
-      status: 'active',
-    },
-  ]
-
-  const seedReviews: WeeklyReview[] = [
-    {
-      id: 'OBS0001',
-      seasonId: 'TEM0001',
-      weekStart: '2026-10-12',
-      text: 'Semana 1: Evaluación inicial de patrones básicos y batería de tests CMJ/Sprint.',
-      createdAt: '2026-10-12T18:00:00.000Z',
-    },
-  ]
-
-  const coaches = ref<CoachProfile[]>(seedCoaches)
+  const coaches = ref<CoachProfile[]>([])
   const coach = ref<CoachProfile>({
     id: 'ENT0001',
     name: 'Nicolás',
@@ -150,20 +97,20 @@ export function useCoachWorkspace() {
   const view = ref<View>('home')
   const activeTeamTab = ref<TeamTab>('week')
   const showArchivedTeams = ref(false)
-  const catalog = ref<TrainingCatalogTables>(defaultTrainingCatalog)
-  const dbSource = ref<'google-sheets' | 'local-fallback'>('local-fallback')
+  const catalog = ref<TrainingCatalogTables>(emptyTrainingCatalog)
+  const dbSource = ref<'google-sheets' | 'unavailable'>('unavailable')
   const loadingDatabase = ref(false)
   const lastSyncedAt = ref('')
-  const teams = ref<Team[]>(seedTeams)
-  const players = ref<Player[]>(seedPlayers)
-  const teamPlayers = ref<TeamPlayer[]>(seedTeamPlayers)
-  const seasons = ref<Season[]>(seedSeasons)
-  const reviews = ref<WeeklyReview[]>(seedReviews)
-  const activeTeamId = ref('EQU0001')
-  const activeSeasonId = ref('TEM0001')
+  const teams = ref<Team[]>([])
+  const players = ref<Player[]>([])
+  const teamPlayers = ref<TeamPlayer[]>([])
+  const seasons = ref<Season[]>([])
+  const reviews = ref<WeeklyReview[]>([])
+  const microcycles = ref<MicrocycleRecord[]>([])
+  const activeTeamId = ref('')
+  const activeSeasonId = ref('')
   const currentWeekNumber = ref(1)
   const selectedDay = ref<DayId>('dia1')
-  const selectedBlockIdForExplorer = ref('BLK0003')
   const session = ref<GeneratedSessionResponse | null>(null)
   const genericExerciseImage = '/images/exercise-placeholder-light-brown.png'
   const loadingSession = ref(false)
@@ -185,17 +132,22 @@ export function useCoachWorkspace() {
   const activeTeamPlayers = computed(() =>
     teamPlayers.value.filter((membership) => membership.teamId === activeTeamId.value && membership.status === 'active'),
   )
+  const activeTeamRoster = computed(() =>
+    activeTeamPlayers.value.map((membership) => ({
+      ...membership,
+      player: players.value.find((item) => item.id === membership.playerId),
+    })),
+  )
   const playerCountByTeam = computed(() => new Map(
     teams.value.map((team) => [team.id, teamPlayers.value.filter((membership) => membership.teamId === team.id && membership.status === 'active').length]),
   ))
 
-  const teamDraft = ref({ name: '', club: '', players: '' })
+  const teamDraft = ref({ name: '', club: '' })
   const seasonDraft = ref<{
     name: string
     ageCategory: AgeCategory
     competitiveLevel: CompetitiveLevel
     startsAt: string
-    endsAt: string
     trainingDays: string[]
     context: string
   }>({
@@ -203,7 +155,6 @@ export function useCoachWorkspace() {
     ageCategory: 'cadete',
     competitiveLevel: 'liga',
     startsAt: '2026-10-12',
-    endsAt: '2027-05-30',
     trainingDays: ['Lunes', 'Miércoles', 'Viernes'],
     context: '',
   })
@@ -214,6 +165,26 @@ export function useCoachWorkspace() {
   const activeSeason = computed(() =>
     seasons.value.find((item) => item.id === activeSeasonId.value),
   )
+  const activeMicrocycle = computed(() =>
+    microcycles.value.find(
+      (item) =>
+        item.seasonId === activeSeasonId.value &&
+        item.weekNumber === currentWeekNumber.value,
+    ),
+  )
+  const activeSeasonEndDate = computed(() =>
+    activeSeason.value
+      ? addDays(activeSeason.value.startsAt, activePlan.value.totalWeeks * 7 - 1)
+      : '',
+  )
+  const seasonDraftEndDate = computed(() => {
+    const totalWeeks = catalog.value.macrocycles.find(
+      (item) => item.ageCategory === seasonDraft.value.ageCategory,
+    )?.totalWeeks || 0
+    return seasonDraft.value.startsAt && totalWeeks > 0
+      ? addDays(seasonDraft.value.startsAt, totalWeeks * 7 - 1)
+      : ''
+  })
 
   const frequency = computed<Frequency>(
     () =>
@@ -224,7 +195,8 @@ export function useCoachWorkspace() {
   )
 
   const planConfig = computed(() => ({
-    planId: activeSeason.value?.planId,
+    macrocycleId: activeSeason.value?.macrocycleId,
+    mesocycleId: activeMicrocycle.value?.mesocycleId || undefined,
     ageCategory: activeSeason.value?.ageCategory || 'cadete',
     competitiveLevel: activeSeason.value?.competitiveLevel || 'liga',
     frequency: frequency.value,
@@ -240,19 +212,7 @@ export function useCoachWorkspace() {
     currentPhase,
     weeklySessions,
     hydratedPreviewSession,
-    homeWorkouts,
-    seasonTests,
   } = useTrainingPlan(planConfig, catalog)
-
-  const activeExplorerBlock = computed(() => {
-    if (!trainingDataStatus.value.available) return undefined
-    const blocks = hydratedPreviewSession.value.blocks
-    return (
-      blocks.find((block) => block.id === selectedBlockIdForExplorer.value) ||
-      blocks[2] ||
-      blocks[0]
-    )
-  })
 
   const seasonStartMonday = computed(() =>
     mondayFor(activeSeason.value?.startsAt || '2026-10-12'),
@@ -296,6 +256,7 @@ export function useCoachWorkspace() {
           teamPlayers: teamPlayers.value,
           seasons: seasons.value,
           reviews: reviews.value,
+          microcycles: microcycles.value,
           includeCatalog: false,
         },
       })
@@ -359,33 +320,41 @@ export function useCoachWorkspace() {
       catalog.value = response.catalog
       dbSource.value = response.source
       lastSyncedAt.value = response.fetchedAt
+      error.value = ''
 
-      if (response.source === 'google-sheets') {
-        if (response.operational.coaches.length > 0) {
-          coaches.value = response.operational.coaches
-          writeStorageJson('pizarra-coaches-v4', coaches.value)
-          syncActiveCoachRoleFromCatalog()
-        }
-        teams.value = response.operational.teams.map((item) => ({
-          ...item,
-          status: isTeamStatus(item.status) ? item.status : 'active',
-        }))
-        writeStorageJson('pizarra-teams-v4', teams.value)
-        players.value = response.operational.players
-        teamPlayers.value = response.operational.teamPlayers
-        writeStorageJson('pizarra-players-v5', players.value)
-        writeStorageJson('pizarra-team-players-v5', teamPlayers.value)
-
-        seasons.value = response.operational.seasons
-        writeStorageJson('pizarra-seasons-v4', seasons.value)
-
-        reviews.value = response.operational.reviews
-        writeStorageJson('pizarra-reviews-v4', reviews.value)
-
-        ensureValidSelections()
-      }
-    } catch {
-      // Mantiene datos en caché local si no hay conexión
+      coaches.value = response.operational.coaches
+      teams.value = response.operational.teams.map((item) => ({
+        ...item,
+        status: isTeamStatus(item.status) ? item.status : 'active',
+      }))
+      players.value = response.operational.players
+      teamPlayers.value = response.operational.teamPlayers
+      seasons.value = response.operational.seasons
+      reviews.value = response.operational.reviews
+      microcycles.value = response.operational.microcycles
+      writeStorageJson('pizarra-coaches-v4', coaches.value)
+      writeStorageJson('pizarra-teams-v4', teams.value)
+      writeStorageJson('pizarra-players-v5', players.value)
+      writeStorageJson('pizarra-team-players-v5', teamPlayers.value)
+      writeStorageJson('pizarra-seasons-v4', seasons.value)
+      writeStorageJson('pizarra-reviews-v4', reviews.value)
+      syncActiveCoachRoleFromCatalog()
+      ensureValidSelections()
+    } catch (loadError) {
+      dbSource.value = 'unavailable'
+      catalog.value = emptyTrainingCatalog
+      coaches.value = []
+      teams.value = []
+      players.value = []
+      teamPlayers.value = []
+      seasons.value = []
+      reviews.value = []
+      microcycles.value = []
+      activeTeamId.value = ''
+      activeSeasonId.value = ''
+      error.value = loadError instanceof Error
+        ? loadError.message
+        : 'No se pudieron cargar los datos de Google Sheets.'
     } finally {
       loadingDatabase.value = false
     }
@@ -421,66 +390,6 @@ export function useCoachWorkspace() {
     displayedWeekStart,
     onSave: saveState,
   })
-
-  function loadState(): void {
-    const storedCoaches = readStorageJson('pizarra-coaches-v4', isCoachArray)
-    const storedTeams = readStorageJson('pizarra-teams-v4', isTeamArray)
-    const storedPlayers = readStorageJson('pizarra-players-v5', isPlayerArray)
-    const storedTeamPlayers = readStorageJson('pizarra-team-players-v5', isTeamPlayerArray)
-    const storedSeasons = readStorageJson('pizarra-seasons-v4', isSeasonArray)
-    const storedReviews = readStorageJson(
-      'pizarra-reviews-v4',
-      isWeeklyReviewArray,
-    )
-
-    if (storedCoaches && storedCoaches.length > 0) {
-      coaches.value = storedCoaches.map((item) => ({
-        ...item,
-        role: isCoachRole(item.role) ? item.role : 'coach',
-      }))
-    }
-    if (storedTeams) {
-      teams.value = storedTeams.map((item) => ({
-        ...item,
-        status: isTeamStatus(item.status) ? item.status : 'active',
-      }))
-      if (!storedPlayers && !storedTeamPlayers) {
-        const legacyTeams = storedTeams as Array<Team & { players?: Player[] }>
-        const legacyPlayers = legacyTeams.flatMap((team) => team.players || [])
-        if (legacyPlayers.length > 0) {
-          players.value = Array.from(new Map(legacyPlayers.map((player) => [player.id, player])).values())
-          teamPlayers.value = legacyTeams.flatMap((team, teamIndex) =>
-            (team.players || []).map((player, playerIndex) => ({
-              id: `EJU${String(teamIndex * 1000 + playerIndex + 1).padStart(4, '0')}`,
-              teamId: team.id,
-              playerId: player.id,
-              status: 'active' as const,
-              joinedAt: '',
-              leftAt: null,
-            })),
-          )
-        }
-      }
-    }
-    if (storedPlayers) players.value = storedPlayers
-    if (storedTeamPlayers) teamPlayers.value = storedTeamPlayers
-    if (storedSeasons) {
-      seasons.value = storedSeasons.map((item) => ({
-        ...item,
-        ageCategory: isAgeCategory(item.ageCategory)
-          ? item.ageCategory
-          : 'cadete',
-        competitiveLevel: isCompetitiveLevel(item.competitiveLevel)
-          ? item.competitiveLevel
-          : 'liga',
-      }))
-    }
-    if (storedReviews) {
-      reviews.value = storedReviews
-    }
-
-    ensureValidSelections()
-  }
 
   function loadCoach(): void {
     const saved = readStorageJson('pizarra-coach', isCoachProfile)
@@ -650,26 +559,17 @@ export function useCoachWorkspace() {
   }
 
   function openCreateTeam(): void {
-    teamDraft.value = { name: '', club: '', players: '' }
+    teamDraft.value = { name: '', club: '' }
     view.value = 'create-team'
   }
 
   function createTeam(): void {
+    if (dbSource.value !== 'google-sheets') return
     if (!teamDraft.value.name.trim()) return
     const teamId = nextId(
       'EQU',
       teams.value.map((item) => item.id),
     )
-    const nextPlayerNumber = players.value.reduce((max, player) => Math.max(max, Number(player.id.slice(3)) || 0), 0)
-    const nextMembershipNumber = teamPlayers.value.reduce((max, membership) => Math.max(max, Number(membership.id.slice(3)) || 0), 0)
-    const draftedPlayers = teamDraft.value.players
-      .split('\n')
-      .map((name) => name.trim())
-      .filter(Boolean)
-      .map((name, index) => ({
-        id: `JUG${String(nextPlayerNumber + index + 1).padStart(4, '0')}`,
-        name,
-      }))
     teams.value.push({
       id: teamId,
       coachId: coach.value.id,
@@ -677,15 +577,6 @@ export function useCoachWorkspace() {
       club: teamDraft.value.club.trim() || 'Sin club',
       status: 'active',
     })
-    players.value.push(...draftedPlayers)
-    teamPlayers.value.push(...draftedPlayers.map((player, index) => ({
-      id: `EJU${String(nextMembershipNumber + index + 1).padStart(4, '0')}`,
-      teamId,
-      playerId: player.id,
-      status: 'active' as const,
-      joinedAt: new Date().toISOString().slice(0, 10),
-      leftAt: null,
-    })))
     activeTeamId.value = teamId
     seasonDraft.value = {
       name: '2026-27',
@@ -713,19 +604,26 @@ export function useCoachWorkspace() {
   }
 
   function createSeason(): void {
+    if (dbSource.value !== 'google-sheets') return
     if (
       !activeTeam.value ||
-      !seasonDraft.value.startsAt ||
-      !seasonDraft.value.endsAt
+      !seasonDraft.value.startsAt
     ) {
+      return
+    }
+    const resolvedMacrocycle = catalog.value.macrocycles.find(
+      (item) => item.ageCategory === seasonDraft.value.ageCategory,
+    )
+    if (!resolvedMacrocycle) {
+      error.value = 'No hay un macrociclo disponible en Google Sheets para esta categoría.'
+      return
+    }
+    if (asLocalDate(seasonDraft.value.startsAt).getDay() !== 1) {
+      error.value = 'La temporada debe comenzar un lunes.'
       return
     }
     const sortedDays = [...seasonDraft.value.trainingDays].sort(
       (first, second) => weekdays.indexOf(first) - weekdays.indexOf(second),
-    )
-    const resolvedPlan = resolvePlan(
-      seasonDraft.value.ageCategory,
-      catalog.value,
     )
     const newSeason: Season = {
       id: nextId(
@@ -733,7 +631,7 @@ export function useCoachWorkspace() {
         seasons.value.map((item) => item.id),
       ),
       teamId: activeTeam.value.id,
-      planId: resolvedPlan.id,
+      macrocycleId: resolvedMacrocycle.id,
       name: seasonDraft.value.name || '2026-27',
       category: categoryLabelFor(
         seasonDraft.value.ageCategory,
@@ -742,11 +640,41 @@ export function useCoachWorkspace() {
       ageCategory: seasonDraft.value.ageCategory,
       competitiveLevel: seasonDraft.value.competitiveLevel,
       startsAt: seasonDraft.value.startsAt,
-      endsAt: seasonDraft.value.endsAt,
+      endsAt: seasonDraftEndDate.value,
       trainingDays: sortedDays,
       context: seasonDraft.value.context.trim(),
       status: 'active',
     }
+    const microcycleIds = microcycles.value.map((item) => item.id)
+    const generatedMicrocycles = Array.from(
+      { length: resolvedMacrocycle.totalWeeks },
+      (_, index): MicrocycleRecord => {
+        const weekNumber = index + 1
+        const mesocycle = catalog.value.mesocycles.find(
+          (item) =>
+            item.macrocycleId === resolvedMacrocycle.id &&
+            weekNumber >= item.weekStart &&
+            weekNumber <= item.weekEnd,
+        )
+        const weekStart = addDays(newSeason.startsAt, index * 7)
+        const id = nextMicrocycleId(microcycleIds)
+        microcycleIds.push(id)
+        return {
+          id,
+          seasonId: newSeason.id,
+          macrocycleId: resolvedMacrocycle.id,
+          mesocycleId: mesocycle?.id || '',
+          weekNumber,
+          weekStart,
+          weekEnd: addDays(weekStart, 6),
+          objective: mesocycle?.objective || '',
+          loadIndex: mesocycle
+            ? mesocycle.weeklyLoads[weekNumber - mesocycle.weekStart] || 0
+            : 0,
+          status: 'planned',
+        }
+      },
+    )
     seasons.value
       .filter(
         (item) =>
@@ -756,6 +684,7 @@ export function useCoachWorkspace() {
         item.status = 'closed'
       })
     seasons.value.push(newSeason)
+    microcycles.value.push(...generatedMicrocycles)
     activeSeasonId.value = newSeason.id
     currentWeekNumber.value = 1
     saveState()
@@ -787,6 +716,8 @@ export function useCoachWorkspace() {
             day,
             frequency: frequency.value,
             weekNumber: currentWeekNumber.value,
+            macrocycleId: activeSeason.value?.macrocycleId,
+            mesocycleId: activeMicrocycle.value?.mesocycleId,
             ageCategory: activeSeason.value?.ageCategory || 'cadete',
             competitiveLevel: activeSeason.value?.competitiveLevel || 'liga',
           },
@@ -803,21 +734,9 @@ export function useCoachWorkspace() {
     }
   }
 
-  function inspectDayInTables(day: DayId): void {
-    selectedDay.value = day
-    const firstCircuit =
-      hydratedPreviewSession.value.blocks[2] ||
-      hydratedPreviewSession.value.blocks[0]
-    if (firstCircuit) {
-      selectedBlockIdForExplorer.value = firstCircuit.id
-    }
-    activeTeamTab.value = 'tables'
-  }
-
   onMounted(() => {
     loadCoach()
     signedIn.value = readStorageFlag('pizarra-coach-session') !== 'signed-out'
-    loadState()
     void loadDatabaseFromSheets(false)
   })
 
@@ -839,15 +758,20 @@ export function useCoachWorkspace() {
     players,
     teamPlayers,
     activeTeamPlayers,
+    activeTeamRoster,
     playerCountByTeam,
     activeTeams,
     archivedTeams,
     visibleTeams,
     seasons,
+    microcycles,
     teamSeasons,
     reviews,
     activeTeam,
     activeSeason,
+    activeMicrocycle,
+    activeSeasonEndDate,
+    seasonDraftEndDate,
     frequency,
     trainingDataStatus,
     activePlan,
@@ -856,12 +780,8 @@ export function useCoachWorkspace() {
     currentPhase,
     weeklySessions,
     hydratedPreviewSession,
-    homeWorkouts,
-    seasonTests,
-    activeExplorerBlock,
     currentWeekNumber,
     selectedDay,
-    selectedBlockIdForExplorer,
     displayedWeekStart,
     canGoToPreviousWeek,
     canGoToNextWeek,
@@ -902,7 +822,6 @@ export function useCoachWorkspace() {
     openHistory,
     closeHistory,
     generateSession,
-    inspectDayInTables,
     refreshDatabaseFromSheets: () => loadDatabaseFromSheets(true),
   }
 }

@@ -1,23 +1,23 @@
 import { computed, type Ref } from 'vue'
 import {
-  defaultTrainingCatalog,
   getTrainingDataStatus,
   getHydratedSession,
-  getPhaseForWeek,
-  getPlanHomeSessions,
-  getPlanPhases,
-  getPlanTests,
-  getWeeklySessionsForPhase,
-  resolvePlan,
+  getMesocycleForWeek,
+  getMesocycles,
+  getWeeklySessionsForMesocycle,
   type AgeCategory,
   type CompetitiveLevel,
   type Frequency,
+  type MesocycleRecord,
+  type MesocycleWeekContext,
+  type MacrocycleRecord,
   type TrainingCatalogTables,
   type TrainingDay,
 } from '~/shared/training'
 
 export interface SeasonPlanConfig {
-  planId?: string
+  macrocycleId?: string
+  mesocycleId?: string
   ageCategory: AgeCategory
   competitiveLevel: CompetitiveLevel
   frequency: Frequency
@@ -27,15 +27,39 @@ export interface SeasonPlanConfig {
 
 export function useTrainingPlan(
   config: Ref<SeasonPlanConfig>,
-  catalogRef?: Ref<TrainingCatalogTables>,
+  catalogRef: Ref<TrainingCatalogTables>,
 ) {
-  const catalog = computed(() => catalogRef?.value ?? defaultTrainingCatalog)
+  const catalog = computed(() => catalogRef.value)
+
+  const emptyMacrocycle = computed<MacrocycleRecord>(() => ({
+    id: '',
+    name: '',
+    ageCategory: config.value.ageCategory,
+    totalWeeks: 0,
+  }))
+  const emptyMesocycle = computed<MesocycleRecord>(() => ({
+    id: '',
+    macrocycleId: '',
+    phaseOrder: 0,
+    type: 'training',
+    name: '',
+    weeksCount: 0,
+    weekStart: 0,
+    weekEnd: 0,
+    color: '#4f7cac',
+    objective: '',
+    loadRules: [],
+    plioRule: '',
+    weeklyProgressionNote: '',
+    weeklyLoads: [],
+  }))
 
   const trainingDataStatus = computed(() =>
     getTrainingDataStatus(
       {
         ageCategory: config.value.ageCategory,
-        planId: config.value.planId,
+        macrocycleId: config.value.macrocycleId,
+        mesocycleId: config.value.mesocycleId,
         weekNumber: config.value.weekNumber,
         day: config.value.selectedDay,
       },
@@ -43,100 +67,64 @@ export function useTrainingPlan(
     ),
   )
 
-  const activePlan = computed(() =>
-    resolvePlan(
-      config.value.ageCategory,
-      catalog.value,
-      config.value.planId,
-    ),
-  )
+  const activePlan = computed(() => catalog.value.macrocycles.find(
+    (item) =>
+      (config.value.macrocycleId !== undefined
+        ? item.id === config.value.macrocycleId
+        : item.ageCategory === config.value.ageCategory) &&
+      item.ageCategory === config.value.ageCategory,
+  ) ?? emptyMacrocycle.value)
 
   const phases = computed(() =>
-    getPlanPhases(activePlan.value.id, catalog.value),
+    getMesocycles(activePlan.value.id, catalog.value),
   )
 
   const currentWeekContext = computed(() =>
-    getPhaseForWeek(
-      activePlan.value.id,
-      config.value.weekNumber,
-      catalog.value,
-    ),
+    activePlan.value.id
+      ? getMesocycleForWeek(
+          activePlan.value.id,
+          config.value.weekNumber,
+          catalog.value,
+          config.value.mesocycleId,
+        )
+      : {
+          phase: emptyMesocycle.value,
+          weekNumber: config.value.weekNumber,
+          weekInPhase: 0,
+          loadIndex: 0,
+          isDeload: false,
+        } satisfies MesocycleWeekContext,
   )
 
   const currentPhase = computed(() => currentWeekContext.value.phase)
 
   const weeklySessions = computed(() =>
-    getWeeklySessionsForPhase(
-      currentPhase.value.id,
-      config.value.frequency,
-      config.value.competitiveLevel,
-      catalog.value,
-    ),
+    currentPhase.value.id
+      ? getWeeklySessionsForMesocycle(
+          currentPhase.value.id,
+          config.value.frequency,
+          config.value.competitiveLevel,
+          catalog.value,
+        )
+      : [],
   )
 
   const hydratedPreviewSession = computed(() =>
-    getHydratedSession(
-      {
-        ageCategory: config.value.ageCategory,
-        planId: config.value.planId,
-        competitiveLevel: config.value.competitiveLevel,
-        frequency: config.value.frequency,
-        weekNumber: config.value.weekNumber,
-        day: config.value.selectedDay,
-      },
-      catalog.value,
-    ),
+    trainingDataStatus.value.available
+      ? getHydratedSession(
+          {
+            ageCategory: config.value.ageCategory,
+            macrocycleId: config.value.macrocycleId,
+            mesocycleId: config.value.mesocycleId,
+            competitiveLevel: config.value.competitiveLevel,
+            frequency: config.value.frequency,
+            weekNumber: config.value.weekNumber,
+            day: config.value.selectedDay,
+          },
+          catalog.value,
+        )
+      : null,
   )
-
-  const homeWorkouts = computed(() =>
-    getPlanHomeSessions(activePlan.value.id, catalog.value),
-  )
-  const seasonTests = computed(() =>
-    getPlanTests(activePlan.value.id, catalog.value),
-  )
-
-  const allWeeksTimeline = computed(() => {
-    const timeline: Array<{
-      weekNumber: number
-      phaseId: string
-      phaseName: string
-      phaseColor: string
-      phaseType: 'training' | 'holiday'
-      loadIndex: number
-      isDeload: boolean
-    }> = []
-
-    for (const phase of phases.value) {
-      for (let w = phase.weekStart; w <= phase.weekEnd; w++) {
-        const idx = w - phase.weekStart
-        const loadIndex = phase.weeklyLoads[idx] ?? 5
-        const isDeload =
-          phase.type === 'training' &&
-          idx + 1 === phase.weeksCount &&
-          loadIndex <= 4
-        timeline.push({
-          weekNumber: w,
-          phaseId: phase.id,
-          phaseName: phase.name,
-          phaseColor: phase.color,
-          phaseType: phase.type,
-          loadIndex,
-          isDeload,
-        })
-      }
-    }
-    return timeline
-  })
-
-  const rawTables = computed(() => ({
-    plans: catalog.value.plans,
-    planPhases: catalog.value.planPhases,
-    phaseSessions: catalog.value.phaseSessions,
-    sessionVariants: catalog.value.sessionVariants,
-    sessionBlocks: catalog.value.sessionBlocks,
-    blockExercises: catalog.value.blockExercises,
-    exercises: catalog.value.exercises,
-  }))
 
   return {
     trainingDataStatus,
@@ -146,9 +134,5 @@ export function useTrainingPlan(
     currentPhase,
     weeklySessions,
     hydratedPreviewSession,
-    homeWorkouts,
-    seasonTests,
-    allWeeksTimeline,
-    rawTables,
   }
 }

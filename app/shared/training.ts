@@ -18,16 +18,16 @@ export interface ExerciseRecord {
   harder: string
 }
 
-export interface PlanRecord {
+export interface MacrocycleRecord {
   id: string
   name: string
   ageCategory: AgeCategory
   totalWeeks: number
 }
 
-export interface PlanPhaseRecord {
+export interface MesocycleRecord {
   id: string
-  planId: string
+  macrocycleId: string
   phaseOrder: number
   type: PhaseType
   name: string
@@ -42,9 +42,24 @@ export interface PlanPhaseRecord {
   weeklyLoads: number[]
 }
 
-export interface PhaseSessionRecord {
+export type MicrocycleStatus = 'planned' | 'active' | 'completed'
+
+export interface MicrocycleRecord {
   id: string
-  phaseId: string
+  seasonId: string
+  macrocycleId: string
+  mesocycleId: string
+  weekNumber: number
+  weekStart: string
+  weekEnd: string
+  objective: string
+  loadIndex: number
+  status: MicrocycleStatus
+}
+
+export interface MesocycleSessionRecord {
+  id: string
+  mesocycleId: string
   day: TrainingDay
   order: number
   name: string
@@ -54,16 +69,15 @@ export interface PhaseSessionRecord {
 
 export interface SessionVariantRecord {
   id: string
-  phaseSessionId: string
+  mesocycleSessionId: string
   variantCode: 'A' | 'B'
   name: string
   focus: string
   weekStart: number
   weekEnd: number
-  weekParity: 0 | 1
 }
 
-export interface SessionBlockRecord {
+export interface TrainingBlockRecord {
   id: string
   sessionId: string
   blockOrder: number
@@ -85,7 +99,7 @@ export interface BlockExerciseRecord {
 
 export interface HomeSessionRecord {
   id: string
-  planId: string
+  macrocycleId: string
   code: 'A' | 'B' | 'C'
   name: string
   minutes: number
@@ -97,7 +111,7 @@ export interface HomeSessionRecord {
 
 export interface TestRecord {
   id: string
-  planId: string
+  macrocycleId: string
   testOrder: number
   name: string
   protocol: string
@@ -127,13 +141,13 @@ export interface HydratedSessionBlock {
 }
 
 export interface HydratedPhaseSession {
-  plan: PlanRecord
-  phase: PlanPhaseRecord
+  plan: MacrocycleRecord
+  phase: MesocycleRecord
   weekNumber: number
   weekInPhase: number
   loadIndex: number
   isDeload: boolean
-  session: PhaseSessionRecord
+  session: MesocycleSessionRecord
   variant: SessionVariantRecord
   blocks: HydratedSessionBlock[]
 }
@@ -451,29 +465,29 @@ export const exercises: ExerciseRecord[] = [
 ]
 
 // ============================================================================
-// TABLA 2: plantillas_macrociclo (Catálogo maestro por categoría formativa)
+// TABLE 2: macrocycles (master catalog by training category)
 // ============================================================================
-export const plans: PlanRecord[] = [
+export const macrocycles: MacrocycleRecord[] = [
   {
-    id: 'PLN0001',
+    id: 'MAC0001',
     name: 'Plan Anual Alevín (U12)',
     ageCategory: 'alevin',
     totalWeeks: 45,
   },
   {
-    id: 'PLN0002',
+    id: 'MAC0002',
     name: 'Plan Anual Infantil (U14)',
     ageCategory: 'infantil',
     totalWeeks: 45,
   },
   {
-    id: 'PLN0003',
+    id: 'MAC0003',
     name: 'Plan Anual Cadete (U16)',
     ageCategory: 'cadete',
     totalWeeks: 45,
   },
   {
-    id: 'PLN0004',
+    id: 'MAC0004',
     name: 'Plan Anual Juvenil (U18)',
     ageCategory: 'juvenil',
     totalWeeks: 45,
@@ -483,11 +497,11 @@ export const plans: PlanRecord[] = [
 // ============================================================================
 // TABLA 3: mesociclos (fases iniciales por cada categoría)
 // ============================================================================
-export const planPhases: PlanPhaseRecord[] = [
-  // --- PLN0001: ALEVÍN (U12) ---
+export const mesocycles: MesocycleRecord[] = [
+  // --- MAC0001: ALEVÍN (U12) ---
   {
-    id: 'FAS0001',
-    planId: 'PLN0001',
+    id: 'MES0001',
+    macrocycleId: 'MAC0001',
     phaseOrder: 1,
     type: 'training',
     name: 'Pretemporada · Coordinación y Aterrizajes (U12)',
@@ -502,8 +516,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [3, 4, 4, 5],
   },
   {
-    id: 'FAS0002',
-    planId: 'PLN0001',
+    id: 'MES0002',
+    macrocycleId: 'MAC0001',
     phaseOrder: 2,
     type: 'training',
     name: 'Período competitivo 1 · Autocarga y Agilidad (U12)',
@@ -518,8 +532,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [4, 5, 5, 6, 6, 4, 5, 5, 6, 6, 5, 3],
   },
   {
-    id: 'FAS0003',
-    planId: 'PLN0001',
+    id: 'MES0003',
+    macrocycleId: 'MAC0001',
     phaseOrder: 3,
     type: 'holiday',
     name: 'Período transitorio Navidad · Retos activos en casa (U12)',
@@ -534,8 +548,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [2, 2],
   },
   {
-    id: 'FAS0004',
-    planId: 'PLN0001',
+    id: 'MES0004',
+    macrocycleId: 'MAC0001',
     phaseOrder: 4,
     type: 'training',
     name: 'Período competitivo 2 · Velocidad de Reacción y Juegos (U12)',
@@ -550,10 +564,10 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [3, 5, 5, 6, 6, 5, 6, 6, 6, 5, 3],
   },
 
-  // --- PLN0002: INFANTIL (U14) ---
+  // --- MAC0002: INFANTIL (U14) ---
   {
-    id: 'FAS0005',
-    planId: 'PLN0002',
+    id: 'MES0005',
+    macrocycleId: 'MAC0002',
     phaseOrder: 1,
     type: 'training',
     name: 'Pretemporada · Control Postural y Patrones (U14)',
@@ -568,8 +582,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [4, 4, 5, 5],
   },
   {
-    id: 'FAS0006',
-    planId: 'PLN0002',
+    id: 'MES0006',
+    macrocycleId: 'MAC0002',
     phaseOrder: 2,
     type: 'training',
     name: 'Período competitivo 1 · Fuerza con Propio Peso y Gomas (U14)',
@@ -584,8 +598,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [5, 5, 6, 6, 6, 4, 5, 6, 6, 6, 5, 4],
   },
   {
-    id: 'FAS0007',
-    planId: 'PLN0002',
+    id: 'MES0007',
+    macrocycleId: 'MAC0002',
     phaseOrder: 3,
     type: 'holiday',
     name: 'Período transitorio Navidad · Trabajo autónomo en casa (U14)',
@@ -600,8 +614,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [2, 2],
   },
   {
-    id: 'FAS0008',
-    planId: 'PLN0002',
+    id: 'MES0008',
+    macrocycleId: 'MAC0002',
     phaseOrder: 4,
     type: 'training',
     name: 'Período competitivo 2 · Saltos, Aceleración y COD (U14)',
@@ -616,10 +630,10 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [4, 5, 6, 6, 7, 5, 6, 6, 7, 7, 4],
   },
 
-  // --- PLN0003: CADETE (U16) ---
+  // --- MAC0003: CADETE (U16) ---
   {
-    id: 'FAS0009',
-    planId: 'PLN0003',
+    id: 'MES0009',
+    macrocycleId: 'MAC0003',
     phaseOrder: 1,
     type: 'training',
     name: 'Pretemporada · Fundamentos (U16)',
@@ -634,8 +648,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [4, 5, 5, 6],
   },
   {
-    id: 'FAS0010',
-    planId: 'PLN0003',
+    id: 'MES0010',
+    macrocycleId: 'MAC0003',
     phaseOrder: 2,
     type: 'training',
     name: 'Período competitivo 1 · Fuerza Base (U16)',
@@ -650,8 +664,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [5, 6, 6, 7, 7, 4, 6, 6, 7, 7, 6, 4],
   },
   {
-    id: 'FAS0011',
-    planId: 'PLN0003',
+    id: 'MES0011',
+    macrocycleId: 'MAC0003',
     phaseOrder: 3,
     type: 'holiday',
     name: 'Período transitorio Navidad · Trabajo en casa (U16)',
@@ -666,8 +680,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [2, 2],
   },
   {
-    id: 'FAS0012',
-    planId: 'PLN0003',
+    id: 'MES0012',
+    macrocycleId: 'MAC0003',
     phaseOrder: 4,
     type: 'training',
     name: 'Período competitivo 2 · Fuerza y Potencia (U16)',
@@ -682,10 +696,10 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [4, 6, 7, 7, 8, 5, 6, 7, 8, 8, 4],
   },
 
-  // --- PLN0004: JUVENIL (U18) ---
+  // --- MAC0004: JUVENIL (U18) ---
   {
-    id: 'FAS0013',
-    planId: 'PLN0004',
+    id: 'MES0013',
+    macrocycleId: 'MAC0004',
     phaseOrder: 1,
     type: 'training',
     name: 'Pretemporada · Capacidad de Trabajo y Tejido (U18)',
@@ -700,8 +714,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [5, 6, 6, 7],
   },
   {
-    id: 'FAS0014',
-    planId: 'PLN0004',
+    id: 'MES0014',
+    macrocycleId: 'MAC0004',
     phaseOrder: 2,
     type: 'training',
     name: 'Período competitivo 1 · Fuerza Máxima Relativa (U18)',
@@ -716,8 +730,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [6, 7, 7, 8, 8, 4, 7, 7, 8, 8, 7, 4],
   },
   {
-    id: 'FAS0015',
-    planId: 'PLN0004',
+    id: 'MES0015',
+    macrocycleId: 'MAC0004',
     phaseOrder: 3,
     type: 'holiday',
     name: 'Período transitorio Navidad · Mantenimiento Neuromuscular (U18)',
@@ -732,8 +746,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [3, 3],
   },
   {
-    id: 'FAS0016',
-    planId: 'PLN0004',
+    id: 'MES0016',
+    macrocycleId: 'MAC0004',
     phaseOrder: 4,
     type: 'training',
     name: 'Período competitivo 2 · Contraste y Potencia Competitiva (U18)',
@@ -748,8 +762,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [5, 7, 8, 8, 9, 6, 7, 8, 8, 9, 5],
   },
   {
-    id: 'FAS0017',
-    planId: 'PLN0001',
+    id: 'MES0017',
+    macrocycleId: 'MAC0001',
     phaseOrder: 5,
     type: 'holiday',
     name: 'Período transitorio Semana Santa · Movimiento autónomo (U12)',
@@ -764,8 +778,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [2],
   },
   {
-    id: 'FAS0018',
-    planId: 'PLN0001',
+    id: 'MES0018',
+    macrocycleId: 'MAC0001',
     phaseOrder: 6,
     type: 'training',
     name: 'Período competitivo 3 · Velocidad y Juegos (U12)',
@@ -780,8 +794,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [4, 5, 6, 6, 6, 4, 5, 6, 6, 5, 3],
   },
   {
-    id: 'FAS0019',
-    planId: 'PLN0001',
+    id: 'MES0019',
+    macrocycleId: 'MAC0001',
     phaseOrder: 7,
     type: 'holiday',
     name: 'Período transitorio final · Recuperación activa (U12)',
@@ -796,8 +810,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [2, 2, 1, 1],
   },
   {
-    id: 'FAS0020',
-    planId: 'PLN0002',
+    id: 'MES0020',
+    macrocycleId: 'MAC0002',
     phaseOrder: 5,
     type: 'holiday',
     name: 'Período transitorio Semana Santa · Mantenimiento (U14)',
@@ -812,8 +826,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [2],
   },
   {
-    id: 'FAS0021',
-    planId: 'PLN0002',
+    id: 'MES0021',
+    macrocycleId: 'MAC0002',
     phaseOrder: 6,
     type: 'training',
     name: 'Período competitivo 3 · Potencia y COD (U14)',
@@ -828,8 +842,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [5, 6, 6, 7, 7, 5, 6, 7, 7, 6, 4],
   },
   {
-    id: 'FAS0022',
-    planId: 'PLN0002',
+    id: 'MES0022',
+    macrocycleId: 'MAC0002',
     phaseOrder: 7,
     type: 'holiday',
     name: 'Período transitorio final · Recuperación activa (U14)',
@@ -844,8 +858,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [2, 2, 2, 1],
   },
   {
-    id: 'FAS0023',
-    planId: 'PLN0003',
+    id: 'MES0023',
+    macrocycleId: 'MAC0003',
     phaseOrder: 5,
     type: 'holiday',
     name: 'Período transitorio Semana Santa · Mantenimiento (U16)',
@@ -860,8 +874,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [2],
   },
   {
-    id: 'FAS0024',
-    planId: 'PLN0003',
+    id: 'MES0024',
+    macrocycleId: 'MAC0003',
     phaseOrder: 6,
     type: 'training',
     name: 'Período competitivo 3 · Contraste y Potencia (U16)',
@@ -876,8 +890,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [6, 7, 7, 8, 8, 5, 6, 7, 8, 7, 4],
   },
   {
-    id: 'FAS0025',
-    planId: 'PLN0003',
+    id: 'MES0025',
+    macrocycleId: 'MAC0003',
     phaseOrder: 7,
     type: 'holiday',
     name: 'Período transitorio final · Recuperación activa (U16)',
@@ -892,8 +906,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [2, 2, 2, 1],
   },
   {
-    id: 'FAS0026',
-    planId: 'PLN0004',
+    id: 'MES0026',
+    macrocycleId: 'MAC0004',
     phaseOrder: 5,
     type: 'holiday',
     name: 'Período transitorio Semana Santa · Mantenimiento (U18)',
@@ -908,8 +922,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [2],
   },
   {
-    id: 'FAS0027',
-    planId: 'PLN0004',
+    id: 'MES0027',
+    macrocycleId: 'MAC0004',
     phaseOrder: 6,
     type: 'training',
     name: 'Período competitivo 3 · Potencia competitiva (U18)',
@@ -924,8 +938,8 @@ export const planPhases: PlanPhaseRecord[] = [
     weeklyLoads: [7, 8, 8, 9, 9, 6, 7, 8, 9, 8, 5],
   },
   {
-    id: 'FAS0028',
-    planId: 'PLN0004',
+    id: 'MES0028',
+    macrocycleId: 'MAC0004',
     phaseOrder: 7,
     type: 'holiday',
     name: 'Período transitorio final · Recuperación activa (U18)',
@@ -942,13 +956,13 @@ export const planPhases: PlanPhaseRecord[] = [
 ]
 
 // ============================================================================
-// TABLA 4: sesiones_planificadas (sesiones por día y mesociclo)
+// TABLE 4: mesocycle_sessions (sessions by day and mesocycle)
 // ============================================================================
-export const phaseSessions: PhaseSessionRecord[] = [
-  // --- PLN0001: ALEVÍN (U12) · Fases FAS0001, FAS0002, FAS0004 ---
+export const mesocycleSessions: MesocycleSessionRecord[] = [
+  // --- MAC0001: ALEVÍN (U12) · Fases MES0001, MES0002, MES0004 ---
   {
     id: 'SES0001',
-    phaseId: 'FAS0001',
+    mesocycleId: 'MES0001',
     day: 'dia1',
     order: 1,
     name: 'Coordinación + Aterrizaje (Fase 1 · U12)',
@@ -957,7 +971,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0002',
-    phaseId: 'FAS0001',
+    mesocycleId: 'MES0001',
     day: 'dia2',
     order: 2,
     name: 'Juegos de Frenada y Desplazamiento (Fase 1 · U12)',
@@ -966,7 +980,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0003',
-    phaseId: 'FAS0001',
+    mesocycleId: 'MES0001',
     day: 'dia3',
     order: 3,
     name: 'Movilidad, Core y Tobillo (Fase 1 · U12)',
@@ -975,7 +989,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0004',
-    phaseId: 'FAS0002',
+    mesocycleId: 'MES0002',
     day: 'dia1',
     order: 1,
     name: 'Autocarga + Saltos Controlados (Fase 2 · U12)',
@@ -984,7 +998,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0005',
-    phaseId: 'FAS0002',
+    mesocycleId: 'MES0002',
     day: 'dia2',
     order: 2,
     name: 'Agilidad y Cambios de Dirección (Fase 2 · U12)',
@@ -993,7 +1007,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0006',
-    phaseId: 'FAS0002',
+    mesocycleId: 'MES0002',
     day: 'dia3',
     order: 3,
     name: 'Reactividad Lúdica + Prevención (Fase 2 · U12)',
@@ -1002,7 +1016,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0007',
-    phaseId: 'FAS0004',
+    mesocycleId: 'MES0004',
     day: 'dia1',
     order: 1,
     name: 'Potencia Lúdica + Autocarga (Fase 3 · U12)',
@@ -1011,7 +1025,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0008',
-    phaseId: 'FAS0004',
+    mesocycleId: 'MES0004',
     day: 'dia2',
     order: 2,
     name: 'Velocidad de Reacción y Persecución (Fase 3 · U12)',
@@ -1020,7 +1034,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0009',
-    phaseId: 'FAS0004',
+    mesocycleId: 'MES0004',
     day: 'dia3',
     order: 3,
     name: 'Activación Pre-partido + Movilidad (Fase 3 · U12)',
@@ -1028,10 +1042,10 @@ export const phaseSessions: PhaseSessionRecord[] = [
     totalMinutes: 25,
   },
 
-  // --- PLN0002: INFANTIL (U14) · Fases FAS0005, FAS0006, FAS0008 ---
+  // --- MAC0002: INFANTIL (U14) · Fases MES0005, MES0006, MES0008 ---
   {
     id: 'SES0010',
-    phaseId: 'FAS0005',
+    mesocycleId: 'MES0005',
     day: 'dia1',
     order: 1,
     name: 'Control Postural + Patrones (Fase 1 · U14)',
@@ -1040,7 +1054,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0011',
-    phaseId: 'FAS0005',
+    mesocycleId: 'MES0005',
     day: 'dia2',
     order: 2,
     name: 'Desaceleración + Bisagra Básica (Fase 1 · U14)',
@@ -1049,7 +1063,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0012',
-    phaseId: 'FAS0005',
+    mesocycleId: 'MES0005',
     day: 'dia3',
     order: 3,
     name: 'Estabilidad de Rodilla y Tobillo (Fase 1 · U14)',
@@ -1058,7 +1072,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0013',
-    phaseId: 'FAS0006',
+    mesocycleId: 'MES0006',
     day: 'dia1',
     order: 1,
     name: 'Fuerza con Autocarga y Gomas (Fase 2 · U14)',
@@ -1067,7 +1081,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0014',
-    phaseId: 'FAS0006',
+    mesocycleId: 'MES0006',
     day: 'dia2',
     order: 2,
     name: 'Velocidad + Cadena Posterior (Fase 2 · U14)',
@@ -1076,7 +1090,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0015',
-    phaseId: 'FAS0006',
+    mesocycleId: 'MES0006',
     day: 'dia3',
     order: 3,
     name: 'Pliometría Controlada + Prevención (Fase 2 · U14)',
@@ -1085,7 +1099,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0016',
-    phaseId: 'FAS0008',
+    mesocycleId: 'MES0008',
     day: 'dia1',
     order: 1,
     name: 'Potencia + Fuerza Dinámica (Fase 3 · U14)',
@@ -1094,7 +1108,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0017',
-    phaseId: 'FAS0008',
+    mesocycleId: 'MES0008',
     day: 'dia2',
     order: 2,
     name: 'Aceleración y COD Reactivo (Fase 3 · U14)',
@@ -1103,7 +1117,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0018',
-    phaseId: 'FAS0008',
+    mesocycleId: 'MES0008',
     day: 'dia3',
     order: 3,
     name: 'Chispa Pre-partido + Prevención (Fase 3 · U14)',
@@ -1111,10 +1125,10 @@ export const phaseSessions: PhaseSessionRecord[] = [
     totalMinutes: 25,
   },
 
-  // --- PLN0003: CADETE (U16) · Fases FAS0009, FAS0010, FAS0012 ---
+  // --- MAC0003: CADETE (U16) · Fases MES0009, MES0010, MES0012 ---
   {
     id: 'SES0019',
-    phaseId: 'FAS0009',
+    mesocycleId: 'MES0009',
     day: 'dia1',
     order: 1,
     name: 'Fuerza + Potencia (Fase 1 · U16)',
@@ -1123,7 +1137,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0020',
-    phaseId: 'FAS0009',
+    mesocycleId: 'MES0009',
     day: 'dia2',
     order: 2,
     name: 'Velocidad, COD + Fuerza (Fase 1 · U16)',
@@ -1132,7 +1146,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0021',
-    phaseId: 'FAS0009',
+    mesocycleId: 'MES0009',
     day: 'dia3',
     order: 3,
     name: 'Reactividad + Prevención (Fase 1 · U16)',
@@ -1141,7 +1155,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0022',
-    phaseId: 'FAS0010',
+    mesocycleId: 'MES0010',
     day: 'dia1',
     order: 1,
     name: 'Fuerza Unilateral + Potencia (Fase 2 · U16)',
@@ -1150,7 +1164,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0023',
-    phaseId: 'FAS0010',
+    mesocycleId: 'MES0010',
     day: 'dia2',
     order: 2,
     name: 'Velocidad Reactiva + Bisagra (Fase 2 · U16)',
@@ -1159,7 +1173,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0024',
-    phaseId: 'FAS0010',
+    mesocycleId: 'MES0010',
     day: 'dia3',
     order: 3,
     name: 'Pliometría + Prevención (Fase 2 · U16)',
@@ -1168,7 +1182,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0025',
-    phaseId: 'FAS0012',
+    mesocycleId: 'MES0012',
     day: 'dia1',
     order: 1,
     name: 'Contraste Fuerza + Salto (Fase 3 · U16)',
@@ -1177,7 +1191,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0026',
-    phaseId: 'FAS0012',
+    mesocycleId: 'MES0012',
     day: 'dia2',
     order: 2,
     name: 'Velocidad Competitiva + Fuerza (Fase 3 · U16)',
@@ -1186,7 +1200,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0027',
-    phaseId: 'FAS0012',
+    mesocycleId: 'MES0012',
     day: 'dia3',
     order: 3,
     name: 'Activación Pre-partido + Prevención (Fase 3 · U16)',
@@ -1194,10 +1208,10 @@ export const phaseSessions: PhaseSessionRecord[] = [
     totalMinutes: 30,
   },
 
-  // --- PLN0004: JUVENIL (U18) · Fases FAS0013, FAS0014, FAS0016 ---
+  // --- MAC0004: JUVENIL (U18) · Fases MES0013, MES0014, MES0016 ---
   {
     id: 'SES0028',
-    phaseId: 'FAS0013',
+    mesocycleId: 'MES0013',
     day: 'dia1',
     order: 1,
     name: 'Fuerza Estructural + Absorción (Fase 1 · U18)',
@@ -1206,7 +1220,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0029',
-    phaseId: 'FAS0013',
+    mesocycleId: 'MES0013',
     day: 'dia2',
     order: 2,
     name: 'Desaceleración Intensa + Cadena Posterior (Fase 1 · U18)',
@@ -1215,7 +1229,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0030',
-    phaseId: 'FAS0013',
+    mesocycleId: 'MES0013',
     day: 'dia3',
     order: 3,
     name: 'Capacidad Tendinosa + Core (Fase 1 · U18)',
@@ -1224,7 +1238,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0031',
-    phaseId: 'FAS0014',
+    mesocycleId: 'MES0014',
     day: 'dia1',
     order: 1,
     name: 'Fuerza Máxima Unilateral + Potencia (Fase 2 · U18)',
@@ -1233,7 +1247,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0032',
-    phaseId: 'FAS0014',
+    mesocycleId: 'MES0014',
     day: 'dia2',
     order: 2,
     name: 'COD Agresivo + Bisagra Pesada (Fase 2 · U18)',
@@ -1242,7 +1256,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0033',
-    phaseId: 'FAS0014',
+    mesocycleId: 'MES0014',
     day: 'dia3',
     order: 3,
     name: 'Pliometría Reactiva + Excéntrico (Fase 2 · U18)',
@@ -1251,7 +1265,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0034',
-    phaseId: 'FAS0016',
+    mesocycleId: 'MES0016',
     day: 'dia1',
     order: 1,
     name: 'Contraste Pesado + Salto Reactivo (Fase 3 · U18)',
@@ -1260,7 +1274,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0035',
-    phaseId: 'FAS0016',
+    mesocycleId: 'MES0016',
     day: 'dia2',
     order: 2,
     name: 'Sprint Competitivo + Potencia Cadena Posterior (Fase 3 · U18)',
@@ -1269,7 +1283,7 @@ export const phaseSessions: PhaseSessionRecord[] = [
   },
   {
     id: 'SES0036',
-    phaseId: 'FAS0016',
+    mesocycleId: 'MES0016',
     day: 'dia3',
     order: 3,
     name: 'Primer Paso / Activación Pre-partido (Fase 3 · U18)',
@@ -1277,91 +1291,96 @@ export const phaseSessions: PhaseSessionRecord[] = [
     totalMinutes: 30,
   },
 
-  // --- PLN0003: CADETE (U16) · Fase 3 y periodos transitorios ---
+  // --- MAC0003: CADETE (U16) · Fase 3 y periodos transitorios ---
   {
-    id: 'SES0037', phaseId: 'FAS0014', day: 'dia1', order: 1,
+    id: 'SES0037', mesocycleId: 'MES0014', day: 'dia1', order: 1,
     name: 'Fuerza y potencia · Fase 3 (U16)',
     focus: 'Fuerza unilateral y salto vertical', totalMinutes: 40,
   },
   {
-    id: 'SES0038', phaseId: 'FAS0014', day: 'dia2', order: 2,
+    id: 'SES0038', mesocycleId: 'MES0014', day: 'dia2', order: 2,
     name: 'Velocidad y cambio de dirección · Fase 3 (U16)',
     focus: 'Aceleración, frenada y salida diagonal', totalMinutes: 40,
   },
   {
-    id: 'SES0039', phaseId: 'FAS0014', day: 'dia3', order: 3,
+    id: 'SES0039', mesocycleId: 'MES0014', day: 'dia3', order: 3,
     name: 'Prevención y activación · Fase 3 (U16)',
     focus: 'Tobillo, isquios y core', totalMinutes: 30,
   },
   {
-    id: 'SES0040', phaseId: 'FAS0011', day: 'dia1', order: 1,
+    id: 'SES0040', mesocycleId: 'MES0011', day: 'dia1', order: 1,
     name: 'Trabajo en casa A · Navidad (U16)',
     focus: 'Movilidad y fuerza con autocarga', totalMinutes: 20,
   },
   {
-    id: 'SES0041', phaseId: 'FAS0011', day: 'dia2', order: 2,
+    id: 'SES0041', mesocycleId: 'MES0011', day: 'dia2', order: 2,
     name: 'Trabajo en casa B · Navidad (U16)',
     focus: 'Core y estabilidad', totalMinutes: 20,
   },
   {
-    id: 'SES0042', phaseId: 'FAS0011', day: 'dia3', order: 3,
+    id: 'SES0042', mesocycleId: 'MES0011', day: 'dia3', order: 3,
     name: 'Trabajo en casa C · Navidad (U16)',
     focus: 'Movilidad y recuperación activa', totalMinutes: 20,
   },
   {
-    id: 'SES0043', phaseId: 'FAS0013', day: 'dia1', order: 1,
+    id: 'SES0043', mesocycleId: 'MES0013', day: 'dia1', order: 1,
     name: 'Mantenimiento A · Semana Santa (U16)',
     focus: 'Fuerza básica con autocarga', totalMinutes: 20,
   },
   {
-    id: 'SES0044', phaseId: 'FAS0013', day: 'dia2', order: 2,
+    id: 'SES0044', mesocycleId: 'MES0013', day: 'dia2', order: 2,
     name: 'Mantenimiento B · Semana Santa (U16)',
     focus: 'Movilidad y control postural', totalMinutes: 20,
   },
   {
-    id: 'SES0045', phaseId: 'FAS0013', day: 'dia3', order: 3,
+    id: 'SES0045', mesocycleId: 'MES0013', day: 'dia3', order: 3,
     name: 'Mantenimiento C · Semana Santa (U16)',
     focus: 'Recuperación activa', totalMinutes: 20,
   },
   {
-    id: 'SES0046', phaseId: 'FAS0015', day: 'dia1', order: 1,
+    id: 'SES0046', mesocycleId: 'MES0015', day: 'dia1', order: 1,
     name: 'Recuperación activa A · Cierre (U16)',
     focus: 'Movilidad global y core', totalMinutes: 20,
   },
   {
-    id: 'SES0047', phaseId: 'FAS0015', day: 'dia2', order: 2,
+    id: 'SES0047', mesocycleId: 'MES0015', day: 'dia2', order: 2,
     name: 'Recuperación activa B · Cierre (U16)',
     focus: 'Fuerza básica y equilibrio', totalMinutes: 20,
   },
   {
-    id: 'SES0048', phaseId: 'FAS0015', day: 'dia3', order: 3,
+    id: 'SES0048', mesocycleId: 'MES0015', day: 'dia3', order: 3,
     name: 'Recuperación activa C · Cierre (U16)',
     focus: 'Movilidad y respiración', totalMinutes: 20,
   },
 ]
 
-export const sessionVariants: SessionVariantRecord[] = phaseSessions.flatMap(
+export const sessionVariants: SessionVariantRecord[] = mesocycleSessions.flatMap(
   (session) => {
-    const phase = planPhases.find((item) => item.id === session.phaseId)
-    const weekStart = phase?.weekStart ?? 1
-    const weekEnd = phase?.weekEnd ?? 45
-    return (['A', 'B'] as const).map((variantCode, index) => ({
-      id: `VAR${String(phaseSessions.indexOf(session) * 2 + index + 1).padStart(4, '0')}`,
-      phaseSessionId: session.id,
-      variantCode,
-      name: `${session.name} · Variante ${variantCode}`,
-      focus: `${session.focus} · Alternativa ${variantCode}`,
-      weekStart,
-      weekEnd,
-      weekParity: index as 0 | 1,
+    const phase = mesocycles.find((item) => item.id === session.mesocycleId)
+    if (!phase) return []
+    const firstBlockEnd = phase.weekStart + Math.ceil(phase.weeksCount / 2) - 1
+    const ranges = [
+      { variantCode: 'A' as const, weekStart: phase.weekStart, weekEnd: firstBlockEnd },
+      ...(firstBlockEnd < phase.weekEnd
+        ? [{ variantCode: 'B' as const, weekStart: firstBlockEnd + 1, weekEnd: phase.weekEnd }]
+        : []),
+    ]
+    return ranges.map((range, index) => ({
+      id: `VAR${String(mesocycleSessions.indexOf(session) * 2 + index + 1).padStart(4, '0')}`,
+      mesocycleSessionId: session.id,
+      variantCode: range.variantCode,
+      name: `${session.name} · Variante ${range.variantCode}`,
+      focus: `${session.focus} · Alternativa ${range.variantCode}`,
+      weekStart: range.weekStart,
+      weekEnd: range.weekEnd,
     }))
   },
 )
 
 // ============================================================================
-// TABLA 5: bloques_sesion (bloques de tiempo dentro de cada sesión)
+// TABLE 5: training_blocks (time blocks inside each training session)
 // ============================================================================
-export const sessionBlocks: SessionBlockRecord[] = [
+export const trainingBlocks: TrainingBlockRecord[] = [
   // Bloques de SES0019 (7 + 8 + 20 + 5 = 40 min)
   {
     id: 'BLK0001',
@@ -1710,16 +1729,27 @@ const variantExerciseMap: Record<string, string> = {
   EJE0018: 'EJE0015',
 }
 
-const variantBySessionId = new Map(
+const variantBySessionAndCode = new Map(
   sessionVariants
-    .filter((variant) => variant.variantCode === 'B')
-    .map((variant) => [variant.phaseSessionId, variant]),
+    .map((variant) => [`${variant.mesocycleSessionId}:${variant.variantCode}`, variant]),
 )
 
-const variantBlockExercises: BlockExerciseRecord[] = baseBlockExercises.flatMap(
+const baseBlockExercisesWithVariant: BlockExerciseRecord[] = baseBlockExercises.map(
+  (item) => {
+    const block = trainingBlocks.find((candidate) => candidate.id === item.blockId)
+    const variant = block
+      ? variantBySessionAndCode.get(`${block.sessionId}:A`)
+      : undefined
+    return variant ? { ...item, variantId: variant.id } : item
+  },
+)
+
+const variantBlockExercises: BlockExerciseRecord[] = baseBlockExercisesWithVariant.flatMap(
   (item, index) => {
-    const block = sessionBlocks.find((candidate) => candidate.id === item.blockId)
-    const variant = block ? variantBySessionId.get(block.sessionId) : undefined
+    const block = trainingBlocks.find((candidate) => candidate.id === item.blockId)
+    const variant = block
+      ? variantBySessionAndCode.get(`${block.sessionId}:B`)
+      : undefined
     if (!variant) return []
     return [{
       ...item,
@@ -1731,7 +1761,7 @@ const variantBlockExercises: BlockExerciseRecord[] = baseBlockExercises.flatMap(
 )
 
 export const blockExercises: BlockExerciseRecord[] = [
-  ...baseBlockExercises,
+  ...baseBlockExercisesWithVariant,
   ...variantBlockExercises,
 ]
 
@@ -1741,7 +1771,7 @@ export const blockExercises: BlockExerciseRecord[] = [
 export const homeSessions: HomeSessionRecord[] = [
   {
     id: 'HOM0001',
-    planId: 'PLN0003',
+    macrocycleId: 'MAC0003',
     code: 'A',
     name: 'Sesión A · Fuerza en casa',
     minutes: 25,
@@ -1752,7 +1782,7 @@ export const homeSessions: HomeSessionRecord[] = [
   },
   {
     id: 'HOM0002',
-    planId: 'PLN0003',
+    macrocycleId: 'MAC0003',
     code: 'A',
     name: 'Sesión A · Fuerza en casa',
     minutes: 25,
@@ -1763,7 +1793,7 @@ export const homeSessions: HomeSessionRecord[] = [
   },
   {
     id: 'HOM0003',
-    planId: 'PLN0003',
+    macrocycleId: 'MAC0003',
     code: 'B',
     name: 'Sesión B · Potencia y carrera',
     minutes: 25,
@@ -1774,7 +1804,7 @@ export const homeSessions: HomeSessionRecord[] = [
   },
   {
     id: 'HOM0004',
-    planId: 'PLN0003',
+    macrocycleId: 'MAC0003',
     code: 'C',
     name: 'Sesión C · Movilidad y prevención',
     minutes: 20,
@@ -1791,7 +1821,7 @@ export const homeSessions: HomeSessionRecord[] = [
 export const tests: TestRecord[] = [
   {
     id: 'TST0001',
-    planId: 'PLN0003',
+    macrocycleId: 'MAC0003',
     testOrder: 1,
     name: 'Salto vertical (CMJ)',
     protocol: 'De lado a la pared, marcar alcance de pie y saltar con contramovimiento tocando lo más alto posible. Mejor de 3 intentos (diferencia en cm).',
@@ -1799,7 +1829,7 @@ export const tests: TestRecord[] = [
   },
   {
     id: 'TST0002',
-    planId: 'PLN0003',
+    macrocycleId: 'MAC0003',
     testOrder: 2,
     name: 'Sprint 20 metros',
     protocol: 'Salida de pie a 30 cm de la línea. Cronometrar desde el primer movimiento hasta cruzar los 20 m. Mejor de 2 intentos con 2 min de pausa.',
@@ -1807,7 +1837,7 @@ export const tests: TestRecord[] = [
   },
   {
     id: 'TST0003',
-    planId: 'PLN0003',
+    macrocycleId: 'MAC0003',
     testOrder: 3,
     name: 'Flexiones en 60 segundos',
     protocol: 'Pecho a un puño del suelo manteniendo el cuerpo en línea recta. Se cuentan solo las repeticiones técnicamente válidas.',
@@ -1815,7 +1845,7 @@ export const tests: TestRecord[] = [
   },
   {
     id: 'TST0004',
-    planId: 'PLN0003',
+    macrocycleId: 'MAC0003',
     testOrder: 4,
     name: 'Plancha frontal / lateral (máx 90")',
     protocol: 'Tiempo máximo manteniendo cadera alineada sin hundirse ni rotar (tope de 90 segundos).',
@@ -1828,11 +1858,11 @@ export const tests: TestRecord[] = [
 // ============================================================================
 
 export interface TrainingCatalogTables {
-  plans: PlanRecord[]
-  planPhases: PlanPhaseRecord[]
-  phaseSessions: PhaseSessionRecord[]
+  macrocycles: MacrocycleRecord[]
+  mesocycles: MesocycleRecord[]
+  mesocycleSessions: MesocycleSessionRecord[]
   sessionVariants: SessionVariantRecord[]
-  sessionBlocks: SessionBlockRecord[]
+  trainingBlocks: TrainingBlockRecord[]
   blockExercises: BlockExerciseRecord[]
   exercises: ExerciseRecord[]
   homeSessions: HomeSessionRecord[]
@@ -1840,11 +1870,11 @@ export interface TrainingCatalogTables {
 }
 
 export const defaultTrainingCatalog: TrainingCatalogTables = {
-  plans,
-  planPhases,
-  phaseSessions,
+  macrocycles,
+  mesocycles,
+  mesocycleSessions,
   sessionVariants,
-  sessionBlocks,
+  trainingBlocks,
   blockExercises,
   exercises,
   homeSessions,
@@ -1874,16 +1904,17 @@ export interface TrainingDataStatus {
 export function getTrainingDataStatus(
   params: {
     ageCategory: AgeCategory
-    planId?: string
+    macrocycleId?: string
+    mesocycleId?: string
     weekNumber: number
     day: TrainingDay
   },
   catalog: TrainingCatalogTables = defaultTrainingCatalog,
 ): TrainingDataStatus {
-  const plan = catalog.plans.find(
+  const plan = catalog.macrocycles.find(
     (item) =>
-      (params.planId !== undefined
-        ? item.id === params.planId
+      (params.macrocycleId !== undefined
+        ? item.id === params.macrocycleId
         : item.ageCategory === params.ageCategory) &&
       item.ageCategory === params.ageCategory,
   )
@@ -1891,18 +1922,26 @@ export function getTrainingDataStatus(
     return {
       available: false,
       code: 'missing-plan',
-      message: params.planId !== undefined
-        ? `No existe el plan ${params.planId} de esta temporada.`
+      message: params.macrocycleId !== undefined
+        ? `No existe el plan ${params.macrocycleId} de esta temporada.`
         : `No hay un plan disponible para la categoría ${params.ageCategory}.`,
     }
   }
 
-  const phase = catalog.planPhases.find(
-    (item) =>
-      item.planId === plan.id &&
-      params.weekNumber >= item.weekStart &&
-      params.weekNumber <= item.weekEnd,
-  )
+  const phase = params.mesocycleId
+    ? catalog.mesocycles.find(
+        (item) =>
+          item.id === params.mesocycleId &&
+          item.macrocycleId === plan.id &&
+          params.weekNumber >= item.weekStart &&
+          params.weekNumber <= item.weekEnd,
+      )
+    : catalog.mesocycles.find(
+        (item) =>
+          item.macrocycleId === plan.id &&
+          params.weekNumber >= item.weekStart &&
+          params.weekNumber <= item.weekEnd,
+      )
   if (!phase) {
     return {
       available: false,
@@ -1911,8 +1950,8 @@ export function getTrainingDataStatus(
     }
   }
 
-  const session = catalog.phaseSessions.find(
-    (item) => item.phaseId === phase.id && item.day === params.day,
+  const session = catalog.mesocycleSessions.find(
+    (item) => item.mesocycleId === phase.id && item.day === params.day,
   )
   if (!session) {
     return {
@@ -1936,7 +1975,7 @@ export function getTrainingDataStatus(
     throw error
   }
 
-  const blocks = catalog.sessionBlocks.filter(
+  const blocks = catalog.trainingBlocks.filter(
     (item) => item.sessionId === session.id,
   )
   if (!blocks.length) {
@@ -1949,10 +1988,7 @@ export function getTrainingDataStatus(
 
   for (const block of blocks) {
     const blockItems = catalog.blockExercises.filter(
-      (item) =>
-        item.blockId === block.id &&
-        (item.variantId === variant.id ||
-          (variant.variantCode === 'A' && item.variantId === undefined)),
+      (item) => item.blockId === block.id && item.variantId === variant.id,
     )
     if (!blockItems.length) {
       return {
@@ -1974,7 +2010,7 @@ export function getTrainingDataStatus(
   }
 
   const missingHomeExercise = catalog.homeSessions
-    .filter((item) => item.planId === plan.id)
+    .filter((item) => item.macrocycleId === plan.id)
     .find(
       (item) =>
         !catalog.exercises.some((exercise) => exercise.id === item.exerciseId),
@@ -2007,27 +2043,27 @@ function unavailable(
   throw new TrainingDataUnavailableError(code, message)
 }
 
-export function resolvePlan(
+export function resolveMacrocycle(
   ageCategory: AgeCategory = 'cadete',
   catalog: TrainingCatalogTables = defaultTrainingCatalog,
-  planId?: string,
-): PlanRecord {
-  const exact = catalog.plans.find(
+  macrocycleId?: string,
+): MacrocycleRecord {
+  const exact = catalog.macrocycles.find(
     (plan) =>
-      (planId !== undefined ? plan.id === planId : plan.ageCategory === ageCategory) &&
+      (macrocycleId !== undefined ? plan.id === macrocycleId : plan.ageCategory === ageCategory) &&
       plan.ageCategory === ageCategory,
   )
   if (exact) return exact
   return unavailable(
     'missing-plan',
-    planId !== undefined
-      ? `No existe el plan ${planId} de esta temporada.`
+    macrocycleId !== undefined
+      ? `No existe el plan ${macrocycleId} de esta temporada.`
       : `No hay un plan disponible para la categoría ${ageCategory}.`,
   )
 }
 
-export interface PhaseWeekContext {
-  phase: PlanPhaseRecord
+export interface MesocycleWeekContext {
+  phase: MesocycleRecord
   weekNumber: number
   weekInPhase: number
   loadIndex: number
@@ -2038,27 +2074,35 @@ export interface HydratedHomeSessionRecord extends HomeSessionRecord {
   exercise: ExerciseRecord
 }
 
-export function getPlanPhases(
-  planId: string,
+export function getMesocycles(
+  macrocycleId: string,
   catalog: TrainingCatalogTables = defaultTrainingCatalog,
-): PlanPhaseRecord[] {
-  const direct = catalog.planPhases.filter((phase) => phase.planId === planId)
+): MesocycleRecord[] {
+  const direct = catalog.mesocycles.filter((phase) => phase.macrocycleId === macrocycleId)
   return [...direct].sort((a, b) => a.phaseOrder - b.phaseOrder)
 }
 
-export function getPhaseForWeek(
-  planId: string,
+export function getMesocycleForWeek(
+  macrocycleId: string,
   weekNumber: number,
   catalog: TrainingCatalogTables = defaultTrainingCatalog,
-): PhaseWeekContext {
-  const phases = getPlanPhases(planId, catalog)
-  const plan = catalog.plans.find((item) => item.id === planId)
-  if (!plan) return unavailable('missing-plan', `No existe el plan ${planId}.`)
+  mesocycleId?: string,
+): MesocycleWeekContext {
+  const phases = getMesocycles(macrocycleId, catalog)
+  const plan = catalog.macrocycles.find((item) => item.id === macrocycleId)
+  if (!plan) return unavailable('missing-plan', `No existe el plan ${macrocycleId}.`)
   const maxWeeks = plan.totalWeeks
   const clampedWeek = Math.max(1, Math.min(maxWeeks, weekNumber))
-  const phase = phases.find(
-    (item) => clampedWeek >= item.weekStart && clampedWeek <= item.weekEnd,
-  )
+  const phase = mesocycleId
+    ? phases.find(
+        (item) =>
+          item.id === mesocycleId &&
+          clampedWeek >= item.weekStart &&
+          clampedWeek <= item.weekEnd,
+      )
+    : phases.find(
+        (item) => clampedWeek >= item.weekStart && clampedWeek <= item.weekEnd,
+      )
   if (!phase) {
     return unavailable(
       'missing-phase',
@@ -2081,20 +2125,20 @@ export function getPhaseForWeek(
   }
 }
 
-export function getWeeklySessionsForPhase(
-  phaseId: string,
+export function getWeeklySessionsForMesocycle(
+  mesocycleId: string,
   frequency: Frequency,
   competitiveLevel: CompetitiveLevel = 'liga',
   catalog: TrainingCatalogTables = defaultTrainingCatalog,
-): PhaseSessionRecord[] {
-  const direct = catalog.phaseSessions
-    .filter((session) => session.phaseId === phaseId)
+): MesocycleSessionRecord[] {
+  const direct = catalog.mesocycleSessions
+    .filter((session) => session.mesocycleId === mesocycleId)
     .sort((a, b) => a.order - b.order)
 
   if (!direct.length) {
     return unavailable(
       'missing-session',
-      `No hay sesiones configuradas para la fase ${phaseId}.`,
+      `No hay sesiones configuradas para la fase ${mesocycleId}.`,
     )
   }
 
@@ -2108,10 +2152,9 @@ function selectSessionVariant(
 ): SessionVariantRecord {
   const variants = catalog.sessionVariants.filter(
     (variant) =>
-      variant.phaseSessionId === sessionId &&
+      variant.mesocycleSessionId === sessionId &&
       weekNumber >= variant.weekStart &&
-      weekNumber <= variant.weekEnd &&
-      (weekNumber - variant.weekStart) % 2 === variant.weekParity,
+      weekNumber <= variant.weekEnd,
   )
   if (!variants.length) {
     return unavailable(
@@ -2125,7 +2168,8 @@ function selectSessionVariant(
 export function getHydratedSession(
   params: {
     ageCategory?: AgeCategory
-    planId?: string
+    macrocycleId?: string
+    mesocycleId?: string
     competitiveLevel?: CompetitiveLevel
     frequency: Frequency
     weekNumber?: number
@@ -2135,12 +2179,13 @@ export function getHydratedSession(
 ): HydratedPhaseSession {
   const ageCategory = params.ageCategory || 'cadete'
   const competitiveLevel = params.competitiveLevel || 'liga'
-  const plan = resolvePlan(ageCategory, catalog, params.planId)
-  const { phase, weekNumber, weekInPhase, loadIndex, isDeload } =
-    getPhaseForWeek(plan.id, params.weekNumber || 1, catalog)
+  const plan = resolveMacrocycle(ageCategory, catalog, params.macrocycleId)
+  const weekNumber = params.weekNumber || 1
+  const { phase: resolvedPhase, weekInPhase, loadIndex, isDeload } =
+    getMesocycleForWeek(plan.id, weekNumber, catalog, params.mesocycleId)
 
-  const weeklySessions = getWeeklySessionsForPhase(
-    phase.id,
+  const weeklySessions = getWeeklySessionsForMesocycle(
+    resolvedPhase.id,
     params.frequency,
     competitiveLevel,
     catalog,
@@ -2155,7 +2200,7 @@ export function getHydratedSession(
 
   const variant = selectSessionVariant(session.id, params.weekNumber || 1, catalog)
 
-  const directBlocks = catalog.sessionBlocks
+  const directBlocks = catalog.trainingBlocks
     .filter((block) => block.sessionId === session.id)
     .sort((a, b) => a.blockOrder - b.blockOrder)
 
@@ -2168,12 +2213,7 @@ export function getHydratedSession(
 
   const blocks: HydratedSessionBlock[] = directBlocks.map((block) => {
     const rawItems = catalog.blockExercises
-      .filter(
-        (item) =>
-          item.blockId === block.id &&
-          (item.variantId === variant.id ||
-            (variant.variantCode === 'A' && item.variantId === undefined)),
-      )
+      .filter((item) => item.blockId === block.id && item.variantId === variant.id)
       .sort((a, b) => a.itemOrder - b.itemOrder)
 
     if (!rawItems.length) {
@@ -2211,7 +2251,7 @@ export function getHydratedSession(
 
   return {
     plan,
-    phase,
+    phase: resolvedPhase,
     weekNumber,
     weekInPhase,
     loadIndex,
@@ -2223,10 +2263,10 @@ export function getHydratedSession(
 }
 
 export function getPlanHomeSessions(
-  planId: string,
+  macrocycleId: string,
   catalog: TrainingCatalogTables = defaultTrainingCatalog,
 ): HydratedHomeSessionRecord[] {
-  const direct = catalog.homeSessions.filter((item) => item.planId === planId)
+  const direct = catalog.homeSessions.filter((item) => item.macrocycleId === macrocycleId)
   return direct.map((item) => {
     const exercise = catalog.exercises.find(
       (ex) => ex.id === item.exerciseId,
@@ -2245,10 +2285,10 @@ export function getPlanHomeSessions(
 }
 
 export function getPlanTests(
-  planId: string,
+  macrocycleId: string,
   catalog: TrainingCatalogTables = defaultTrainingCatalog,
 ): TestRecord[] {
-  return catalog.tests.filter((item) => item.planId === planId)
+  return catalog.tests.filter((item) => item.macrocycleId === macrocycleId)
 }
 
 export function getWeeklyPlan(
@@ -2257,10 +2297,10 @@ export function getWeeklyPlan(
   ageCategory: AgeCategory = 'cadete',
   competitiveLevel: CompetitiveLevel = 'liga',
   catalog: TrainingCatalogTables = defaultTrainingCatalog,
-): PhaseSessionRecord[] {
-  const plan = resolvePlan(ageCategory, catalog)
-  const { phase } = getPhaseForWeek(plan.id, weekNumber, catalog)
-  return getWeeklySessionsForPhase(
+): MesocycleSessionRecord[] {
+  const plan = resolveMacrocycle(ageCategory, catalog)
+  const { phase } = getMesocycleForWeek(plan.id, weekNumber, catalog)
+  return getWeeklySessionsForMesocycle(
     phase.id,
     frequency,
     competitiveLevel,
