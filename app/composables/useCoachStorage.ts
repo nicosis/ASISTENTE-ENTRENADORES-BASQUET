@@ -289,8 +289,41 @@ export function useCoachStorage() {
   };
 }
 
-export function asLocalDate(value: string): Date {
-  return new Date(`${value}T00:00:00`);
+export function asLocalDate(value: unknown): Date {
+  if (value instanceof Date) return new Date(value.getTime());
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const googleEpoch = Date.UTC(1899, 11, 30);
+    const utcDate = new Date(googleEpoch + value * 86_400_000);
+    return new Date(
+      utcDate.getUTCFullYear(),
+      utcDate.getUTCMonth(),
+      utcDate.getUTCDate(),
+    );
+  }
+
+  if (typeof value !== "string") return new Date(Number.NaN);
+
+  const normalized = value.trim();
+  const isoDate = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
+  if (isoDate) {
+    return new Date(
+      Number(isoDate[1]),
+      Number(isoDate[2]) - 1,
+      Number(isoDate[3]),
+    );
+  }
+
+  const localizedDate = /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/.exec(normalized);
+  if (localizedDate) {
+    return new Date(
+      Number(localizedDate[3]),
+      Number(localizedDate[2]) - 1,
+      Number(localizedDate[1]),
+    );
+  }
+
+  return new Date(normalized);
 }
 
 export function dateKey(date: Date): string {
@@ -348,11 +381,14 @@ export function nextMicrocycleId(existing: string[]): string {
 }
 
 export function formattedDate(value: string): string {
+  const date = asLocalDate(value);
+  if (Number.isNaN(date.getTime())) return "Fecha no disponible";
+
   return new Intl.DateTimeFormat("es-ES", {
     day: "numeric",
     month: "short",
     year: "numeric",
   })
-    .format(new Date(`${value}T00:00:00`))
+    .format(date)
     .replace(".", "");
 }

@@ -44,6 +44,7 @@ const {
   canGoToPreviousWeek,
   canGoToNextWeek,
   weekLabel,
+  annualWeekLabel,
   sessionDates,
   activeWeekReview,
   seasonReviews,
@@ -95,6 +96,18 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
 
 <template>
   <main class="app-shell">
+    <div
+      v-if="loadingDatabase"
+      class="database-loading-overlay"
+      role="status"
+      aria-live="polite"
+    >
+      <div class="database-loading-card">
+        <span class="loading-spinner" aria-hidden="true"></span>
+        <strong>Cargando datos de la base de datos…</strong>
+        <span>La aplicación estará disponible en unos segundos.</span>
+      </div>
+    </div>
     <header class="topbar">
       <button class="brand" type="button" @click="view = 'home'">
         <span class="brand-ball">B</span><span>pizarra</span>
@@ -727,34 +740,45 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             </span>
           </div>
 
-          <div class="phase-cards-row">
-            <button
+          <div class="phase-list">
+            <article
               v-for="ph in phases"
               :key="ph.id"
-              type="button"
-              class="phase-pill-card"
+              class="phase-row"
               :class="{ active: ph.id === currentPhase.id }"
               :style="{ '--phase-color': ph.color }"
-              @click="selectPhaseWeek(ph.weekStart)"
             >
-              <div class="phase-pill-top">
-                <strong>{{ ph.name }}</strong>
-                <small>Sem {{ ph.weekStart }}–{{ ph.weekEnd }}</small>
-              </div>
-              <p>{{ ph.objective }}</p>
-              <div class="week-dots">
-                <span
-                  v-for="(load, idx) in ph.weeklyLoads"
-                  :key="idx"
-                  class="week-dot"
-                  :class="{ current: ph.weekStart + idx === currentWeekNumber }"
-                  :title="'Semana ' + (ph.weekStart + idx) + ' · Carga ' + load + '/10'"
-                  @click.stop="selectPhaseWeek(ph.weekStart + idx)"
-                >
-                  S{{ ph.weekStart + idx }}
+              <div class="phase-row-header">
+                <span class="phase-row-title">
+                  <strong>{{ ph.name }}</strong>
+                  <small>Semanas {{ ph.weekStart }}–{{ ph.weekEnd }}</small>
+                </span>
+                <span class="phase-row-objective">
+                  <span>Objetivo</span>
+                  {{ ph.objective }}
                 </span>
               </div>
-            </button>
+              <div class="week-grid" aria-label="Semanas de la fase">
+                <button
+                  v-for="(load, idx) in ph.weeklyLoads"
+                  :key="idx"
+                  type="button"
+                  class="week-cell"
+                  :class="{ current: Number(ph.weekStart) + idx === currentWeekNumber }"
+                  @click="selectPhaseWeek(Number(ph.weekStart) + idx)"
+                >
+                  <span class="week-cell-number">Semana {{ Number(ph.weekStart) + idx }}</span>
+                  <span class="week-cell-date">{{ annualWeekLabel(Number(ph.weekStart) + idx).replace(/^Semana \\d+ · /, '') }}</span>
+                  <span class="week-cell-load">Carga <strong>{{ load }}/10</strong></span>
+                  <span
+                    v-if="ph.type === 'training' && idx === ph.weeklyLoads.length - 1 && load <= 4"
+                    class="week-cell-deload"
+                  >
+                    Descarga
+                  </span>
+                </button>
+              </div>
+            </article>
           </div>
         </section>
       </template>
@@ -990,6 +1014,45 @@ button {
 }
 .app-shell {
   min-height: 100vh;
+}
+.database-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(32, 61, 48, 0.22);
+  backdrop-filter: blur(3px);
+}
+.database-loading-card {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  max-width: 360px;
+  padding: 28px 32px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 18px 45px rgba(32, 61, 48, 0.18);
+  text-align: center;
+}
+.database-loading-card span:last-child {
+  color: var(--muted);
+  font-size: 13px;
+}
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: database-spinner 0.8s linear infinite;
+}
+@keyframes database-spinner {
+  to {
+    transform: rotate(360deg);
+  }
 }
 .topbar {
   display: flex;
@@ -1456,64 +1519,108 @@ legend {
   font-size: 12px;
   font-weight: 700;
 }
-.phase-cards-row {
+.phase-list {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  gap: 12px;
 }
-.phase-pill-card {
-  display: grid;
-  align-content: space-between;
-  gap: 8px;
-  padding: 12px;
+.phase-row {
+  overflow: hidden;
   border: 1px solid var(--line);
-  border-top: 4px solid var(--phase-color);
-  border-radius: 9px;
+  border-left: 4px solid var(--phase-color);
+  border-radius: 11px;
   background: var(--bg);
+}
+.phase-row.active {
+  border-color: var(--button);
+  border-left-color: var(--phase-color);
+  background: var(--soft);
+}
+.phase-row-header {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.9fr) minmax(220px, 1.5fr) auto;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  padding: 15px 18px 13px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  background: transparent;
   text-align: left;
 }
-.phase-pill-card.active {
-  background: var(--soft);
-  border-color: var(--button);
-  border-top: 4px solid var(--phase-color);
+.phase-row-title,
+.phase-row-objective {
+  display: grid;
+  gap: 4px;
 }
-.phase-pill-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 6px;
+.phase-row-title strong {
+  font-size: 14px;
 }
-.phase-pill-top strong {
-  font-size: 13px;
+.phase-row-title small,
+.phase-row-objective {
+  color: var(--muted);
+  font-size: 12px;
 }
-.phase-pill-top small {
+.phase-row-objective span {
+  color: #69806f;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 8px;
+  padding: 12px 14px 14px;
+}
+.week-cell {
+  display: grid;
+  gap: 4px;
+  min-height: 78px;
+  padding: 10px 11px;
+  border: 1px solid #cbd4ca;
+  border-radius: 7px;
+  color: var(--ink);
+  background: var(--surface);
+  text-align: left;
+}
+.week-cell:hover {
+  border-color: var(--accent);
+  background: #f7faf5;
+}
+.week-cell.current {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+  background: #e9f1e8;
+}
+.week-cell-number {
+  font-size: 12px;
+  font-weight: 800;
+}
+.week-cell-date {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.25;
+}
+.week-cell-load {
   color: var(--muted);
   font-size: 11px;
 }
-.phase-pill-card p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 11.5px;
-  line-height: 1.35;
+.week-cell-load strong {
+  color: var(--ink);
 }
-.week-dots {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-.week-dot {
-  border: 1px solid #cbd4ca;
-  border-radius: 5px;
+.week-cell-deload {
+  justify-self: start;
+  margin-top: 2px;
   padding: 2px 6px;
-  background: var(--surface);
+  border-radius: 4px;
+  color: #9c4c21;
+  background: #fbe7dc;
   font-size: 10px;
-  font-weight: 700;
-  color: var(--muted);
-}
-.week-dot.current {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 /* Subtabs */
@@ -2002,7 +2109,7 @@ legend {
   .review-section,
   .note-editor,
   .season-summary,
-  .phase-cards-row {
+  .phase-row-header {
     grid-template-columns: 1fr;
     display: grid;
     align-items: start;

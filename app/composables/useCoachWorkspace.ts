@@ -99,7 +99,7 @@ export function useCoachWorkspace() {
   const showArchivedTeams = ref(false)
   const catalog = ref<TrainingCatalogTables>(emptyTrainingCatalog)
   const dbSource = ref<'google-sheets' | 'unavailable'>('unavailable')
-  const loadingDatabase = ref(false)
+  const loadingDatabase = ref(true)
   const lastSyncedAt = ref('')
   const teams = ref<Team[]>([])
   const players = ref<Player[]>([])
@@ -230,12 +230,36 @@ export function useCoachWorkspace() {
   const weekLabel = computed(() => {
     const start = asLocalDate(displayedWeekStart.value)
     const end = asLocalDate(addDays(displayedWeekStart.value, 6))
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return 'Fechas no disponibles'
+    }
     const formatter = new Intl.DateTimeFormat('es-ES', {
       day: 'numeric',
       month: 'short',
     })
     return `${formatter.format(start).replace('.', '')} – ${formatter.format(end).replace('.', '')}`
   })
+
+  function annualWeekLabel(weekNumber: number): string {
+    const normalizedWeekNumber = Number(weekNumber)
+    if (!Number.isFinite(normalizedWeekNumber)) return 'Semana no disponible'
+
+    const weekStart = asLocalDate(
+      addDays(seasonStartMonday.value, (normalizedWeekNumber - 1) * 7),
+    )
+    const weekEnd = asLocalDate(addDays(weekStart, 6))
+    if (Number.isNaN(weekStart.getTime()) || Number.isNaN(weekEnd.getTime())) {
+      return `Semana ${normalizedWeekNumber} · fechas no disponibles`
+    }
+    const formatter = new Intl.DateTimeFormat('es-ES', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+    const startLabel = formatter.format(weekStart).replace('.', '')
+    const endLabel = formatter.format(weekEnd).replace('.', '')
+    return `Semana ${normalizedWeekNumber} · ${startLabel} – ${endLabel}`
+  }
 
   const sessionDates = computed(() =>
     weeklySessions.value.map((_, index) => {
@@ -701,6 +725,7 @@ export function useCoachWorkspace() {
   function selectPhaseWeek(weekNumber: number): void {
     closeReviewEditor()
     currentWeekNumber.value = weekNumber
+    activeTeamTab.value = 'week'
   }
 
   async function generateSession(day: DayId): Promise<void> {
@@ -786,6 +811,7 @@ export function useCoachWorkspace() {
     canGoToPreviousWeek,
     canGoToNextWeek,
     weekLabel,
+    annualWeekLabel,
     sessionDates,
     activeWeekReview,
     seasonReviews,
