@@ -571,6 +571,7 @@ export function useCoachWorkspace() {
 
   function openTeam(teamId: string): void {
     activeTeamId.value = teamId
+    activeTeamTab.value = 'week'
     const foundSeason =
       seasons.value.find(
         (item) => item.teamId === teamId && item.status === 'active',

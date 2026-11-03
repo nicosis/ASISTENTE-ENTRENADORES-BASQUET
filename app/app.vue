@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import {
   ageCategoryOptions,
   blockPalette,
@@ -18,6 +19,7 @@ const {
   activeTeamTab,
   showArchivedTeams,
   dbSource,
+  lastSyncedAt,
   loadingDatabase,
   activeTeams,
   archivedTeams,
@@ -28,6 +30,7 @@ const {
   teamSeasons,
   activeTeam,
   activeSeason,
+  activeMicrocycle,
   activeSeasonEndDate,
   seasonDraftEndDate,
   frequency,
@@ -83,6 +86,56 @@ const {
   refreshDatabaseFromSheets,
 } = useCoachWorkspace()
 
+const lastSyncedLabel = computed(() => {
+  if (!lastSyncedAt.value) return ''
+  const date = new Date(lastSyncedAt.value)
+  if (Number.isNaN(date.getTime())) return ''
+  return new Intl.DateTimeFormat('es-ES', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date).replace('.', '')
+})
+
+const nextSessionIndex = computed(() => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const weekStart = new Date(`${displayedWeekStart.value}T00:00:00`)
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekEnd.getDate() + 6)
+  if (today < weekStart || today > weekEnd) return -1
+
+  return sessionDates.value.findIndex((date) => {
+    const sessionDate = new Date(`${date}T00:00:00`)
+    return sessionDate >= today
+  })
+})
+
+const nextSessionCallout = computed(() => {
+  const index = nextSessionIndex.value
+  const item = weeklySessions.value[index]
+  const date = sessionDates.value[index]
+  if (index < 0 || !item || !date) return ''
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const sessionDate = new Date(`${date}T00:00:00`)
+  const timing = sessionDate.getTime() === today.getTime() ? 'Hoy' : 'Próxima sesión'
+  return `${timing}: ${item.name} · ${formattedDate(date)} · ${item.totalMinutes} min`
+})
+
+const sessionExerciseCount = computed(() =>
+  session.value?.trainingBlocks.reduce((total, block) => total + block.items.length, 0) || 0,
+)
+
+function microcycleStatusLabel(status: string | undefined): string {
+  if (status === 'completed') return 'Planificación completada'
+  if (status === 'active') return 'Planificación activa'
+  if (status === 'planned') return 'Planificación prevista'
+  return ''
+}
+
 function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
   if (!isAdmin.value) return
   const accepted = window.confirm(
@@ -113,20 +166,24 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         <span class="brand-ball">B</span><span>pizarra</span>
       </button>
       <div class="topbar-right">
+        <span
+          class="connection-status"
+          :class="{ connected: dbSource === 'google-sheets' }"
+          role="status"
+          aria-live="polite"
+        >
+          <span aria-hidden="true">{{ dbSource === 'google-sheets' ? '●' : '○' }}</span>
+          {{ dbSource === 'google-sheets' ? 'Sheets conectado' : 'Sheets no disponible' }}
+          <small v-if="lastSyncedLabel">· {{ lastSyncedLabel }}</small>
+        </span>
         <button
-          class="logout-button"
+          class="refresh-button"
           type="button"
           :disabled="loadingDatabase"
-          title="Recargar las 12 planillas directamente desde Google Sheets"
+          :aria-label="loadingDatabase ? 'Actualizando datos desde Google Sheets' : 'Actualizar datos desde Google Sheets'"
           @click="refreshDatabaseFromSheets"
         >
-          {{
-            loadingDatabase
-              ? 'Sincronizando Sheets…'
-              : dbSource === 'google-sheets'
-                ? '● Sheets DB conectado (Actualizar)'
-                : '○ Sheets no disponible (Reintentar)'
-          }}
+          {{ loadingDatabase ? 'Actualizando…' : 'Actualizar' }}
         </button>
         <template v-if="signedIn">
           <span class="coach-avatar">{{ coach.name.slice(0, 1) }}</span>
@@ -196,9 +253,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
 
     <section v-else-if="view === 'home'" class="page home-page">
       <p class="eyebrow">
-        PANEL DEL ENTRENADOR · {{ coach.id }} ({{
-          isAdmin ? 'ROL: ADMINISTRADOR' : 'ROL: ENTRENADOR'
-        }})
+        PANEL DEL ENTRENADOR · {{ isAdmin ? 'ADMINISTRADOR' : 'ENTRENADOR' }}
       </p>
       <div class="heading-row">
         <div>
@@ -209,7 +264,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             {{
               showArchivedTeams
                 ? 'Estos equipos están ocultos del panel principal conservando todo su historial de temporadas y observaciones.'
-                : 'Abre una temporada para explorar los mesociclos del año, o archiva equipos y temporadas cerradas para mantener limpio tu panel.'
+                : 'Accede a las sesiones de la semana, consulta tu planificación y gestiona tus equipos.'
             }}
           </p>
         </div>
@@ -237,7 +292,11 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           </button>
         </div>
       </div>
-      <section class="team-grid">
+      <p v-if="visibleTeams.length" class="team-list-summary">
+        {{ visibleTeams.length }} {{ visibleTeams.length === 1 ? 'equipo' : 'equipos' }}
+        {{ showArchivedTeams ? (visibleTeams.length === 1 ? 'archivado' : 'archivados') : (visibleTeams.length === 1 ? 'activo' : 'activos') }}
+      </p>
+      <section class="team-grid" aria-label="Listado de equipos">
         <article
           v-for="team in visibleTeams"
           :key="team.id"
@@ -245,8 +304,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           :class="{ 'is-archived': team.status === 'archived' }"
         >
           <div class="team-card-top">
-            <span>
-              {{ team.id }} ·
+            <span class="team-status" :class="{ 'team-status-archived': team.status === 'archived' }">
               {{ team.status === 'archived' ? 'ARCHIVADO' : 'ACTIVO' }}
             </span>
           </div>
@@ -266,7 +324,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
               }}</strong>
               <small>{{ playerCountByTeam.get(team.id) || 0 }} jugadores</small>
             </div>
-            <em>Abrir planificación anual →</em>
+            <em>Ver sesiones de la semana <span aria-hidden="true">→</span></em>
           </button>
           <div class="team-card-footer">
             <button
@@ -463,13 +521,15 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       <div class="team-heading">
         <div>
           <p class="eyebrow">
-            {{ activeTeam?.id }} · TEMPORADA {{ activeSeason?.name }} ({{
+            TEMPORADA {{ activeSeason?.name }} ({{
               activeSeason?.status === 'closed' ? 'CERRADA' : 'ACTIVA'
-            }}) · MACROCYCLE ID:
-            {{ activeSeason?.macrocycleId || 'Sin plan' }}
+            }})
           </p>
           <h1>{{ activeTeam?.name }}</h1>
           <p>{{ activeSeason?.category }} · {{ activeTeam?.club }}</p>
+          <p v-if="activeMicrocycle" class="microcycle-status">
+            {{ microcycleStatusLabel(activeMicrocycle.status) }} · solo lectura
+          </p>
         </div>
         <div class="heading-actions">
           <button
@@ -667,12 +727,25 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           </p>
         </section>
 
-        <section v-else class="session-grid">
-          <article v-for="(item, index) in weeklySessions" :key="item.id">
+        <template v-else>
+          <div v-if="nextSessionCallout" class="weekly-next-session" role="status">
+            <span class="eyebrow">REFERENCIA DE LA SEMANA</span>
+            <strong>{{ nextSessionCallout }}</strong>
+          </div>
+
+          <section class="session-grid">
+          <article
+            v-for="(item, index) in weeklySessions"
+            :key="item.id"
+            :class="{ 'is-next': nextSessionIndex === index }"
+          >
             <span>
-              SESIÓN {{ index + 1 }} · ID: {{ item.id }} ({{
+              SESIÓN {{ index + 1 }} · {{
                 item.day.toUpperCase()
-              }})
+              }}
+            </span>
+            <span v-if="nextSessionIndex === index" class="session-state-label">
+              {{ new Date(`${sessionDates[index]}T00:00:00`).getTime() === new Date(new Date().toDateString()).getTime() ? 'Sesión de hoy' : 'Próxima sesión' }}
             </span>
             <h3>{{ item.name }}</h3>
             <p class="session-focus">{{ item.focus }}</p>
@@ -691,12 +764,13 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
                 {{
                   loadingSession && selectedDay === item.day
                     ? 'Preparando…'
-                    : 'Abrir bloques y ejercicios →'
+                    : 'Ver bloques y ejercicios →'
                 }}
               </button>
             </div>
           </article>
-        </section>
+          </section>
+        </template>
       </template>
 
       <!-- PESTAÑA 3: PLANTILLA DEL EQUIPO -->
@@ -706,6 +780,9 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             <div>
               <p class="eyebrow">PLANTILLA DEL EQUIPO</p>
               <h2>Jugadores</h2>
+              <p class="construction-notice" role="status">
+                La configuración de la plantilla está en construcción. Por ahora, esta vista es solo de consulta.
+              </p>
               <span>
                 {{ activeTeamRoster.length }}
                 {{ activeTeamRoster.length === 1 ? 'jugador activo' : 'jugadores activos' }}
@@ -714,8 +791,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           </div>
           <div v-if="activeTeamRoster.length" class="roster-grid">
             <article v-for="membership in activeTeamRoster" :key="membership.id" class="roster-card">
-              <strong>{{ membership.player?.name || membership.playerId }}</strong>
-              <small>{{ membership.playerId }}</small>
+              <strong>{{ membership.player?.name || 'Jugador sin nombre' }}</strong>
             </article>
           </div>
           <p v-else class="panel-lead">
@@ -765,9 +841,11 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
                   type="button"
                   class="week-cell"
                   :class="{ current: Number(ph.weekStart) + idx === currentWeekNumber }"
+                  :aria-current="Number(ph.weekStart) + idx === currentWeekNumber ? 'true' : undefined"
                   @click="selectPhaseWeek(Number(ph.weekStart) + idx)"
                 >
                   <span class="week-cell-number">Semana {{ Number(ph.weekStart) + idx }}</span>
+                  <span v-if="Number(ph.weekStart) + idx === currentWeekNumber" class="week-cell-selected">Seleccionada</span>
                   <span class="week-cell-date">{{ annualWeekLabel(Number(ph.weekStart) + idx).replace(/^Semana \\d+ · /, '') }}</span>
                   <span class="week-cell-load">Carga <strong>{{ load }}/10</strong></span>
                   <span
@@ -896,16 +974,41 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         ← Volver a la semana {{ session.weekNumber }}
       </button>
       <p class="eyebrow">
-        {{ session.plan.id }} → {{ session.phase.id }} →
-        {{ session.session.id }} · {{ session.duration }} MINUTOS TOTALES
+        SESIÓN · {{ session.duration }} MINUTOS TOTALES
       </p>
       <h1>{{ session.objective }}</h1>
       <p class="session-rationale">{{ session.rationale }}</p>
 
-      <!-- Barra de distribución de minutos por bloque (`training_blocks`) -->
+      <div class="session-overview" aria-label="Resumen de la sesión">
+        <div>
+          <span class="eyebrow">DURACIÓN</span>
+          <strong>{{ session.duration }} min</strong>
+        </div>
+        <div>
+          <span class="eyebrow">BLOQUES</span>
+          <strong>{{ session.trainingBlocks.length }}</strong>
+        </div>
+        <div>
+          <span class="eyebrow">EJERCICIOS</span>
+          <strong>{{ sessionExerciseCount }}</strong>
+        </div>
+      </div>
+
+      <!-- Barra de distribución de minutos por bloque -->
+      <nav class="block-jump-nav" aria-label="Navegar por bloques de la sesión">
+        <span class="eyebrow">ACCESO RÁPIDO</span>
+        <a
+          v-for="blk in session.trainingBlocks"
+          :key="`jump-${blk.id}`"
+          :href="`#session-block-${blk.id}`"
+        >
+          {{ blk.blockOrder }} · {{ blk.name }}
+        </a>
+      </nav>
+
       <div class="timebar-wrap">
         <span class="eyebrow">
-            DISTRIBUCIÓN DE BLOQUES (`training_blocks`)
+            DISTRIBUCIÓN DE TIEMPO
         </span>
         <div class="session-timebar">
           <div
@@ -926,11 +1029,13 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           v-for="blk in session.trainingBlocks"
           :key="blk.id"
           class="session-block-card"
+          :id="`session-block-${blk.id}`"
+          :aria-label="`Bloque ${blk.blockOrder}: ${blk.name}`"
         >
           <header class="session-block-header">
             <div>
               <span class="eyebrow">
-                BLOQUE {{ blk.blockOrder }} · ID: {{ blk.id }}
+                BLOQUE {{ blk.blockOrder }}
               </span>
               <h2>{{ blk.name }}</h2>
               <p>{{ blk.format }}</p>
@@ -1264,16 +1369,22 @@ button {
 }
 .team-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  margin-top: 38px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 275px), 1fr));
+  gap: 18px;
+  margin-top: 16px;
+}
+.team-list-summary {
+  margin: 38px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
 }
 .team-card {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-height: 250px;
-  padding: 20px;
+  gap: 12px;
+  min-height: 270px;
+  padding: 22px;
   border: 1px solid var(--line);
   border-radius: 13px;
   color: var(--ink);
@@ -1290,6 +1401,16 @@ button {
 .team-card:hover {
   transform: translateY(-3px);
   border-color: #829b87;
+}
+.team-status {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: #edf4ed;
+}
+.team-status.team-status-archived {
+  color: #765a40;
+  background: #f0e8dc;
 }
 .team-card-top span,
 .team-card em {
@@ -1309,6 +1430,7 @@ button {
   background: transparent;
   color: inherit;
   text-align: left;
+  cursor: pointer;
 }
 .team-card h2 {
   margin: 5px 0 0;
@@ -1324,7 +1446,7 @@ button {
 }
 .team-card-meta {
   display: grid;
-  gap: 3px;
+  gap: 6px;
   margin-top: auto;
   padding-top: 13px;
   border-top: 1px solid var(--line);
@@ -1333,7 +1455,7 @@ button {
   color: var(--muted);
 }
 .team-card em {
-  margin-top: 6px;
+  margin-top: 10px;
   color: var(--accent);
 }
 .team-card-footer {
@@ -2099,6 +2221,115 @@ legend {
     600 28px Georgia,
     serif;
 }
+.connection-status {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  color: #8d4d37;
+  font-size: 12px;
+  font-weight: 700;
+}
+.connection-status.connected { color: #365443; }
+.connection-status small { color: var(--muted); font-weight: 500; }
+.refresh-button {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 9px;
+  color: var(--button);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 700;
+}
+.refresh-button:hover { border-color: var(--button); background: var(--soft); }
+.construction-notice {
+  max-width: 48ch;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.microcycle-status { color: #52725e !important; font-size: 12px !important; }
+.session-grid article.is-next {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(230, 107, 72, 0.14);
+}
+.session-state-label {
+  justify-self: start;
+  border-radius: 999px;
+  padding: 4px 8px;
+  color: #9c4c21 !important;
+  background: #fbe7dc;
+  font-size: 10px !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.week-cell-selected {
+  justify-self: start;
+  border-radius: 4px;
+  padding: 2px 5px;
+  color: var(--button);
+  background: var(--soft);
+  font-size: 10px;
+  font-weight: 800;
+}
+.block-jump-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 22px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+}
+.block-jump-nav .eyebrow { margin: 0 5px 0 0; }
+.block-jump-nav a {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 9px;
+  color: var(--button);
+  background: var(--soft);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.block-jump-nav a:hover { border-color: var(--accent); }
+.weekly-next-session {
+  display: grid;
+  gap: 5px;
+  margin: 20px 0 12px;
+  padding: 14px 16px;
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  background: #fbe7dc;
+}
+.weekly-next-session strong { color: #7c3f24; font-size: 15px; }
+.session-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 20px 0 14px;
+}
+.session-overview > div {
+  display: grid;
+  gap: 4px;
+  min-height: 66px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+}
+.session-overview strong { color: var(--button); font-size: 18px; }
+.session-block-card { scroll-margin-top: 150px; }
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(230, 107, 72, 0.65);
+  outline-offset: 2px;
+}
 @media (max-width: 820px) {
   .page {
     padding-top: 36px;
@@ -2118,7 +2349,6 @@ legend {
     border-top: 1px solid var(--line);
     border-left: 0;
   }
-  .team-grid,
   .session-grid,
   .roster-grid {
     grid-template-columns: 1fr;
@@ -2142,5 +2372,50 @@ legend {
   .history-layout {
     grid-template-columns: 1fr;
   }
+}
+@media (max-width: 520px) {
+  .topbar {
+    height: auto;
+    min-height: 64px;
+    padding: 12px 14px;
+  }
+  .topbar-right {
+    gap: 6px;
+    font-size: 12px;
+  }
+  .coach-avatar,
+  .topbar-right > span:not(.connection-status) {
+    display: none;
+  }
+  .heading-actions,
+  .heading-actions > button,
+  .week-navigation,
+  .week-navigation button {
+    width: 100%;
+  }
+  .week-navigation,
+  .heading-actions {
+    display: grid;
+  }
+  .session-grid article {
+    min-height: auto;
+  }
+  .week-grid {
+    grid-template-columns: 1fr 1fr;
+    padding: 10px;
+  }
+  .week-cell {
+    min-height: 92px;
+    padding: 9px;
+  }
+  .block-jump-nav {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .session-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .session-overview > div:last-child { grid-column: 1 / -1; }
+  .block-jump-nav a { text-align: center; }
+  .session-block-header h2 { font-size: 21px; }
+  .session-timebar div { font-size: 10px; }
 }
 </style>
