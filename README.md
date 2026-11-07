@@ -7,6 +7,10 @@ Está construida con Nuxt 4 y Vue 3. Google Sheets es la única fuente de datos;
 ## Funcionalidad actual
 
 - Gestión de equipos, plantilla, temporadas y observaciones semanales.
+- Panel de equipos con búsqueda por nombre o club, tarjetas con iniciales y acciones para archivar o eliminar.
+- Menú de acciones del equipo y menú de usuario adaptado a pantallas móviles.
+- Indicador del tiempo transcurrido de la temporada y sesiones anteriores visibles en gris; sus bloques siguen disponibles para consulta.
+- Acceso flotante en móvil para añadir o editar la nota de la semana seleccionada.
 - Estados de equipo (`active` / `archived`) y de temporada (`active` / `closed`).
 - Roles visuales de entrenador y administrador; el administrador puede eliminar un equipo junto a sus temporadas y observaciones.
 - Planificación por categoría: Alevín (U12), Infantil (U14), Cadete (U16) y Juvenil (U18).

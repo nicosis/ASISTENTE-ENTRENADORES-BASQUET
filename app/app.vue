@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import {
   ageCategoryOptions,
   blockPalette,
@@ -98,6 +98,42 @@ const lastSyncedLabel = computed(() => {
   }).format(date).replace('.', '')
 })
 
+function teamInitials(name: string): string {
+  return name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0]?.toUpperCase() || '').join('')
+}
+
+const teamSearch = ref('')
+const noteInput = ref<HTMLTextAreaElement | null>(null)
+const filteredTeams = computed(() => {
+  const query = teamSearch.value.trim().toLocaleLowerCase('es')
+  return visibleTeams.value.filter((team) =>
+    `${team.name} ${team.club}`.toLocaleLowerCase('es').includes(query),
+  )
+})
+const seasonProgress = computed(() => {
+  if (!activeSeason.value || !activeSeasonEndDate.value) return null
+  const start = Date.parse(`${activeSeason.value.startsAt}T00:00:00Z`)
+  const end = Date.parse(`${activeSeasonEndDate.value}T00:00:00Z`) + 86400000
+  const now = new Date()
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null
+  return Math.round(Math.max(0, Math.min(1, (today - start) / (end - start))) * 100)
+})
+function isPastSession(index: number): boolean {
+  const date = sessionDates.value[index]
+  if (!date) return false
+  const today = new Date()
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  return date < todayKey
+}
+
+async function openFloatingNote(): Promise<void> {
+  if (!reviewEditorOpen.value) openReviewEditor()
+  await nextTick()
+  noteInput.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  noteInput.value?.focus({ preventScroll: true })
+}
+
 const nextSessionIndex = computed(() => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -161,7 +197,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         <span>La aplicación estará disponible en unos segundos.</span>
       </div>
     </div>
-    <header class="topbar">
+    <header class="topbar" :class="{ 'is-signed-in': signedIn }">
       <button class="brand" type="button" @click="view = 'home'">
         <span class="brand-ball">B</span><span>pizarra</span>
       </button>
@@ -186,6 +222,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           {{ loadingDatabase ? 'Actualizando…' : 'Actualizar' }}
         </button>
         <template v-if="signedIn">
+          <div class="desktop-account">
           <span class="coach-avatar">{{ coach.name.slice(0, 1) }}</span>
           <span>{{ coach.name }}</span>
           <button
@@ -200,6 +237,17 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           <button class="logout-button" type="button" @click="signOut">
             Cerrar sesión
           </button>
+          </div>
+          <details class="mobile-account">
+            <summary :aria-label="`Cuenta de ${coach.name}`">{{ coach.name.slice(0, 1).toUpperCase() }}</summary>
+            <div class="account-menu">
+              <strong>{{ coach.name }}</strong>
+              <span>{{ dbSource === 'google-sheets' ? 'Sheets conectado' : 'Sheets no disponible' }}<small v-if="lastSyncedLabel"> · {{ lastSyncedLabel }}</small></span>
+              <button type="button" :disabled="loadingDatabase" @click="refreshDatabaseFromSheets">{{ loadingDatabase ? 'Actualizando…' : 'Actualizar datos' }}</button>
+              <button type="button" @click="toggleCoachRole">Rol: {{ isAdmin ? 'ADMIN' : 'ENTRENADOR' }}</button>
+              <button type="button" @click="signOut">Cerrar sesión</button>
+            </div>
+          </details>
         </template>
       </div>
     </header>
@@ -292,18 +340,23 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           </button>
         </div>
       </div>
+      <label v-if="visibleTeams.length" class="team-search">
+        <span>Buscar equipo</span>
+        <input v-model="teamSearch" type="search" placeholder="Nombre del equipo o club" />
+      </label>
       <p v-if="visibleTeams.length" class="team-list-summary">
-        {{ visibleTeams.length }} {{ visibleTeams.length === 1 ? 'equipo' : 'equipos' }}
-        {{ showArchivedTeams ? (visibleTeams.length === 1 ? 'archivado' : 'archivados') : (visibleTeams.length === 1 ? 'activo' : 'activos') }}
+        {{ filteredTeams.length }} {{ filteredTeams.length === 1 ? 'equipo' : 'equipos' }}
+        {{ showArchivedTeams ? (filteredTeams.length === 1 ? 'archivado' : 'archivados') : (filteredTeams.length === 1 ? 'activo' : 'activos') }}
       </p>
       <section class="team-grid" aria-label="Listado de equipos">
         <article
-          v-for="team in visibleTeams"
+          v-for="team in filteredTeams"
           :key="team.id"
           class="team-card"
           :class="{ 'is-archived': team.status === 'archived' }"
         >
           <div class="team-card-top">
+            <span class="team-avatar" aria-hidden="true">{{ teamInitials(team.name) }}</span>
             <span class="team-status" :class="{ 'team-status-archived': team.status === 'archived' }">
               {{ team.status === 'archived' ? 'ARCHIVADO' : 'ACTIVO' }}
             </span>
@@ -331,10 +384,11 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
               v-if="team.status !== 'archived'"
               class="card-mini-btn"
               type="button"
+              aria-label="Archivar equipo"
               title="Ocultar equipo del panel principal sin perder su historial"
               @click.stop="archiveTeam(team.id)"
             >
-              Archivar equipo
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h18v4H3zM5 8v12h14V8m-9 4h4" /></svg>
             </button>
             <button
               v-else
@@ -348,14 +402,16 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
               v-if="isAdmin"
               class="card-mini-btn danger"
               type="button"
+              aria-label="Eliminar equipo"
               title="Solo Administrador: borra equipo, temporadas y observaciones en cascada"
               @click.stop="handleConfirmDeleteTeam(team.id, team.name)"
             >
-              Eliminar (Admin)
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v6m4-6v6" /></svg>
             </button>
           </div>
         </article>
       </section>
+      <p v-if="visibleTeams.length && !filteredTeams.length" role="status">No se encontraron equipos para esta búsqueda.</p>
       <section v-if="!visibleTeams.length" class="empty-state">
         <h2>
           {{
@@ -533,13 +589,23 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         </div>
         <div class="heading-actions">
           <button
+            class="secondary-button"
+            type="button"
+            @click="view = 'create-season'"
+          >
+            + Nueva temporada
+          </button>
+          <details class="other-actions">
+          <summary class="secondary-button">⋮ Otras acciones</summary>
+          <div class="other-actions-menu">
+          <button
             v-if="activeSeason && activeSeason.status === 'active'"
             class="secondary-button"
             type="button"
             title="Cerrar/archivar esta temporada"
             @click="closeSeason(activeSeason.id)"
           >
-            Cerrar temporada
+            <span aria-hidden="true">✕</span> Cerrar temporada
           </button>
           <button
             v-else-if="activeSeason && activeSeason.status === 'closed'"
@@ -551,20 +617,13 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             Reactivar temporada
           </button>
           <button
-            class="secondary-button"
-            type="button"
-            @click="view = 'create-season'"
-          >
-            + Nueva temporada
-          </button>
-          <button
             v-if="activeTeam && activeTeam.status !== 'archived'"
             class="secondary-button"
             type="button"
             title="Ocultar equipo del panel principal"
             @click="archiveTeam(activeTeam.id)"
           >
-            Archivar equipo
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h18v4H3zM5 8v12h14V8m-9 4h4" /></svg> Archivar equipo
           </button>
           <button
             v-else-if="activeTeam && activeTeam.status === 'archived'"
@@ -580,8 +639,10 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             type="button"
             @click="handleConfirmDeleteTeam(activeTeam.id, activeTeam.name)"
           >
-            Eliminar equipo (Admin)
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v6m4-6v6" /></svg> Eliminar equipo (Admin)
           </button>
+          </div>
+          </details>
         </div>
       </div>
 
@@ -622,6 +683,11 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
               : '—'
           }}</strong>
         </div>
+      </section>
+
+      <section v-if="seasonProgress !== null" class="season-progress" aria-label="Progreso de la temporada">
+        <div><strong>Tiempo transcurrido de la temporada</strong><span>{{ seasonProgress }} %</span></div>
+        <progress :value="seasonProgress" max="100" :aria-label="`Tiempo transcurrido de la temporada: ${seasonProgress} %`">{{ seasonProgress }} %</progress>
       </section>
 
       <section v-if="!trainingDataStatus.available" class="panel-box">
@@ -737,7 +803,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           <article
             v-for="(item, index) in weeklySessions"
             :key="item.id"
-            :class="{ 'is-next': nextSessionIndex === index }"
+            :class="{ 'is-next': nextSessionIndex === index, 'is-past': isPastSession(index) }"
           >
             <span>
               SESIÓN {{ index + 1 }} · {{
@@ -892,6 +958,10 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         </div>
       </section>
 
+      <button v-if="!reviewEditorOpen" class="floating-note" type="button" :aria-label="activeWeekReview ? 'Editar nota semanal' : 'Añadir nota semanal'" @click="openFloatingNote">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+      </button>
+
       <section v-if="reviewEditorOpen" class="note-editor">
         <div>
           <p class="eyebrow">
@@ -901,6 +971,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         </div>
         <div>
           <textarea
+            ref="noteInput"
             v-model="reviewDraft"
             rows="4"
             placeholder="Carga percibida, asistencia, progresos, molestias…"
@@ -1206,6 +1277,25 @@ button {
   color: var(--muted);
   font-size: 14px;
 }
+.desktop-account { display: flex; align-items: center; gap: 9px; }
+.mobile-account { display: none; }
+.mobile-account, .other-actions { position: relative; }
+.account-menu, .other-actions-menu {
+  position: absolute;
+  right: 0;
+  z-index: 5;
+  display: grid;
+  gap: 8px;
+  min-width: 220px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px #0002;
+}
+.account-menu button { text-align: left; }
+.other-actions summary { cursor: pointer; list-style: none; }
+.other-actions summary::-webkit-details-marker { display: none; }
 .logout-button {
   margin-left: 8px;
   border: 0;
@@ -1374,12 +1464,20 @@ button {
   margin-top: 16px;
 }
 .team-list-summary {
-  margin: 38px 0 0;
+  margin: 16px 0 0;
   color: var(--muted);
   font-size: 13px;
   font-weight: 700;
 }
+.team-search { display: grid; gap: 7px; max-width: 360px; margin-top: 30px; color: var(--muted); font-size: 13px; font-weight: 700; }
+.team-search input { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--surface); }
+.season-progress { display: grid; gap: 8px; margin: 18px 0; color: var(--muted); font-size: 13px; }
+.season-progress div { display: flex; justify-content: space-between; gap: 12px; }
+.season-progress progress { width: 100%; height: 10px; accent-color: var(--button); }
+.session-grid article.is-past { background: #f0f0ed; border-color: #d5d5d0; }
+.floating-note { display: none; }
 .team-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1393,6 +1491,20 @@ button {
   transition:
     transform 0.18s,
     border-color 0.18s;
+}
+.team-card-main::after { content: ''; position: absolute; inset: 0; }
+.team-card-footer { position: relative; z-index: 1; pointer-events: none; }
+.team-card-footer button { pointer-events: auto; }
+.team-card-top { display: flex; align-items: center; justify-content: space-between; }
+.team-card-top .team-avatar {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: white;
+  background: var(--button);
+  font-size: 13px;
 }
 .team-card.is-archived {
   opacity: 0.82;
@@ -2323,6 +2435,7 @@ legend {
 .session-overview strong { color: var(--button); font-size: 18px; }
 .session-block-card { scroll-margin-top: 150px; }
 button:focus-visible,
+summary:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible,
@@ -2374,6 +2487,21 @@ textarea:focus-visible {
   }
 }
 @media (max-width: 520px) {
+  .floating-note {
+    position: fixed;
+    right: max(18px, env(safe-area-inset-right));
+    bottom: max(18px, env(safe-area-inset-bottom));
+    z-index: 10;
+    display: grid;
+    place-items: center;
+    width: 54px;
+    height: 54px;
+    border: 0;
+    border-radius: 50%;
+    color: #fff;
+    background: var(--button);
+    box-shadow: 0 4px 16px #0003;
+  }
   .topbar {
     height: auto;
     min-height: 64px;
@@ -2383,10 +2511,22 @@ textarea:focus-visible {
     gap: 6px;
     font-size: 12px;
   }
-  .coach-avatar,
-  .topbar-right > span:not(.connection-status) {
-    display: none;
+  .desktop-account, .is-signed-in .topbar-right > .connection-status,
+  .is-signed-in .topbar-right > .refresh-button { display: none; }
+  .mobile-account { display: block; }
+  .mobile-account summary {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: #fff;
+    background: var(--button);
+    cursor: pointer;
+    list-style: none;
   }
+  .mobile-account summary::-webkit-details-marker { display: none; }
+  .other-actions { width: 100%; }
   .heading-actions,
   .heading-actions > button,
   .week-navigation,
