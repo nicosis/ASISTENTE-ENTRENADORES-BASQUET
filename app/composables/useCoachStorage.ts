@@ -50,6 +50,7 @@ export interface Season {
   startsAt: string;
   endsAt: string;
   trainingDays: string[];
+  holidayWeeks?: string[];
   context: string;
   status: "active" | "closed";
 }
@@ -118,10 +119,6 @@ export const weekdays: string[] = [
   "Sábado",
 ];
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 export function isAgeCategory(value: unknown): value is AgeCategory {
   return (
     value === "alevin" ||
@@ -135,158 +132,8 @@ export function isCompetitiveLevel(value: unknown): value is CompetitiveLevel {
   return value === "formacion" || value === "liga";
 }
 
-export function isCoachRole(value: unknown): value is CoachRole {
-  return value === "admin" || value === "coach";
-}
-
 export function isTeamStatus(value: unknown): value is TeamStatus {
   return value === "active" || value === "archived";
-}
-
-function isPlayer(value: unknown): value is Player {
-  return (
-    isRecord(value) &&
-    typeof value.id === "string" &&
-    typeof value.name === "string"
-  );
-}
-
-function isTeam(value: unknown): value is Team {
-  return (
-    isRecord(value) &&
-    typeof value.id === "string" &&
-    typeof value.coachId === "string" &&
-    typeof value.name === "string" &&
-    typeof value.club === "string" &&
-    (value.status === undefined || isTeamStatus(value.status))
-  );
-}
-
-function isTeamPlayer(value: unknown): value is TeamPlayer {
-  return isRecord(value) &&
-    typeof value.id === "string" &&
-    typeof value.teamId === "string" &&
-    typeof value.playerId === "string" &&
-    (value.status === "active" || value.status === "inactive") &&
-    typeof value.joinedAt === "string" &&
-    (typeof value.leftAt === "string" || value.leftAt === null);
-}
-
-export function isPlayerArray(value: unknown): value is Player[] {
-  return Array.isArray(value) && value.every(isPlayer);
-}
-
-export function isTeamPlayerArray(value: unknown): value is TeamPlayer[] {
-  return Array.isArray(value) && value.every(isTeamPlayer);
-}
-
-export function isTeamArray(value: unknown): value is Team[] {
-  return Array.isArray(value) && value.every(isTeam);
-}
-
-function isSeason(value: unknown): value is Season {
-  if (!isRecord(value)) return false;
-  return (
-    typeof value.id === "string" &&
-    typeof value.teamId === "string" &&
-    typeof value.name === "string" &&
-    typeof value.category === "string" &&
-    typeof value.startsAt === "string" &&
-    typeof value.endsAt === "string" &&
-    Array.isArray(value.trainingDays) &&
-    value.trainingDays.every((day): day is string => typeof day === "string") &&
-    typeof value.context === "string" &&
-    (value.status === "active" || value.status === "closed")
-  );
-}
-
-export function isSeasonArray(value: unknown): value is Season[] {
-  return Array.isArray(value) && value.every(isSeason);
-}
-
-function isWeeklyReview(value: unknown): value is WeeklyReview {
-  return (
-    isRecord(value) &&
-    typeof value.id === "string" &&
-    typeof value.seasonId === "string" &&
-    typeof value.weekStart === "string" &&
-    typeof value.text === "string" &&
-    typeof value.createdAt === "string"
-  );
-}
-
-export function isWeeklyReviewArray(value: unknown): value is WeeklyReview[] {
-  return Array.isArray(value) && value.every(isWeeklyReview);
-}
-
-export function isCoachProfile(value: unknown): value is CoachProfile {
-  return (
-    isRecord(value) &&
-    typeof value.name === "string" &&
-    value.name.trim().length > 0 &&
-    (typeof value.id === "string" || value.id === undefined) &&
-    (value.role === undefined || isCoachRole(value.role))
-  );
-}
-
-export function isCoachArray(value: unknown): value is CoachProfile[] {
-  return Array.isArray(value) && value.every(isCoachProfile);
-}
-
-export function useCoachStorage() {
-  function readStorageJson<T>(
-    key: string,
-    guard: (candidate: unknown) => candidate is T,
-  ): T | null {
-    try {
-      const raw = localStorage.getItem(key);
-      if (!raw) return null;
-      const parsed: unknown = JSON.parse(raw);
-      return guard(parsed) ? parsed : null;
-    } catch {
-      return null;
-    }
-  }
-
-  function writeStorageJson(key: string, value: unknown): void {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch {
-      // Ignorar errores de cuota o acceso a localStorage
-    }
-  }
-
-  function readStorageFlag(key: string): string | null {
-    try {
-      return localStorage.getItem(key);
-    } catch {
-      return null;
-    }
-  }
-
-  function writeStorageFlag(key: string, value: string): void {
-    try {
-      localStorage.setItem(key, value);
-    } catch {
-      // Ignorar errores de acceso a localStorage
-    }
-  }
-
-  function removeStorageKey(key: string): void {
-    try {
-      localStorage.removeItem(key);
-    } catch {
-      // Ignorar errores de acceso a localStorage
-    }
-  }
-
-  return {
-    readStorageJson,
-    writeStorageJson,
-    readStorageFlag,
-    writeStorageFlag,
-    removeStorageKey,
-  };
 }
 
 export function asLocalDate(value: unknown): Date {

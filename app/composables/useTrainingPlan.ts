@@ -1,4 +1,5 @@
 import { computed, type Ref } from 'vue'
+import { alignCadeteCatalog } from '~/shared/cadeteCalendar'
 import {
   getTrainingDataStatus,
   getHydratedSession,
@@ -23,13 +24,25 @@ export interface SeasonPlanConfig {
   frequency: Frequency
   weekNumber: number
   selectedDay: TrainingDay
+  startsAt?: string
+  holidayWeeks?: string[]
 }
 
 export function useTrainingPlan(
   config: Ref<SeasonPlanConfig>,
   catalogRef: Ref<TrainingCatalogTables>,
 ) {
-  const catalog = computed(() => catalogRef.value)
+  const catalog = computed(() => {
+    if (config.value.ageCategory !== 'cadete' || !config.value.startsAt) return catalogRef.value
+    const plan = catalogRef.value.macrocycles.find(item => item.id === config.value.macrocycleId && item.ageCategory === 'cadete')
+    const phases = catalogRef.value.mesocycles.filter(item => item.macrocycleId === plan?.id)
+    if (!plan || phases.length !== 4) return catalogRef.value
+    try {
+      return alignCadeteCatalog(catalogRef.value, config.value.startsAt, config.value.holidayWeeks)
+    } catch {
+      return { ...catalogRef.value, macrocycles: [] }
+    }
+  })
 
   const emptyMacrocycle = computed<MacrocycleRecord>(() => ({
     id: '',
@@ -79,22 +92,33 @@ export function useTrainingPlan(
     getMesocycles(activePlan.value.id, catalog.value),
   )
 
-  const currentWeekContext = computed(() =>
-    activePlan.value.id
-      ? getMesocycleForWeek(
-          activePlan.value.id,
-          config.value.weekNumber,
-          catalog.value,
-          config.value.mesocycleId,
-        )
-      : {
-          phase: emptyMesocycle.value,
-          weekNumber: config.value.weekNumber,
-          weekInPhase: 0,
-          loadIndex: 0,
-          isDeload: false,
-        } satisfies MesocycleWeekContext,
-  )
+  const currentWeekContext = computed<MesocycleWeekContext>(() => {
+    if (!activePlan.value.id) {
+      return {
+        phase: emptyMesocycle.value,
+        weekNumber: config.value.weekNumber,
+        weekInPhase: 0,
+        loadIndex: 0,
+        isDeload: false,
+      }
+    }
+    try {
+      return getMesocycleForWeek(
+        activePlan.value.id,
+        config.value.weekNumber,
+        catalog.value,
+        config.value.mesocycleId,
+      )
+    } catch {
+      return {
+        phase: emptyMesocycle.value,
+        weekNumber: config.value.weekNumber,
+        weekInPhase: 0,
+        loadIndex: 0,
+        isDeload: false,
+      }
+    }
+  })
 
   const currentPhase = computed(() => currentWeekContext.value.phase)
 

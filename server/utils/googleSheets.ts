@@ -72,6 +72,7 @@ export interface SheetSeasonInput {
   startsAt: string
   endsAt: string
   trainingDays: string[]
+  holidayWeeks?: string[]
   context: string
   status: 'active' | 'closed'
 }
@@ -123,6 +124,10 @@ interface GoogleTokenResponse {
 interface SheetProperties {
   sheetId?: number
   title?: string
+  gridProperties?: {
+    rowCount?: number
+    columnCount?: number
+  }
 }
 
 interface SpreadsheetMetadata {
@@ -542,6 +547,7 @@ export function buildTrainingSheetTables(
         'training_days',
         'context',
         'status',
+        'holiday_weeks',
       ],
       rows: activeSeasons.map((season) => {
         const freq = Math.min(
@@ -563,6 +569,7 @@ export function buildTrainingSheetTables(
           season.trainingDays.join(', '),
           season.context,
           season.status,
+          (season.holidayWeeks || []).join(', '),
         ]
       }),
       rgbColor: { red: 0.16, green: 0.38, blue: 0.68 },
@@ -650,30 +657,15 @@ function cellString(row: string[], index: number, fallback = ''): string {
 }
 
 function normalizeMacrocycleId(value: string): string {
-  return value.replace(/^PLN(?=\d{4}$)/, 'MAC')
+  return value
 }
 
 function normalizeMesocycleId(value: string): string {
-  const normalized = value.replace(/^FAS(?=\d{4}$)/, 'MES')
-  const legacyMatch = normalized.match(/^MES01(\d{2})$/)
-  const legacyNumber = legacyMatch ? Number(legacyMatch[1]) : 0
-
-  // The live catalog uses MES0001..MES0007. Keep the former MES0101..MES0107
-  // range readable only as a compatibility fallback while the sheet is migrated.
-  return legacyNumber >= 1 && legacyNumber <= 7
-    ? `MES00${legacyMatch?.[1]}`
-    : normalized
+  return value
 }
 
 function normalizeTrainingBlockId(value: string): string {
-  const legacyMatch = value.match(/^BLK01(\d{2})$/)
-  const legacyNumber = legacyMatch ? Number(legacyMatch[1]) : 0
-
-  // The live catalog uses BLK0001..BLK0063. Do not synthesize missing blocks;
-  // this only normalizes an old persisted key when its row is actually read.
-  return legacyNumber >= 1 && legacyNumber <= 63
-    ? `BLK00${legacyMatch?.[1]}`
-    : value
+  return value
 }
 
 function normalizeMicrocycleId(value: string): string {
@@ -929,59 +921,10 @@ export async function readDatabaseFromGoogleSheets(
         stationLabel: cellString(row, 4),
         doseFormacion: cellString(row, 5),
         doseLiga: cellString(row, 6, cellString(row, 5)),
-        variantId:
-          cellString(row, 7) ||
-          blockExercises.find((item) => item.id === cellString(row, 0))?.variantId ||
-          parsedVariants.find((variant) => {
-            const block = parsedTrainingBlocks.find(
-              (candidate) => candidate.id === cellString(row, 1),
-            )
-            return (
-              variant.variantCode === 'A' &&
-              block?.sessionId === variant.mesocycleSessionId
-            )
-          })?.id,
+        variantId: cellString(row, 7) || undefined,
       }))
     : []
-  const parsedBlockExerciseIds = new Set(
-    parsedSheetBlockExercises.map((item) => item.id),
-  )
-  const migratedVariantExercises = parsedVariants
-    .filter((variant) => variant.variantCode === 'B')
-    .flatMap((variant) => {
-      const defaultVariant = sessionVariants.find(
-        (candidate) =>
-          candidate.mesocycleSessionId === variant.mesocycleSessionId &&
-          candidate.variantCode === 'B',
-      )
-      const assignedBlocks = new Set(
-        parsedSheetBlockExercises
-          .filter((item) => item.variantId === variant.id)
-          .map((item) => item.blockId),
-      )
-      return parsedTrainingBlocks
-        .filter((block) => block.sessionId === variant.mesocycleSessionId)
-        .filter((block) => !assignedBlocks.has(block.id))
-        .flatMap((block) => {
-          const bibleItems = blockExercises.filter(
-            (item) => item.blockId === block.id && item.variantId === defaultVariant?.id,
-          )
-          const baseItems = parsedSheetBlockExercises.filter(
-            (item) => item.blockId === block.id,
-          )
-          const sourceItems = bibleItems.length ? bibleItems : baseItems
-          return sourceItems.map((item) => ({
-            ...item,
-            id: bibleItems.length ? item.id : `${item.id}-${variant.id}`,
-            variantId: variant.id,
-          }))
-        })
-    })
-    .filter((item) => !parsedBlockExerciseIds.has(item.id))
-  const parsedBlockExercises: BlockExerciseRecord[] = [
-    ...parsedSheetBlockExercises,
-    ...migratedVariantExercises,
-  ]
+  const parsedBlockExercises: BlockExerciseRecord[] = parsedSheetBlockExercises
 
   const exerciseRows = rowsByTab.get(SHEET_TITLES.exercises) || []
   const parsedExercises: ExerciseRecord[] = exerciseRows.length
@@ -1108,6 +1051,7 @@ export async function readDatabaseFromGoogleSheets(
       trainingDays: splitCommaStrings(cellString(row, 10)),
       context: cellString(row, 11),
       status: cellString(row, 12) === 'closed' ? 'closed' : 'active',
+      holidayWeeks: splitCommaStrings(cellString(row, 13)),
     }
   })
 
@@ -1189,7 +1133,6 @@ export async function syncTrainingTablesToGoogleSheets(
     )
   }
 
-  const allTables = buildTrainingSheetTables(operational)
   const includeCatalog =
     operational?.includeCatalog ??
     !(
@@ -1200,6 +1143,12 @@ export async function syncTrainingTablesToGoogleSheets(
       operational?.seasons ||
       operational?.reviews
     )
+  if (includeCatalog) {
+    throw new Error('El catálogo se administra directamente en Google Sheets y no puede sobrescribirse desde la aplicación.')
+  }
+  const allTables = buildTrainingSheetTables(operational).filter(
+    table => OPERATIONAL_TABLE_TITLES.has(table.title),
+  )
 
   const existingByTitle = new Map<string, number>()
   for (const sheet of metadata.sheets || []) {
@@ -1243,12 +1192,7 @@ export async function syncTrainingTablesToGoogleSheets(
     }
   }
 
-  const tables = allTables.filter(
-    (table) =>
-      includeCatalog ||
-      OPERATIONAL_TABLE_TITLES.has(table.title) ||
-      !existingByTitle.has(table.title),
-  )
+  const tables = allTables
 
   const createRequests: Array<Record<string, unknown>> = []
   for (const table of tables) {
@@ -1286,6 +1230,12 @@ export async function syncTrainingTablesToGoogleSheets(
   }
 
   const refreshedRes = await fetch(baseUrl, { headers: authHeaders })
+  if (!refreshedRes.ok) {
+    const errBody = (await refreshedRes.json()) as SpreadsheetMetadata
+    throw new Error(
+      errBody.error?.message || `Unable to refresh spreadsheet (${refreshedRes.status}).`,
+    )
+  }
   const refreshedMeta = (await refreshedRes.json()) as SpreadsheetMetadata
   const sheetIdsByTitle = new Map<string, number>()
   for (const sheet of refreshedMeta.sheets || []) {
@@ -1296,38 +1246,71 @@ export async function syncTrainingTablesToGoogleSheets(
     }
   }
 
-  const valueData = tables.map((table) => ({
-    range: `${table.title}!A1`,
-    majorDimension: 'ROWS',
-    values: [table.headers, ...table.rows],
-  }))
-
-  const clearRanges = tables.map((table) => `${table.title}!A1:Z500`)
-  await fetch(`${baseUrl}/values:batchClear`, {
-    method: 'POST',
-    headers: authHeaders,
-    body: JSON.stringify({ ranges: clearRanges }),
-  })
-
-  const writeRes = await fetch(`${baseUrl}/values:batchUpdate`, {
-    method: 'POST',
-    headers: authHeaders,
-    body: JSON.stringify({
-      valueInputOption: 'USER_ENTERED',
-      data: valueData,
-    }),
-  })
-  if (!writeRes.ok) {
-    const errBody = (await writeRes.json()) as SpreadsheetMetadata
-    throw new Error(
-      errBody.error?.message || 'Failed to write table values to Google Sheets.',
-    )
-  }
-
+  const writeRequests: Array<Record<string, unknown>> = []
   const formatRequests: Array<Record<string, unknown>> = []
   for (const table of tables) {
     const sheetId = sheetIdsByTitle.get(table.title)
-    if (typeof sheetId !== 'number') continue
+    if (typeof sheetId !== 'number') {
+      throw new Error(`Missing Google Sheets tab: ${table.title}.`)
+    }
+    if (table.rows.some((row) => row.length !== table.headers.length)) {
+      throw new Error(`Invalid row width in Google Sheets table: ${table.title}.`)
+    }
+    const sheet = refreshedMeta.sheets?.find(
+      (item) => item.properties?.title === table.title,
+    )?.properties
+    const clearRowCount = Math.max(
+      sheet?.gridProperties?.rowCount ?? 100,
+      table.rows.length + 1,
+    )
+    const clearColumnCount = Math.max(
+      sheet?.gridProperties?.columnCount ?? table.headers.length,
+      table.headers.length,
+    )
+
+    if (
+      clearRowCount > (sheet?.gridProperties?.rowCount ?? 0) ||
+      clearColumnCount > (sheet?.gridProperties?.columnCount ?? 0)
+    ) {
+      writeRequests.push({
+        updateSheetProperties: {
+          properties: {
+            sheetId,
+            gridProperties: {
+              rowCount: clearRowCount,
+              columnCount: clearColumnCount,
+            },
+          },
+          fields: 'gridProperties.rowCount,gridProperties.columnCount',
+        },
+      })
+    }
+    writeRequests.push({
+      updateCells: {
+        range: {
+          sheetId,
+          startRowIndex: 0,
+          endRowIndex: clearRowCount,
+          startColumnIndex: 0,
+          endColumnIndex: clearColumnCount,
+        },
+        fields: 'userEnteredValue',
+      },
+    })
+    writeRequests.push({
+      updateCells: {
+        start: { sheetId, rowIndex: 0, columnIndex: 0 },
+        rows: [table.headers, ...table.rows].map((row) => ({
+          values: row.map((value) => ({
+            userEnteredValue:
+              typeof value === 'number'
+                ? { numberValue: value }
+                : { stringValue: value },
+          })),
+        })),
+        fields: 'userEnteredValue',
+      },
+    })
 
     formatRequests.push(
       {
@@ -1382,12 +1365,16 @@ export async function syncTrainingTablesToGoogleSheets(
     })
   }
 
-  if (formatRequests.length > 0) {
-    await fetch(`${baseUrl}:batchUpdate`, {
-      method: 'POST',
-      headers: authHeaders,
-      body: JSON.stringify({ requests: formatRequests }),
-    })
+  const writeRes = await fetch(`${baseUrl}:batchUpdate`, {
+    method: 'POST',
+    headers: authHeaders,
+    body: JSON.stringify({ requests: [...writeRequests, ...formatRequests] }),
+  })
+  if (!writeRes.ok) {
+    const errBody = (await writeRes.json()) as SpreadsheetMetadata
+    throw new Error(
+      errBody.error?.message || 'Failed to update table values and formatting in Google Sheets.',
+    )
   }
 
   invalidateSheetsDatabaseCache()

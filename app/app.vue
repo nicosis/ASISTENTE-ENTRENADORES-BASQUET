@@ -44,6 +44,8 @@ const {
   currentWeekNumber,
   selectedDay,
   displayedWeekStart,
+  isCadeteHoliday,
+  holidayHomeSessions,
   canGoToPreviousWeek,
   canGoToNextWeek,
   weekLabel,
@@ -58,6 +60,7 @@ const {
   selectedHistoryReviewId,
   teamDraft,
   seasonDraft,
+  draftCadeteWeeks,
   session,
   loadingSession,
   error,
@@ -165,6 +168,7 @@ const sessionExerciseCount = computed(() =>
   session.value?.trainingBlocks.reduce((total, block) => total + block.items.length, 0) || 0,
 )
 
+
 function microcycleStatusLabel(status: string | undefined): string {
   if (status === 'completed') return 'Planificación completada'
   if (status === 'active') return 'Planificación activa'
@@ -252,6 +256,8 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       </div>
     </header>
 
+    <p v-if="error" class="error" role="alert">{{ error }}</p>
+
     <section
       v-if="!loadingDatabase && dbSource === 'unavailable'"
       class="data-unavailable-banner"
@@ -295,7 +301,13 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             </option>
           </select>
         </label>
-        <button class="primary-button" type="submit">Entrar</button>
+        <button
+          class="primary-button"
+          type="submit"
+          :disabled="loadingDatabase || dbSource !== 'google-sheets'"
+        >
+          {{ loadingDatabase ? 'Conectando con Google Sheets…' : 'Entrar' }}
+        </button>
       </form>
     </section>
 
@@ -521,11 +533,9 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             <input
               v-model="seasonDraft.startsAt"
               type="date"
-              min="2026-01-05"
-              step="7"
               required
             />
-            <small>La temporada debe comenzar un lunes.</small>
+            <small>Para cadete, selecciona un lunes de agosto.</small>
           </label>
           <label>
             Final de temporada
@@ -534,7 +544,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
               type="date"
               readonly
             />
-            <small>Calculado para {{ activePlan.totalWeeks }} semanas.</small>
+            <small>Calculado según el calendario de la temporada.</small>
           </label>
         </div>
         <fieldset>
@@ -553,6 +563,16 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
                 @change="toggleDraftDay(day)"
               />
               <span>{{ day }}</span>
+            </label>
+          </div>
+        </fieldset>
+        <fieldset v-if="seasonDraft.ageCategory === 'cadete' && draftCadeteWeeks.length">
+          <legend>Semanas de vacaciones</legend>
+          <p>Selecciona el lunes de cada semana sin entrenamiento.</p>
+          <div class="day-pills">
+            <label v-for="week in draftCadeteWeeks" :key="week.weekStart">
+              <input v-model="seasonDraft.holidayWeeks" type="checkbox" :value="week.weekStart" />
+              <span>{{ formattedDate(week.weekStart) }}</span>
             </label>
           </div>
         </fieldset>
@@ -782,15 +802,19 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         </div>
 
         <section
-          v-if="currentPhase.type === 'holiday'"
+          v-if="currentPhase.type === 'holiday' || isCadeteHoliday"
           class="holiday-notice-card"
         >
           <p class="eyebrow">SEMANA DE RECESO</p>
           <h3>Descanso de pista: trabajo autónomo en casa</h3>
           <p>
-            Esta semana ({{ weekLabel }}) corresponde a vacaciones. Los
-            jugadores realizan las 3 sesiones sin material (A, B y C).
+            Esta semana ({{ weekLabel }}) corresponde a vacaciones. Las siguientes actividades son opcionales.
           </p>
+          <ul>
+            <li v-for="home in holidayHomeSessions" :key="home.id">
+              {{ home.name }} · {{ home.doseHoliday1 }}
+            </li>
+          </ul>
         </section>
 
         <template v-else>
@@ -912,7 +936,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
                 >
                   <span class="week-cell-number">Semana {{ Number(ph.weekStart) + idx }}</span>
                   <span v-if="Number(ph.weekStart) + idx === currentWeekNumber" class="week-cell-selected">Seleccionada</span>
-                  <span class="week-cell-date">{{ annualWeekLabel(Number(ph.weekStart) + idx).replace(/^Semana \\d+ · /, '') }}</span>
+                  <span class="week-cell-date">{{ annualWeekLabel(Number(ph.weekStart) + idx).replace(/^Semana \d+ · /, '') }}</span>
                   <span class="week-cell-load">Carga <strong>{{ load }}/10</strong></span>
                   <span
                     v-if="ph.type === 'training' && idx === ph.weeklyLoads.length - 1 && load <= 4"
@@ -986,7 +1010,6 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           </div>
         </div>
       </section>
-      <p v-if="error" class="error">{{ error }}</p>
     </section>
 
     <div

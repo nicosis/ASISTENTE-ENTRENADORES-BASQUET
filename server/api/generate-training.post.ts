@@ -9,6 +9,7 @@ import {
   type TrainingDay,
 } from '../../app/shared/training'
 import { readDatabaseFromGoogleSheets } from '../utils/googleSheets'
+import { alignCadeteCatalog, getCadeteWeeks } from '../../app/shared/cadeteCalendar'
 
 interface GenerateTrainingBody {
   day?: TrainingDay
@@ -18,6 +19,9 @@ interface GenerateTrainingBody {
   mesocycleId?: string
   ageCategory?: AgeCategory
   competitiveLevel?: CompetitiveLevel
+  startsAt?: string
+  holidayWeeks?: string[]
+  seasonId?: string
 }
 
 export default defineEventHandler(async (event) => {
@@ -35,6 +39,7 @@ export default defineEventHandler(async (event) => {
       })
     }
     let catalog: TrainingCatalogTables
+    let sheetSeasons: Awaited<ReturnType<typeof readDatabaseFromGoogleSheets>>['operational']['seasons']
     try {
       const db = await readDatabaseFromGoogleSheets({
         spreadsheetId,
@@ -42,6 +47,7 @@ export default defineEventHandler(async (event) => {
         privateKey,
       })
       catalog = db.catalog
+      sheetSeasons = db.operational.seasons
     } catch (error) {
       const message =
         error instanceof Error
@@ -54,6 +60,8 @@ export default defineEventHandler(async (event) => {
     }
 
     const body = await readBody<GenerateTrainingBody>(event)
+    const sheetSeason = body.seasonId ? sheetSeasons.find(item => item.id === body.seasonId) : undefined
+    if (body.seasonId && !sheetSeason) throw createError({ statusCode: 422, statusMessage: 'No existe la temporada en Google Sheets.' })
     const frequency: Frequency =
       body.frequency === 1 || body.frequency === 2 || body.frequency === 3
         ? body.frequency
@@ -66,7 +74,7 @@ export default defineEventHandler(async (event) => {
       typeof body.weekNumber === 'number' && Number.isFinite(body.weekNumber)
         ? body.weekNumber
         : 1
-    const macrocycleId = typeof body.macrocycleId === 'string' ? body.macrocycleId : undefined
+    const macrocycleId = sheetSeason?.macrocycleId ?? (typeof body.macrocycleId === 'string' ? body.macrocycleId : undefined)
     const mesocycleId = typeof body.mesocycleId === 'string' ? body.mesocycleId : undefined
     const ageCategory: AgeCategory =
       body.ageCategory === 'alevin' ||
@@ -79,6 +87,24 @@ export default defineEventHandler(async (event) => {
       body.competitiveLevel === 'formacion' || body.competitiveLevel === 'liga'
         ? body.competitiveLevel
         : 'liga'
+
+    let cadeteRestWeek = false
+    const startsAt = sheetSeason?.startsAt ?? body.startsAt
+    if (ageCategory === 'cadete' && startsAt) {
+      const phaseCount = catalog.mesocycles.filter(item => item.macrocycleId === macrocycleId).length
+      if (phaseCount === 4) {
+        try {
+          const holidays = sheetSeason?.holidayWeeks ?? (Array.isArray(body.holidayWeeks) ? body.holidayWeeks : [])
+          catalog = alignCadeteCatalog(catalog, startsAt, holidays)
+          const week = getCadeteWeeks(startsAt, holidays)[weekNumber - 1]
+          if (!week) throw createError({ statusCode: 422, statusMessage: 'La semana está fuera de la temporada.' })
+          if (week.holiday) throw createError({ statusCode: 422, statusMessage: 'Esta semana está marcada como vacaciones.' })
+          cadeteRestWeek = week.rest
+        } catch {
+          throw createError({ statusCode: 422, statusMessage: 'No se puede generar la sesión: revisa la fecha, la semana y las vacaciones.' })
+        }
+      }
+    }
 
     const trainingDataStatus = getTrainingDataStatus(
       {
@@ -125,12 +151,15 @@ export default defineEventHandler(async (event) => {
       weekNumber: hydrated.weekNumber,
       weekInPhase: hydrated.weekInPhase,
       loadIndex: hydrated.loadIndex,
-      isDeload: hydrated.isDeload,
+      isDeload: cadeteRestWeek || hydrated.isDeload,
       session: hydrated.session,
       objective: hydrated.session.name,
       duration: hydrated.session.totalMinutes,
       rationale: `${hydrated.phase.name} (Semana ${hydrated.weekNumber} · Carga ${hydrated.loadIndex}/10): ${hydrated.phase.objective}`,
-      trainingBlocks: hydrated.blocks,
+      trainingBlocks: cadeteRestWeek ? hydrated.blocks.map(block => ({
+        ...block,
+        items: block.items.map(item => ({ ...item, dose: `${item.dose.replace(/^\d+\s*×/, '2 ×').replace(/\s*\+\s*contraste/gi, '')} · descanso activo: sin saltos nuevos` })),
+      })) : hydrated.blocks,
     }
   } catch (error) {
     if (error instanceof TrainingDataUnavailableError) {

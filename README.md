@@ -13,11 +13,11 @@ Está construida con Nuxt 4 y Vue 3. Google Sheets es la única fuente de datos;
 - Acceso flotante en móvil para añadir o editar la nota de la semana seleccionada.
 - Estados de equipo (`active` / `archived`) y de temporada (`active` / `closed`).
 - Roles visuales de entrenador y administrador; el administrador puede eliminar un equipo junto a sus temporadas y observaciones.
-- Planificación por categoría: Alevín (U12), Infantil (U14), Cadete (U16) y Juvenil (U18).
+- Planificación Cadete (U16); las demás categorías quedan fuera del catálogo beta vigente.
 - Nivel competitivo de formación o liga y frecuencia de uno, dos o tres entrenamientos semanales.
 - Navegación por semanas, fases, cargas, semanas de descarga, trabajo en vacaciones y tests.
 - Generación de sesiones desde el mismo catálogo que utiliza la interfaz. Cada bloque define objetivo, ejercicios, dosis y duración.
-- Base Cadete de 45 semanas, organizada en siete mesociclos, con dos variantes (`A`/`B`) por sesión.
+- Catálogo Cadete servido desde Google Sheets, con cuatro períodos, sesiones, variantes, bloques y ejercicios relacionados.
 - La sesión del `día 1` es la principal; los días 2 y 3 son refuerzos. La frecuencia del equipo determina si se muestra uno, dos o tres días.
 - Lectura exclusiva desde Google Sheets. Cuando Sheets no está disponible, se bloquean las acciones dependientes y se muestra el estado de datos no disponibles.
 
@@ -86,42 +86,25 @@ SES0037 · Fase 3 · Día 1
 
 La duración total se configura con `macrocycles.total_weeks`. Cada fila de `mesocycles` define su propio intervalo con `week_start`, `week_end` y `weeks_count`. Cada fila de `microcycles` representa una semana, con fechas reales, carga y objetivo.
 
-La periodización objetivo, basada en [ESTRUCTURA DE UNA TEMPORADA](https://docs.google.com/spreadsheets/d/1sXNf5-OCUkx607aGiFqyW0HwbXSMLMzVDMEDcgjUtIo/edit), consta de 45 semanas:
+La planificación Cadete vigente usa cuatro períodos de agosto a junio. El calendario se alinea con los lunes de cada temporada y contempla semanas de vacaciones y descanso:
 
-| Mesociclo | Semanas | Duración |
-| --- | --- | ---: |
-| Pretemporada | 1–4 | 4 semanas |
-| Período competitivo 1 | 5–16 | 12 semanas |
-| Período transitorio de Navidad | 17–18 | 2 semanas |
-| Período competitivo 2 | 19–29 | 11 semanas |
-| Período transitorio de Semana Santa | 30 | 1 semana |
-| Período competitivo 3 | 31–41 | 11 semanas |
-| Período transitorio final | 42–45 | 4 semanas |
+| Período | Meses de referencia |
+| --- | --- |
+| Pretemporada (`PT`) | Agosto–septiembre |
+| Período 1 (`M1`) | Octubre–diciembre |
+| Período 2 (`M2`) | Enero–marzo |
+| Período 3 (`M3`) | Abril–junio |
 
-La base Cadete del catálogo está configurada con 45 semanas y siete mesociclos. Los períodos competitivos incluyen ejemplos de ejercicios y los transitorios proponen trabajo autónomo de baja carga.
+La cantidad de semanas se calcula a partir del lunes de inicio de la temporada y puede variar según el calendario.
 
 ### Configuración aplicada
 
-- El macrociclo Cadete de referencia tiene `total_weeks = 45`.
-- Hay siete filas en `mesocycles` para ese macrociclo, sin huecos entre las semanas 1 y 45.
-- Cada mesociclo tiene tres sesiones base: día 1 principal y días 2 y 3 de refuerzo.
-- Cada sesión tiene dos variantes y la rotación se realiza por paridad semanal.
-- `weekly_loads` contiene un valor por semana del mesociclo. La última semana de cada período competitivo es una descarga.
-- Los períodos de Navidad, Semana Santa y cierre de temporada usan `type = holiday`; la interfaz muestra entonces las sesiones autónomas de `home_sessions`.
-- Las evaluaciones de Cadete (U16) se sitúan en las semanas 1, 19, 31 y 41.
+- Un macrociclo Cadete y cuatro períodos definidos en `mesocycles`.
+- Doce sesiones, doce variantes, cuarenta bloques y ochenta y cuatro relaciones bloque–ejercicio.
+- Dieciocho ejercicios y tres sesiones autónomas en `home_sessions`; la tabla `tests` está vacía.
+- La fase, las semanas y la carga se consultan desde Sheets; el calendario alinea el catálogo con la temporada y las vacaciones seleccionadas.
 
-Los ejemplos incluidos deben validarse con el cuerpo técnico antes de utilizarlos como prescripción definitiva:
-
-| Categoría | Ejemplos en los períodos competitivos |
-| --- | --- |
-| U12 | Carreras de persecución, salto y frenada, zancada asistida y plancha lateral. |
-| U14 | Lanzamiento de balón medicinal, split squat, sprint de 10 m y remo con banda. |
-| U16 | Split squat con mancuerna, CMJ, sprint reactivo, RDL y nórdico asistido. |
-| U18 | RDL, split squat pesado, CMJ, sprint de 10–20 m y curl nórdico. |
-
-Las sesiones de Cadete incluyen variantes A/B para alternar ejercicios dentro de
-cada fase. Las categorías que todavía no tienen variantes específicas conservan
-su plantilla base hasta que el cuerpo técnico las valide.
+El catálogo Cadete está en beta. Los ejercicios y las dosis propuestas requieren validación del cuerpo técnico antes de usarse como prescripción definitiva.
 
 ### Creación de una temporada
 
@@ -132,9 +115,9 @@ siendo datos reutilizables de la Biblia.
 
 Los `microcycles` sí son datos propios de cada temporada porque contienen fechas
 reales, carga, objetivo y estado semanal. Al crear una temporada se generan
-automáticamente exactamente `macrocycles.total_weeks` filas, normalmente 45,
-con lunes como inicio y domingo como cierre. Cada fila se vincula al mesociclo
-cuyo intervalo incluye esa semana y comienza en estado `planned`.
+automáticamente `macrocycles.total_weeks` filas, con lunes como inicio y domingo
+como cierre. Cada fila se vincula al período cuyo intervalo incluye esa semana
+y comienza en estado `planned`.
 
 Los microciclos usan IDs globalmente únicos de seis dígitos (`MIC000001`). Se
 aceptan IDs antiguos de cuatro dígitos durante la lectura y se normalizan al
@@ -142,7 +125,7 @@ nuevo formato; los IDs `MAC####` y `MES####` conservan cuatro dígitos.
 
 ## Google Sheets
 
-La aplicación usa un spreadsheet de Google como almacenamiento compartido. Google Sheets es la fuente única del catálogo, las temporadas y los microciclos. Si la lectura falla, el backend devuelve un error y la interfaz no muestra datos de respaldo.
+La aplicación usa un spreadsheet de Google como almacenamiento compartido. Google Sheets es la fuente única del catálogo y de los datos operativos. Si la lectura falla, el backend devuelve un error y la interfaz no muestra datos de respaldo.
 
 ### Hoja vinculada
 
@@ -162,7 +145,21 @@ GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\
 
 No subas el archivo `.env` ni la clave privada al repositorio.
 
-La lectura se realiza mediante `GET /api/sheets-db`. Las mutaciones de equipos, macrociclos y observaciones se sincronizan mediante `POST /api/sheets-sync`; la interfaz actual envía las planillas operativas completas. Por ello, Google Sheets es apropiado para el prototipo y para un uso coordinado con cautela, pero aún no ofrece control de concurrencia ni permisos de servidor por usuario.
+La lectura se realiza mediante `GET /api/sheets-db`. Las mutaciones operativas se sincronizan mediante `POST /api/sheets-sync`; la interfaz actual envía las planillas operativas completas. Por ello, Google Sheets es apropiado para el prototipo y para un uso coordinado con cautela, pero aún no ofrece control de concurrencia ni permisos de servidor por usuario.
+
+### Estado de migración Cadete — 8 de noviembre de 2026
+
+La aplicación lee el catálogo y los datos operativos desde Sheets, sin usar catálogos, perfiles ni tablas operativas locales como respaldo. Al iniciar, elimina las claves heredadas conocidas de `localStorage`. La sincronización de tablas limpia y escribe en un único `batchUpdate`, valida la respuesta y conserva las hojas y sus encabezados.
+
+La hoja quedó con 1 macrociclo, 4 períodos, 12 sesiones, 12 variantes, 40 bloques, 84 relaciones bloque–ejercicio, 18 ejercicios, 3 sesiones de casa y 0 tests. Se conservaron los 3 entrenadores. Equipos, temporadas, jugadores, membresías, revisiones y microciclos quedaron vacíos. También se borraron 36 referencias antiguas de imágenes en Sheets y se eliminaron 37 archivos locales de imágenes heredadas.
+
+Se verificó el recorrido por API contra Sheets: lectura, escritura temporal de equipo/temporada/48 microciclos, generación de una sesión de 25 minutos con 3 bloques y 7 elementos, y limpieza posterior. La comprobación final dejó equipos, temporadas y microciclos en cero y conservó los 3 entrenadores. La cola de guardados serializa snapshots y evita que una recuperación atrasada sobrescriba cambios nuevos.
+
+Verificación local observada: `node --test tests/*.test.mjs` pasó 7/7, `npm run build` terminó correctamente y `git diff --check` pasó. La inspección visual no pudo completarse porque el host del navegador no estuvo disponible.
+
+El commit de la feature sigue pendiente: el último hook Guardian lo rechazó. Reportó un tipo incompatible en el cálculo de fechas del resumen anual, un `macrocycleId` opcional que puede llegar como `undefined` a Sheets, el límite de lectura de 499 filas frente a reescrituras completas y la pérdida de errores específicos de vacaciones/semana fuera de rango. Revisiones anteriores también señalaron que el backend aún no valida una identidad de administrador, que los snapshots completos no detectan escrituras de otros clientes y que la generación acepta parámetros que pueden contradecir la temporada guardada. La validación de fechas de Sheets sigue pendiente. La sugerencia de dividir los componentes es una mejora estructural separada, no un bloqueo funcional identificado.
+
+**Próximo paso bloqueante:** corregir los defectos de tipo y de integridad reportados por Guardian, y definir qué identidad autenticada debe usar el backend para autorizar escrituras administrativas. No se hizo commit ni push. Los cambios de la feature están preparados en el índice de Git; las ediciones preexistentes de `.atl/` se dejaron fuera. El push requiere además un destino remoto y una sesión/credencial explícitamente autorizados.
 
 ## Estructura
 
@@ -171,10 +168,12 @@ app/
   app.vue                              # Interfaz principal
   composables/
     useCoachWorkspace.ts               # Estado y flujos de equipos/temporadas
-    useCoachStorage.ts                 # Tipos, validación y localStorage
+    useCoachStorage.ts                 # Tipos, validación y fechas de temporada
     useTrainingPlan.ts                 # Lectura del catálogo y planificación
     useWeeklyReviews.ts                # Observaciones semanales
-  shared/training.ts                   # Catálogo, tipos y reglas de sesión
+  shared/cadeteCalendar.ts             # Calendario y alineación del catálogo Cadete
+  shared/serialTaskQueue.ts            # Orden de escrituras y control de tareas obsoletas
+  shared/training.ts                   # Tipos y reglas de sesión
 server/
   api/
     generate-training.post.ts          # Generación de una sesión
@@ -210,11 +209,10 @@ npm run build
 
 ## Limitaciones y próximos pasos
 
-1. Implementar autenticación real y autorización en el servidor; los roles actuales son una convención de interfaz, no una barrera de seguridad.
-2. Sustituir la escritura completa de planillas por operaciones por entidad con control de concurrencia.
-3. Añadir pruebas automatizadas, lint y comprobación de tipos al proyecto.
-4. Validar con el cuerpo técnico la metodología, pausas, ejercicios de ejemplo y reglas de progresión.
-5. Diseñar sesiones, bloques y dosis específicos para el período competitivo 3 de cada categoría, en lugar de reutilizar la plantilla competitiva inicial.
-6. Separar las sesiones autónomas de Navidad, Semana Santa y transición final si requieren objetivos o dosis diferentes.
-7. Evaluar una base de datos transaccional para producción y generar PDF de las sesiones.
-8. Añadir IA limitada por la metodología validada y la biblioteca de ejercicios aprobada.
+1. Definir una identidad autenticada y exigir autorización de administrador en el servidor antes de permitir escrituras.
+2. Leer tablas completas: la lectura actual está limitada a 499 filas por planilla.
+3. Evitar que snapshots de distintos clientes se pisen y hacer observable el resultado de cada guardado.
+4. Derivar la categoría y el nivel de la temporada guardada al generar sesiones; mantener coherentes día y frecuencia.
+5. Preservar errores específicos de calendario y validar las fechas importadas desde Sheets.
+6. Validar con el cuerpo técnico la metodología, ejercicios, pausas, dosis y reglas de progresión de la beta.
+7. Evaluar una base de datos transaccional para producción, generación de PDF e IA limitada a la metodología validada.
