@@ -790,19 +790,9 @@ async function isSheetEmpty(
   return !body.values?.length
 }
 
-export async function readDatabaseFromGoogleSheets(
+async function fetchRowsByTab(
   credentials: GoogleSheetsCredentials,
-  options?: { forceRefresh?: boolean },
-): Promise<SheetsDatabaseSnapshot> {
-  if (
-    !options?.forceRefresh &&
-    cachedDatabase &&
-    cachedDatabase.expiresAt > Date.now() &&
-    cachedDatabase.snapshot.spreadsheetId === credentials.spreadsheetId
-  ) {
-    return cachedDatabase.snapshot
-  }
-
+): Promise<Map<string, string[][]>> {
   const token = await getGoogleAccessToken(credentials)
   const baseUrl = `https://sheets.googleapis.com/v4/spreadsheets/${credentials.spreadsheetId}`
   const authHeaders = { Authorization: `Bearer ${token}` }
@@ -854,6 +844,10 @@ export async function readDatabaseFromGoogleSheets(
     rowsByTab.set(SHEET_TITLES[range.key], nonEmptyRows)
   })
 
+  return rowsByTab
+}
+
+function parseCatalogTables(rowsByTab: Map<string, string[][]>): TrainingCatalogTables {
   const macrocycleRows = rowsByTab.get(SHEET_TITLES.macrocycles) || []
   const parsedMacrocycles: MacrocycleRecord[] = macrocycleRows.length
     ? macrocycleRows.map((row) => ({
@@ -973,11 +967,24 @@ export async function readDatabaseFromGoogleSheets(
       }))
     : []
 
+  return {
+    macrocycles: parsedMacrocycles,
+    mesocycles: parsedMesocycles,
+    mesocycleSessions: parsedMesocycleSessions,
+    trainingBlocks: parsedTrainingBlocks,
+    blockExercises: parsedBlockExercises,
+    exercises: parsedExercises,
+    homeSessions: parsedHomeSessions,
+    tests: parsedTests,
+  }
+}
+
+function parseOperationalTables(rowsByTab: Map<string, string[][]>): SheetsDatabaseSnapshot['operational'] {
   const coachRows = rowsByTab.get(SHEET_TITLES.coaches) || []
   const parsedCoaches: SheetCoachInput[] = coachRows.length
     ? coachRows.map((row) => ({
         id: cellString(row, 0, 'ENT0001'),
-        name: cellString(row, 1, 'Nicolás'),
+        name: cellString(row, 1, 'Entrenador'),
         role: cellString(row, 2) === 'admin' ? 'admin' : 'coach',
       }))
     : []
@@ -1081,30 +1088,38 @@ export async function readDatabaseFromGoogleSheets(
     status: parseMicrocycleStatus(cellString(row, 9)),
   }))
 
+  return {
+    coaches: parsedCoaches,
+    teams: parsedTeams,
+    players: uniquePlayers,
+    teamPlayers: migratedTeamPlayers,
+    seasons: parsedSeasons,
+    reviews: parsedReviews,
+    microcycles: parsedMicrocycles,
+  }
+}
+
+export async function readDatabaseFromGoogleSheets(
+  credentials: GoogleSheetsCredentials,
+  options?: { forceRefresh?: boolean },
+): Promise<SheetsDatabaseSnapshot> {
+  if (
+    !options?.forceRefresh &&
+    cachedDatabase &&
+    cachedDatabase.expiresAt > Date.now() &&
+    cachedDatabase.snapshot.spreadsheetId === credentials.spreadsheetId
+  ) {
+    return cachedDatabase.snapshot
+  }
+
+  const rowsByTab = await fetchRowsByTab(credentials)
   const snapshot: SheetsDatabaseSnapshot = {
     source: 'google-sheets',
     fetchedAt: new Date().toISOString(),
     spreadsheetId: credentials.spreadsheetId,
     spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${credentials.spreadsheetId}/edit`,
-    catalog: {
-      macrocycles: parsedMacrocycles,
-      mesocycles: parsedMesocycles,
-      mesocycleSessions: parsedMesocycleSessions,
-      trainingBlocks: parsedTrainingBlocks,
-      blockExercises: parsedBlockExercises,
-      exercises: parsedExercises,
-      homeSessions: parsedHomeSessions,
-      tests: parsedTests,
-    },
-    operational: {
-      coaches: parsedCoaches,
-      teams: parsedTeams,
-      players: uniquePlayers,
-      teamPlayers: migratedTeamPlayers,
-      seasons: parsedSeasons,
-      reviews: parsedReviews,
-      microcycles: parsedMicrocycles,
-    },
+    catalog: parseCatalogTables(rowsByTab),
+    operational: parseOperationalTables(rowsByTab),
   }
 
   cachedDatabase = {
@@ -1114,6 +1129,7 @@ export async function readDatabaseFromGoogleSheets(
 
   return snapshot
 }
+
 
 export async function syncTrainingTablesToGoogleSheets(
   credentials: GoogleSheetsCredentials,
