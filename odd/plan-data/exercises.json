@@ -1,0 +1,1182 @@
+{
+  "source": {
+    "title": "plan_anual_cadete_modelo_cantera.pdf",
+    "drive_file_id": "1nmzjT_pYqvB9eHVgsfZsozAkzdaVM7BP",
+    "printed_pages": "42-53",
+    "scope": "Exercise fiches only"
+  },
+  "extraction": {
+    "method": "PDF text extraction; line-wrap whitespace normalized. Wording, punctuation, and symbols retained. Unreadable extraction control characters are represented as [carácter ilegible].",
+    "entry_count": 68,
+    "ambiguity_count": 3,
+    "notes": [
+      "Staging data for later review/import; not application runtime data.",
+      "Visual diagram labels are outside the requested exercise prescription fields.",
+      "Two illegible extraction characters are marked, and one fiche has no extracted ✕ error text."
+    ]
+  },
+  "exercises": [
+    {
+      "page": 42,
+      "name": "Dead bug (bicho muerto)",
+      "level": "0−",
+      "movement_area": "Proteger",
+      "material": "Sin material",
+      "instructions": [
+        "Boca arriba, brazos arriba y caderas y rodillas a 90°.",
+        "Estira despacio una pierna y el brazo contrario hasta casi tocar el suelo.",
+        "Vuelve y cambia de lado."
+      ],
+      "cue": "La zona lumbar pegada al suelo todo el rato. Saca el aire al estirar.",
+      "errors": "La espalda se arquea cuando baja la pierna · Ir rápido",
+      "easier": "Mueve solo las piernas.",
+      "harder": "Sujetando un balón medicinal con los brazos.",
+      "ambiguities": []
+    },
+    {
+      "page": 42,
+      "name": "Elevación de talones a 1 pierna",
+      "level": "0−",
+      "movement_area": "Proteger",
+      "material": "Cajón o escalón + pared",
+      "instructions": [
+        "Punta del pie en el borde del escalón, mano en la pared.",
+        "Baja el talón por debajo del escalón (2\").",
+        "Sube al máximo de puntillas."
+      ],
+      "cue": "Arriba del todo 1\" de pausa. Lento al bajar.",
+      "errors": "Ayudarse con la mano · Doblar la rodilla",
+      "easier": "En el suelo, a 2 piernas.",
+      "harder": "Con mancuerna en la mano.",
+      "ambiguities": []
+    },
+    {
+      "page": 42,
+      "name": "Movilidad de tobillo en la pared",
+      "level": "0−",
+      "movement_area": "Proteger",
+      "material": "Pared",
+      "instructions": [
+        "Medio arrodillado frente a una pared, pie delantero a 5-10 cm.",
+        "Lleva la rodilla hacia la pared sin levantar el talón.",
+        "Vuelve atrás. Si la tocas fácilmente, aleja el pie 1 cm."
+      ],
+      "cue": "El talón no se levanta nunca. La rodilla va por encima del dedo pequeño del pie.",
+      "errors": "Levantar el talón · Rodilla hacia dentro",
+      "easier": "Menos distancia a la pared.",
+      "harder": "Aguantar 3\" en la posición final.",
+      "ambiguities": []
+    },
+    {
+      "page": 42,
+      "name": "Nórdico de isquiotibiales",
+      "level": "0−",
+      "movement_area": "Proteger",
+      "material": "Compañero + esterilla",
+      "instructions": [
+        "De rodillas sobre una esterilla; un compañero sujeta los tobillos.",
+        "Baja adelante MUY despacio manteniendo el cuerpo recto (rodillas[carácter ilegible]hombros).",
+        "Cuando no puedas frenar, cae con las manos y vuelve arriba empujando."
+      ],
+      "cue": "Frenar tan abajo como puedas. La clave es la bajada.",
+      "errors": "Doblar la cadera · Caer de golpe desde arriba",
+      "easier": "Solo los primeros 30° de bajada.",
+      "harder": "Más repeticiones o bajada de 5\".",
+      "ambiguities": [
+        "La extracción contiene un carácter ilegible [carácter ilegible]; no se reconstruyó."
+      ]
+    },
+    {
+      "page": 42,
+      "name": "Paseo con maleta (1 mancuerna)",
+      "level": "0−",
+      "movement_area": "Luchar",
+      "material": "1 mancuerna",
+      "instructions": [
+        "Una sola mancuerna a un lado.",
+        "Camina recto sin inclinarte hacia el peso.",
+        "Cambia de mano a la vuelta."
+      ],
+      "cue": "Como si llevaras un vaso de agua en la cabeza: nada se mueve.",
+      "errors": "Inclinarse hacia la mancuerna · Brazo libre pegado al cuerpo para compensar",
+      "easier": "Menos peso.",
+      "harder": "Más peso o caminando lento.",
+      "ambiguities": []
+    },
+    {
+      "page": 42,
+      "name": "Paseo del camarero",
+      "level": "0−",
+      "movement_area": "Luchar",
+      "material": "1 mancuerna",
+      "instructions": [
+        "Mancuerna por encima de la cabeza con el brazo estirado.",
+        "Camina lento y recto.",
+        "Cambia de brazo."
+      ],
+      "cue": "Brazo bloqueado junto a la oreja; costillas abajo.",
+      "errors": "Brazo que se dobla · Arquear la espalda",
+      "easier": "Menos peso.",
+      "harder": "Más distancia.",
+      "ambiguities": []
+    },
+    {
+      "page": 43,
+      "name": "Plancha con toques de hombro",
+      "level": "0−",
+      "movement_area": "Luchar",
+      "material": "Sin material",
+      "instructions": [
+        "Plancha alta, pies algo abiertos.",
+        "Toca el hombro contrario con una mano.",
+        "Alterna sin mover la cadera."
+      ],
+      "cue": "La cadera no debe balancearse nada.",
+      "errors": "Balancear la cadera · Pies demasiado juntos",
+      "easier": "Pies más abiertos.",
+      "harder": "Pies juntos o tocar la oreja.",
+      "ambiguities": []
+    },
+    {
+      "page": 43,
+      "name": "Plancha Copenhagen (aductores)",
+      "level": "0−",
+      "movement_area": "Proteger",
+      "material": "Cajón o banco",
+      "instructions": [
+        "Plancha lateral con la pierna de arriba apoyada en el cajón (rodilla o tobillo).",
+        "Sube la cadera haciendo fuerza con la pierna de arriba.",
+        "La pierna de abajo puede ayudar o quedar colgando."
+      ],
+      "cue": "Es el aductor de la pierna de arriba el que aguanta.",
+      "errors": "Cadera caída · Hacerla larga sin dominar la corta",
+      "easier": "Palanca corta (rodilla en el cajón).",
+      "harder": "Palanca larga y pierna de abajo en el aire.",
+      "ambiguities": []
+    },
+    {
+      "page": 43,
+      "name": "Plancha frontal",
+      "level": "0−",
+      "movement_area": "Luchar",
+      "material": "Sin material",
+      "instructions": [
+        "Antebrazos en el suelo, codos bajo los hombros.",
+        "Cuerpo recto de la cabeza a los talones.",
+        "Aprieta glúteos y abdomen."
+      ],
+      "cue": "Mejor 20\" perfectos que 60\" con la cadera caída.",
+      "errors": "Cadera caída · Cadera demasiado alta",
+      "easier": "Con rodillas en el suelo.",
+      "harder": "Plancha con toques de hombro.",
+      "ambiguities": []
+    },
+    {
+      "page": 43,
+      "name": "Plancha lateral",
+      "level": "0−",
+      "movement_area": "Luchar",
+      "material": "Sin material",
+      "instructions": [
+        "De lado, codo bajo el hombro.",
+        "Sube la cadera hasta que el cuerpo forme una línea recta.",
+        "Progresión: levanta la pierna de arriba."
+      ],
+      "cue": "Cadera adelante y arriba: ni atrás ni caída.",
+      "errors": "Cadera atrás · Hombro hundido",
+      "easier": "Rodillas dobladas en el suelo.",
+      "harder": "Con elevación de pierna.",
+      "ambiguities": []
+    },
+    {
+      "page": 43,
+      "name": "Postura del niño",
+      "level": "0−",
+      "movement_area": "Proteger",
+      "material": "Sin material",
+      "instructions": [
+        "De rodillas, siéntate sobre los talones.",
+        "Estira los brazos adelante en el suelo.",
+        "Respira profundo 45\"."
+      ],
+      "cue": "Saca el aire despacio y deja caer el pecho.",
+      "errors": null,
+      "easier": "Rodillas abiertas.",
+      "harder": "Manos hacia un lado para estirar el dorsal.",
+      "ambiguities": [
+        "No aparece texto de errores bajo el marcador ✕ en la extracción."
+      ]
+    },
+    {
+      "page": 43,
+      "name": "Rotación torácica en cuadrupedia",
+      "level": "0−",
+      "movement_area": "Proteger",
+      "material": "Sin material",
+      "instructions": [
+        "A cuatro patas, manos bajo los hombros y rodillas bajo las caderas.",
+        "Abre un brazo hacia el techo girando el pecho.",
+        "Vuelve despacio y repite."
+      ],
+      "cue": "La cadera quieta; gira la espalda, no la cintura.",
+      "errors": "Sentarse hacia un lado · Mover solo el brazo",
+      "easier": "Mano en la nuca y abrir el codo.",
+      "harder": "Sentarse sobre los talones antes de girar.",
+      "ambiguities": []
+    },
+    {
+      "page": 44,
+      "name": "Tibial en la pared",
+      "level": "0−",
+      "movement_area": "Proteger",
+      "material": "Pared",
+      "instructions": [
+        "Espalda apoyada en la pared, pies a 30- 40 cm.",
+        "Levanta las puntas de los pies tanto como puedas.",
+        "Baja despacio."
+      ],
+      "cue": "Los talones no se mueven.",
+      "errors": "Levantar los talones · Ir demasiado rápido",
+      "easier": "Pies más cerca de la pared.",
+      "harder": "Pies más lejos de la pared o a 1 pierna.",
+      "ambiguities": []
+    },
+    {
+      "page": 44,
+      "name": "World's greatest stretch",
+      "level": "0−",
+      "movement_area": "Proteger",
+      "material": "Sin material",
+      "instructions": [
+        "Zancada larga adelante, manos en el suelo por dentro del pie delantero.",
+        "Rodilla de atrás estirada y sin tocar el suelo.",
+        "Gira el pecho y abre el brazo hacia el techo, siguiendo la mano con la mirada."
+      ],
+      "cue": "Sale de la cintura y la espalda, no solo del brazo.",
+      "errors": "Rodilla de atrás apoyada en el suelo · Girar solo con el brazo, sin mover el pecho",
+      "easier": "Rodilla de atrás en el suelo.",
+      "harder": "Añade 2\" de pausa en cada posición.",
+      "ambiguities": []
+    },
+    {
+      "page": 44,
+      "name": "Y-W en el suelo",
+      "level": "0−",
+      "movement_area": "Proteger",
+      "material": "Sin material",
+      "instructions": [
+        "Tumbado boca abajo, brazos adelante formando una Y con los pulgares arriba.",
+        "Levanta los brazos 2\" y baja.",
+        "Después haz la W: codos atrás, juntando las escápulas."
+      ],
+      "cue": "Levantar con los hombros, no arqueando la espalda.",
+      "errors": "Levantar la cabeza · Encoger los hombros",
+      "easier": "Menos repeticiones.",
+      "harder": "Con una botella de agua en cada mano.",
+      "ambiguities": []
+    },
+    {
+      "page": 44,
+      "name": "Carrera continua / fartlek",
+      "level": "0+",
+      "movement_area": "Desplazarse",
+      "material": "Exterior",
+      "instructions": [
+        "15-20' de carrera.",
+        "Continua suave (puedes hablar) o fartlek: 1' rápido / 1' suave.",
+        "Acaba caminando 2'."
+      ],
+      "cue": "Mantener la forma aeróbica sin pista.",
+      "errors": "Hacerlo todo a máxima velocidad",
+      "easier": "Caminar rápido y trotar.",
+      "harder": "Fartlek 30\" rápido / 30\" suave.",
+      "ambiguities": []
+    },
+    {
+      "page": 44,
+      "name": "Flexiones",
+      "level": "0+",
+      "movement_area": "Luchar",
+      "material": "Sin material",
+      "instructions": [
+        "Manos algo más abiertas que los hombros, cuerpo recto.",
+        "Baja el pecho a un puño del suelo.",
+        "Empuja hasta estirar los brazos."
+      ],
+      "cue": "Pecho y cadera suben a la vez.",
+      "errors": "Cadera caída · Cabeza adelantada",
+      "easier": "Flexiones inclinadas.",
+      "harder": "Pies elevados o pausa abajo.",
+      "ambiguities": []
+    },
+    {
+      "page": 44,
+      "name": "Flexiones con pies elevados",
+      "level": "0+",
+      "movement_area": "Luchar",
+      "material": "Cajón",
+      "instructions": [
+        "Pies en el cajón, manos en el suelo.",
+        "Baja el pecho controlando la cadera.",
+        "Empuja hasta arriba."
+      ],
+      "cue": "Más vertical = más difícil. Mantén el core tenso.",
+      "errors": "Cadera arriba o caída · Rango corto",
+      "easier": "Flexiones en el suelo.",
+      "harder": "Cajón más alto.",
+      "ambiguities": []
+    },
+    {
+      "page": 45,
+      "name": "Flexiones inclinadas",
+      "level": "0+",
+      "movement_area": "Luchar",
+      "material": "Cajón o banco",
+      "instructions": [
+        "Manos en el cajón, cuerpo recto de la cabeza a los pies.",
+        "Baja el pecho hasta tocar el cajón.",
+        "Empuja y vuelve arriba."
+      ],
+      "cue": "Cuerpo de plancha: la cadera no cae ni sube. Codos a 45°.",
+      "errors": "Cadera caída · Codos abiertos en cruz",
+      "easier": "Cajón más alto.",
+      "harder": "Flexiones en el suelo.",
+      "ambiguities": []
+    },
+    {
+      "page": 45,
+      "name": "Marcha A (A-march)",
+      "level": "0+",
+      "movement_area": "Desplazarse",
+      "material": "Sin material",
+      "instructions": [
+        "Camina alto, sube la rodilla hasta la altura de la cadera.",
+        "Punta del pie arriba y brazo contrario adelante.",
+        "Baja el pie bajo la cadera y cambia de pierna."
+      ],
+      "cue": "Alto y recto: como si tiraran de ti desde la cabeza.",
+      "errors": "Echar el cuerpo atrás · Brazos cruzados delante del cuerpo",
+      "easier": "Sin brazos, manos en la cadera.",
+      "harder": "A-skip (con un saltito).",
+      "ambiguities": []
+    },
+    {
+      "page": 45,
+      "name": "Paseo del granjero",
+      "level": "0+",
+      "movement_area": "Luchar",
+      "material": "2 mancuernas",
+      "instructions": [
+        "Una mancuerna pesada en cada mano.",
+        "Camina alto con pasos cortos.",
+        "Hombros abajo y atrás."
+      ],
+      "cue": "Aprieta la mancuerna como si quisieras aplastarla.",
+      "errors": "Hombros encogidos · Inclinarse",
+      "easier": "Menos peso o distancia.",
+      "harder": "Más peso.",
+      "ambiguities": []
+    },
+    {
+      "page": 45,
+      "name": "Peso muerto a 1 pierna",
+      "level": "0+",
+      "movement_area": "Desplazarse",
+      "material": "Mancuerna",
+      "instructions": [
+        "Sobre una pierna, mancuerna en la mano contraria.",
+        "Inclina el tronco y lleva la otra pierna atrás formando una línea recta.",
+        "Vuelve arriba apretando el glúteo."
+      ],
+      "cue": "Cuerpo como una T: tronco y pierna de atrás se mueven juntos.",
+      "errors": "Abrir la cadera hacia el lado · Espalda redonda",
+      "easier": "Sin peso, tocando la pared con una mano.",
+      "harder": "Más peso.",
+      "ambiguities": []
+    },
+    {
+      "page": 45,
+      "name": "Peso muerto rumano con mancuernas",
+      "level": "0+",
+      "movement_area": "Saltar",
+      "material": "Mancuernas",
+      "instructions": [
+        "De pie, mancuernas delante de los muslos, rodillas algo dobladas.",
+        "Lleva la cadera atrás con la espalda recta; las mancuernas bajan pegadas a las piernas.",
+        "Cuando notes tirar la parte posterior del muslo, sube."
+      ],
+      "cue": "Cerrar una puerta con el culo. Es un movimiento de cadera, no de espalda.",
+      "errors": "Espalda curvada · Convertirlo en una sentadilla",
+      "easier": "Con un palo en la espalda (tocando cabeza, espalda y sacro).",
+      "harder": "A 1 pierna.",
+      "ambiguities": []
+    },
+    {
+      "page": 45,
+      "name": "Press a 1 brazo medio arrodillado",
+      "level": "0+",
+      "movement_area": "Jugar el balón",
+      "material": "Mancuerna",
+      "instructions": [
+        "Medio arrodillado; la mancuerna en el lado de la rodilla apoyada.",
+        "Empuja la mancuerna arriba hasta estirar el brazo junto a la oreja.",
+        "Baja en 2\"."
+      ],
+      "cue": "Glúteo apretado y costillas abajo: no arquees la espalda.",
+      "errors": "Inclinarse hacia el lado · Arquear la zona lumbar",
+      "easier": "Menos peso.",
+      "harder": "De pie, en posición de zancada.",
+      "ambiguities": []
+    },
+    {
+      "page": 46,
+      "name": "Puente de glúteos",
+      "level": "0+",
+      "movement_area": "Saltar",
+      "material": "Sin material",
+      "instructions": [
+        "Tumbado boca arriba, rodillas dobladas y pies en el suelo a la anchura de las caderas.",
+        "Empuja con los talones y sube la cadera hasta hacer una línea hombros-rodillas.",
+        "Aguanta 2\" arriba y baja despacio."
+      ],
+      "cue": "Aprieta los glúteos arriba, sin arquear la zona lumbar.",
+      "errors": "Subir arqueando la espalda · Empujar con las puntas",
+      "easier": "Menos recorrido.",
+      "harder": "Puente a 1 pierna.",
+      "ambiguities": []
+    },
+    {
+      "page": 46,
+      "name": "Puente de glúteos a 1 pierna",
+      "level": "0+",
+      "movement_area": "Saltar",
+      "material": "Sin material",
+      "instructions": [
+        "Boca arriba, abraza una rodilla contra el pecho.",
+        "Empuja con el talón de la otra pierna y sube la cadera.",
+        "Aguanta 2\" arriba."
+      ],
+      "cue": "La rodilla en el pecho impide arquear la espalda: no la sueltes.",
+      "errors": "Cadera que cae hacia un lado · Empujar con la punta",
+      "easier": "Puente a 2 piernas.",
+      "harder": "Pie sobre un cajón bajo.",
+      "ambiguities": []
+    },
+    {
+      "page": 46,
+      "name": "Remo a 1 brazo con mancuerna",
+      "level": "0+",
+      "movement_area": "Luchar",
+      "material": "Mancuerna + cajón",
+      "instructions": [
+        "Mano y rodilla (o solo mano) apoyadas en el cajón, espalda plana.",
+        "Tira de la mancuerna hacia el bolsillo.",
+        "Baja en 2\" hasta estirar el brazo."
+      ],
+      "cue": "Primero el hombro atrás, después el codo. No gires el tronco.",
+      "errors": "Girar el tronco para subir · Espalda redonda",
+      "easier": "Menos peso.",
+      "harder": "Pausa de 1\" arriba o más peso.",
+      "ambiguities": []
+    },
+    {
+      "page": 46,
+      "name": "Remo en plancha (renegade row)",
+      "level": "0+",
+      "movement_area": "Luchar",
+      "material": "Mancuernas",
+      "instructions": [
+        "Plancha alta con las manos sobre las mancuernas, pies abiertos.",
+        "Rema con un brazo sin girar la cadera.",
+        "Alterna."
+      ],
+      "cue": "La cadera quieta como una mesa.",
+      "errors": "Girar la cadera · Pies demasiado juntos",
+      "easier": "Pies más abiertos o sin remo (solo levantar la mano).",
+      "harder": "Añadir una flexión entre remos.",
+      "ambiguities": []
+    },
+    {
+      "page": 46,
+      "name": "Sentadilla goblet",
+      "level": "0+",
+      "movement_area": "Saltar",
+      "material": "Mancuerna",
+      "instructions": [
+        "Mancuerna vertical contra el pecho, pies algo más abiertos que las caderas.",
+        "Baja hasta que los codos toquen la parte interna de las rodillas.",
+        "Sube empujando el suelo."
+      ],
+      "cue": "Pecho arriba y rodillas en la dirección de los pies.",
+      "errors": "Talones que se levantan · Rodillas hacia dentro",
+      "easier": "Sentadilla a un cajón.",
+      "harder": "Pausa de 2\" abajo o más peso.",
+      "ambiguities": []
+    },
+    {
+      "page": 46,
+      "name": "Flexión explosiva",
+      "level": "I",
+      "movement_area": "Jugar el balón",
+      "material": "Sin material",
+      "instructions": [
+        "Desde abajo de la flexión, empuja tan fuerte que las manos se levanten.",
+        "Aterriza con los codos algo doblados.",
+        "Repite sin perder la línea del cuerpo."
+      ],
+      "cue": "Explosivo arriba, suave al aterrizar.",
+      "errors": "Aterrizar con los brazos rígidos · Cadera caída",
+      "easier": "Inclinada sobre el cajón.",
+      "harder": "Con palmada.",
+      "ambiguities": []
+    },
+    {
+      "page": 47,
+      "name": "Lanzamiento al suelo (slam)",
+      "level": "I",
+      "movement_area": "Luchar",
+      "material": "Balón medicinal 3 kg",
+      "instructions": [
+        "De puntillas, balón por encima de la cabeza.",
+        "Lánzalo al suelo con toda la fuerza delante de los pies.",
+        "Dobla caderas y rodillas al lanzar."
+      ],
+      "cue": "Atacar el suelo con todo el cuerpo, no solo con los brazos.",
+      "errors": "Balón que rebota a la cara: lanzarlo delante de los pies · Espalda redonda",
+      "easier": "Balón de 2 kg.",
+      "harder": "Slam rotacional (a un lado).",
+      "ambiguities": []
+    },
+    {
+      "page": 47,
+      "name": "Lanzamiento hacia atrás por encima de la cabeza",
+      "level": "I",
+      "movement_area": "Saltar",
+      "material": "Balón medicinal 3 kg · espacio libre",
+      "instructions": [
+        "Balón entre las piernas, medio agachado.",
+        "Estira todo el cuerpo con fuerza y lanza el balón hacia atrás por encima de la cabeza.",
+        "¡Mira que no haya nadie detrás!"
+      ],
+      "cue": "Extensión explosiva de tobillos, rodillas y caderas.",
+      "errors": "Lanzar solo con los brazos · Arquear la espalda en exceso",
+      "easier": "Balón de 2 kg.",
+      "harder": "Busca máxima altura y distancia.",
+      "ambiguities": []
+    },
+    {
+      "page": 47,
+      "name": "Lanzamiento rotacional a la pared",
+      "level": "I",
+      "movement_area": "Jugar el balón",
+      "material": "Balón medicinal 3 kg",
+      "instructions": [
+        "De lado a la pared, a 2-3 m.",
+        "Balón en la cadera de atrás, cargando la pierna de atrás.",
+        "Gira cadera y tronco y lanza el balón contra la pared."
+      ],
+      "cue": "Primero la cadera, después el tronco, al final los brazos.",
+      "errors": "Lanzar solo con los brazos · No pivotar el pie de atrás",
+      "easier": "Medio arrodillado.",
+      "harder": "Con paso de aproximación.",
+      "ambiguities": []
+    },
+    {
+      "page": 47,
+      "name": "Pase de pecho a la pared",
+      "level": "I",
+      "movement_area": "Jugar el balón",
+      "material": "Balón medicinal 3 kg",
+      "instructions": [
+        "A 2-3 m de la pared, balón en el pecho.",
+        "Pase de pecho explosivo con paso adelante.",
+        "Recoge y repite."
+      ],
+      "cue": "Lánzalo a través de la pared. Pulgares abajo al acabar.",
+      "errors": "Lanzar solo con los brazos · Espalda arqueada",
+      "easier": "Balón de 2 kg.",
+      "harder": "Pase + sprint de 5 m.",
+      "ambiguities": []
+    },
+    {
+      "page": 47,
+      "name": "Pasos laterales en posición defensiva",
+      "level": "I",
+      "movement_area": "Desplazarse",
+      "material": "Sin material",
+      "instructions": [
+        "Posición defensiva: medio agachado, pies más abiertos que los hombros, manos activas.",
+        "Pasos laterales cortos y rápidos sin que los pies se toquen.",
+        "10 pasos hacia un lado y 10 hacia el otro."
+      ],
+      "cue": "La cabeza no sube ni baja: altura constante como en un partido.",
+      "errors": "Cruzar o juntar los pies · Subir el cuerpo en cada paso",
+      "easier": "Menos agachado.",
+      "harder": "Más bajo y con 2\" de pausa cada 3 pasos.",
+      "ambiguities": []
+    },
+    {
+      "page": 47,
+      "name": "Salto a 1 pierna adelante con parada",
+      "level": "I",
+      "movement_area": "Saltar",
+      "material": "Sin material",
+      "instructions": [
+        "Sobre una pierna, medio agachado.",
+        "Salto corto adelante con la misma pierna.",
+        "Aterriza y aguanta 2\" en equilibrio."
+      ],
+      "cue": "Primero controlar, después alargar.",
+      "errors": "Rodilla hacia dentro · Perder el equilibrio y apoyar el otro pie",
+      "easier": "Salto en el sitio.",
+      "harder": "3 saltos seguidos sin parar (fase 3).",
+      "ambiguities": []
+    },
+    {
+      "page": 48,
+      "name": "Salto al cajón con parada",
+      "level": "I",
+      "movement_area": "Saltar",
+      "material": "Cajón 30-50 cm",
+      "instructions": [
+        "Frente al cajón, brazos atrás y medio agachado.",
+        "Salta y aterriza en el cajón suavemente, en la misma posición medio agachada.",
+        "Aguanta 2\" y baja CAMINANDO (nunca saltando hacia atrás)."
+      ],
+      "cue": "Aterrizaje silencioso. El cajón sirve para aterrizar alto, no para levantar las piernas.",
+      "errors": "Cajón demasiado alto: aterrizan en sentadilla profunda · Bajar saltando",
+      "easier": "Salto a una línea en el suelo.",
+      "harder": "Salto desde 1 pierna o desde sentado.",
+      "ambiguities": []
+    },
+    {
+      "page": 48,
+      "name": "Salto horizontal con parada",
+      "level": "I",
+      "movement_area": "Saltar",
+      "material": "Sin material",
+      "instructions": [
+        "Pies a la anchura de las caderas, brazos atrás.",
+        "Salta tan lejos como puedas con los dos pies.",
+        "Aterriza medio agachado y aguanta 2\" sin mover los pies."
+      ],
+      "cue": "Si se mueven al aterrizar, el salto era demasiado largo.",
+      "errors": "Rodillas hacia dentro al aterrizar · Caer hacia delante",
+      "easier": "Saltos más cortos.",
+      "harder": "3 saltos encadenados (fase 3).",
+      "ambiguities": []
+    },
+    {
+      "page": 48,
+      "name": "Salto lateral a 1 pierna con parada (Heiden)",
+      "level": "I",
+      "movement_area": "Desplazarse",
+      "material": "Sin material",
+      "instructions": [
+        "Apoyado sobre una pierna, medio agachado.",
+        "Salta de lado y aterriza sobre la otra pierna.",
+        "Aguanta 2\" en equilibrio y vuelve."
+      ],
+      "cue": "Rodilla alineada con el pie al aterrizar. Cadera estable.",
+      "errors": "Rodilla hacia dentro · Apoyar el otro pie",
+      "easier": "Salto más corto.",
+      "harder": "Saltos continuos (sin parada).",
+      "ambiguities": []
+    },
+    {
+      "page": 48,
+      "name": "Salto vertical con contramovimiento",
+      "level": "I",
+      "movement_area": "Saltar",
+      "material": "Sin material",
+      "instructions": [
+        "Bajada rápida hasta medio agachado con los brazos atrás.",
+        "Salta arriba al máximo con los brazos.",
+        "Aterriza suavemente y aguanta 2\"."
+      ],
+      "cue": "Bajar y subir en un solo movimiento rápido.",
+      "errors": "Aterrizar con las piernas rígidas · Rodillas hacia dentro",
+      "easier": "Salto sin brazos.",
+      "harder": "Saltos continuos.",
+      "ambiguities": []
+    },
+    {
+      "page": 48,
+      "name": "Sentadilla búlgara (pie de atrás en el cajón)",
+      "level": "I",
+      "movement_area": "Desplazarse",
+      "material": "Cajón/banco + mancuernas",
+      "instructions": [
+        "Empeine del pie de atrás sobre el cajón.",
+        "Baja recto hasta que la rodilla de atrás casi toque el suelo.",
+        "Sube empujando con la pierna delantera."
+      ],
+      "cue": "El peso en la pierna de delante. La de atrás solo equilibra.",
+      "errors": "Pie delantero demasiado cerca del cajón · Rebotar abajo",
+      "easier": "Split squat en el suelo.",
+      "harder": "Más peso o pausa abajo.",
+      "ambiguities": []
+    },
+    {
+      "page": 48,
+      "name": "Sentadilla lateral",
+      "level": "I",
+      "movement_area": "Desplazarse",
+      "material": "Mancuerna",
+      "instructions": [
+        "Pies muy abiertos, puntas adelante.",
+        "Siéntate hacia un lado doblando esa rodilla; la otra pierna queda estirada.",
+        "Vuelve al centro y cambia."
+      ],
+      "cue": "Cadera atrás y pies planos en el suelo.",
+      "errors": "Levantar el talón de la pierna doblada · Rodilla por delante de la punta",
+      "easier": "Sin peso y menos recorrido.",
+      "harder": "Más peso o zancada lateral dinámica.",
+      "ambiguities": []
+    },
+    {
+      "page": 49,
+      "name": "Split squat goblet",
+      "level": "I",
+      "movement_area": "Desplazarse",
+      "material": "Mancuerna",
+      "instructions": [
+        "Posición de zancada estática, mancuerna en el pecho.",
+        "Baja la rodilla de atrás hasta casi tocar el suelo (2\" de bajada).",
+        "Sube sin mover los pies."
+      ],
+      "cue": "La rodilla delantera NO se va hacia dentro.",
+      "errors": "Paso demasiado corto · Inclinar el tronco adelante",
+      "easier": "Sin peso.",
+      "harder": "Pie de atrás elevado (búlgara).",
+      "ambiguities": []
+    },
+    {
+      "page": 49,
+      "name": "Subida al cajón con mancuernas",
+      "level": "I",
+      "movement_area": "Saltar",
+      "material": "Cajón 40 cm + mancuernas",
+      "instructions": [
+        "Pie entero sobre el cajón.",
+        "Sube empujando SOLO con la pierna de arriba y lleva la otra rodilla arriba.",
+        "Baja despacio."
+      ],
+      "cue": "La pierna del suelo no ayuda: no te impulses.",
+      "errors": "Impulsarse con el pie del suelo · Rodilla hacia dentro",
+      "easier": "Cajón más bajo y sin peso.",
+      "harder": "Más peso.",
+      "ambiguities": []
+    },
+    {
+      "page": 49,
+      "name": "5-10-5 (pro agility)",
+      "level": "II",
+      "movement_area": "Desplazarse",
+      "material": "3 conos",
+      "instructions": [
+        "En el cono central, de cara.",
+        "Sprint de 5 m a un lado y toca la línea.",
+        "10 m al otro lado y 5 m de vuelta al centro."
+      ],
+      "cue": "Pie de fuera al frenar y cuerpo bajo en el giro.",
+      "errors": "Girar alto · Dar pasos de más",
+      "easier": "Sin tocar el suelo, a ritmo.",
+      "harder": "Reactivo: el entrenador dice el lado.",
+      "ambiguities": []
+    },
+    {
+      "page": 49,
+      "name": "Caída desde el cajón",
+      "level": "II",
+      "movement_area": "Saltar",
+      "material": "Cajón 30 cm",
+      "instructions": [
+        "De pie sobre el cajón.",
+        "Da un paso adelante (no saltes) y déjate caer.",
+        "Aterriza con los dos pies a la vez y congela la posición."
+      ],
+      "cue": "Aterrizar como un gato: suave, silencioso y estable.",
+      "errors": "Saltar desde el cajón · Aterrizar con los talones",
+      "easier": "Cajón de 20 cm.",
+      "harder": "Salto reactivo al caer (depth jump).",
+      "ambiguities": []
+    },
+    {
+      "page": 49,
+      "name": "Escalera de agilidad (In-In-Out-Out · Scissors)",
+      "level": "II",
+      "movement_area": "Desplazarse",
+      "material": "Escalera de agilidad",
+      "instructions": [
+        "In-In-Out-Out: los dos pies dentro del cuadro y los dos fuera, avanzando.",
+        "Scissors: de lado a la escalera, cruzando piernas como unas tijeras en cada cuadro.",
+        "Al salir de la escalera, sprint de 5 m."
+      ],
+      "cue": "Pies rápidos y ligeros, brazos activos, mirada al frente (no a los pies).",
+      "errors": "Pisar las cintas · Mirar abajo todo el rato",
+      "easier": "Un pie en cada cuadro, a ritmo.",
+      "harder": "Salida reactiva a señal al acabar.",
+      "ambiguities": []
+    },
+    {
+      "page": 49,
+      "name": "Frenada en 2 tiempos + salida",
+      "level": "II",
+      "movement_area": "Desplazarse",
+      "material": "Conos",
+      "instructions": [
+        "Sprint de 5-7 m.",
+        "Frena en 2 tiempos (derecha-izquierda) sobre la línea, bajando el centro de gravedad.",
+        "Fase 2: al frenar, salida explosiva en diagonal 5 m."
+      ],
+      "cue": "Bajar el centro de gravedad ANTES de la línea.",
+      "errors": "Frenar con el tronco echado atrás · Rodilla hacia dentro",
+      "easier": "Solo frenada (sin salida).",
+      "harder": "Con balón medicinal en el pecho (contraste).",
+      "ambiguities": []
+    },
+    {
+      "page": 50,
+      "name": "Pase de pecho + sprint",
+      "level": "II",
+      "movement_area": "Jugar el balón",
+      "material": "Balón medicinal 3 kg",
+      "instructions": [
+        "Pase de pecho explosivo al compañero.",
+        "Justo después de soltar el balón, sprint de 10 m.",
+        "Vuelve caminando."
+      ],
+      "cue": "El pase y la primera zancada son el mismo movimiento.",
+      "errors": "Pararse después de pasar",
+      "easier": "Sprint de 5 m.",
+      "harder": "Salida hacia donde indique el compañero.",
+      "ambiguities": []
+    },
+    {
+      "page": 50,
+      "name": "Pogos (saltos de tobillo)",
+      "level": "II",
+      "movement_area": "Saltar",
+      "material": "Sin material",
+      "instructions": [
+        "Piernas casi estiradas.",
+        "Saltos pequeños y rápidos solo con los tobillos.",
+        "Contacto muy corto con la parte delantera del pie."
+      ],
+      "cue": "Como si el suelo quemara: toca y sal.",
+      "errors": "Doblar mucho las rodillas · Apoyar el talón",
+      "easier": "Saltar a la comba.",
+      "harder": "Pogos a 1 pierna.",
+      "ambiguities": []
+    },
+    {
+      "page": 50,
+      "name": "Salida en caída + sprint",
+      "level": "II",
+      "movement_area": "Desplazarse",
+      "material": "Pista",
+      "instructions": [
+        "De pie, recto y de puntillas.",
+        "Déjate caer adelante como una tabla, sin doblar la cadera.",
+        "Justo antes de caer, primer paso rápido y sprint de 10 m."
+      ],
+      "cue": "El cuerpo ya va inclinado: las 3 primeras zancadas empujan el suelo hacia atrás.",
+      "errors": "Doblar la cadera al caer · Primer paso demasiado largo",
+      "easier": "Salida de pie normal.",
+      "harder": "Caída a señal visual del entrenador.",
+      "ambiguities": []
+    },
+    {
+      "page": 50,
+      "name": "Salidas de 10 m",
+      "level": "II",
+      "movement_area": "Desplazarse",
+      "material": "Conos",
+      "instructions": [
+        "Salida desde posiciones diferentes.",
+        "Sprint de 10 m a máxima velocidad.",
+        "Vuelve caminando: descanso completo."
+      ],
+      "cue": "Primeras 3 zancadas potentes e inclinado adelante.",
+      "errors": "Levantarse recto antes de correr",
+      "easier": "Solo de pie.",
+      "harder": "A señal acústica o visual.",
+      "ambiguities": []
+    },
+    {
+      "page": 50,
+      "name": "Salto reactivo desde el cajón (depth jump)",
+      "level": "II",
+      "movement_area": "Saltar",
+      "material": "Cajón 30 cm",
+      "instructions": [
+        "Paso adelante desde el cajón.",
+        "Al tocar el suelo, sal arriba al máximo, lo más rápido posible.",
+        "Aterriza y aguanta."
+      ],
+      "cue": "Contacto corto. Si se hunden, el cajón es demasiado alto.",
+      "errors": "Pararse en el suelo antes de saltar · Cajón demasiado alto",
+      "easier": "Caída con parada.",
+      "harder": "Depth jump y sprint de 5 m.",
+      "ambiguities": []
+    },
+    {
+      "page": 50,
+      "name": "Saltos alternos (bounding)",
+      "level": "II",
+      "movement_area": "Desplazarse",
+      "material": "Pista · 20 m",
+      "instructions": [
+        "Carrera con zancadas exageradamente largas y altas.",
+        "Cada zancada es un salto: empuja fuerte con la pierna de atrás.",
+        "Rodilla de delante arriba y brazo contrario adelante."
+      ],
+      "cue": "Volar en cada zancada. Menos zancadas para hacer los 20 m = mejor.",
+      "errors": "Pasos cortos y rápidos (es correr, no saltar) · Aterrizar con el talón",
+      "easier": "Skipping largo (A[carácter ilegible]skip avanzando).",
+      "harder": "Bounding a 1 pierna (3 saltos).",
+      "ambiguities": [
+        "La extracción contiene un carácter ilegible [carácter ilegible]; no se reconstruyó."
+      ]
+    },
+    {
+      "page": 51,
+      "name": "Saltos horizontales encadenados",
+      "level": "II",
+      "movement_area": "Saltar",
+      "material": "Sin material",
+      "instructions": [
+        "Como el salto horizontal, pero 3 saltos seguidos.",
+        "Los dos últimos saltos salen nada más tocar el suelo.",
+        "Aterriza el último y aguanta 2\"."
+      ],
+      "cue": "Rápido en el suelo: manda el tiempo de contacto.",
+      "errors": "Pararse entre saltos · Rodillas hacia dentro",
+      "easier": "Salto horizontal con parada.",
+      "harder": "Saltos a 1 pierna encadenados.",
+      "ambiguities": []
+    },
+    {
+      "page": 51,
+      "name": "Saltos laterales continuos",
+      "level": "II",
+      "movement_area": "Desplazarse",
+      "material": "Sin material",
+      "instructions": [
+        "Como el salto Heiden, pero sin parar.",
+        "Recoge y sal hacia el otro lado en cuanto toques.",
+        "4-6 saltos por serie."
+      ],
+      "cue": "Empujar hacia el lado, no hacia arriba.",
+      "errors": "Rodilla hacia dentro · Perder el ritmo",
+      "easier": "Heiden con parada.",
+      "harder": "Salto + sprint de 5 m al acabar.",
+      "ambiguities": []
+    },
+    {
+      "page": 51,
+      "name": "Snap down + salto",
+      "level": "II",
+      "movement_area": "Saltar",
+      "material": "Sin material",
+      "instructions": [
+        "De puntillas con los brazos arriba.",
+        "Baja de golpe a posición atlética (triple amenaza).",
+        "Encadena un salto vertical máximo."
+      ],
+      "cue": "Bajar rápido y parar seco, como una parada de baloncesto.",
+      "errors": "Caer con las piernas rígidas · Espalda curvada",
+      "easier": "Solo el snap down, sin salto.",
+      "harder": "Snap down + salto lateral.",
+      "ambiguities": []
+    },
+    {
+      "page": 51,
+      "name": "T-test adaptado",
+      "level": "II",
+      "movement_area": "Desplazarse",
+      "material": "4 conos",
+      "instructions": [
+        "Sprint A→B (5 m).",
+        "Desplazamiento lateral a C, después a D, y vuelta a B.",
+        "Carrera de espaldas hasta A."
+      ],
+      "cue": "No cruzar las piernas en los desplazamientos laterales.",
+      "errors": "Cruzar las piernas · Girarse de espaldas",
+      "easier": "A ritmo submáximo.",
+      "harder": "A la señal del entrenador (C o D primero).",
+      "ambiguities": []
+    },
+    {
+      "page": 51,
+      "name": "Defensa en zigzag a toda pista",
+      "level": "III",
+      "movement_area": "Desplazarse",
+      "material": "6 conos",
+      "instructions": [
+        "Desplazamiento defensivo en diagonal de cono a cono hasta la otra línea de fondo.",
+        "En cada cono, giro de cadera (drop step) y cambio de dirección.",
+        "Vuelve esprintando por la banda: es el balance defensivo."
+      ],
+      "cue": "Bajo, pasos cortos, sin cruzar las piernas. El giro sale de la cadera.",
+      "errors": "Subir el cuerpo en los giros · Cruzar los pies en el desplazamiento",
+      "easier": "Media pista.",
+      "harder": "Con un atacante que bota (1x1 a toda pista).",
+      "ambiguities": []
+    },
+    {
+      "page": 51,
+      "name": "Duelo de rebote",
+      "level": "III",
+      "movement_area": "Luchar",
+      "material": "Pista, balón",
+      "instructions": [
+        "El entrenador tira (y a menudo falla a propósito).",
+        "El defensor bloquea al atacante de espaldas (bloqueo de rebote), salta y coge el balón arriba.",
+        "Aterriza con los dos pies, estable, y protege el balón."
+      ],
+      "cue": "Primero contacto, después salto. Aterrizaje en posición atlética.",
+      "errors": "Mirar el balón y olvidar al atacante · Aterrizar con las rodillas hacia dentro",
+      "easier": "Sin oposición: salto y aterrizaje.",
+      "harder": "Si el atacante coge el rebote, puede tirar.",
+      "ambiguities": []
+    },
+    {
+      "page": 52,
+      "name": "Espejo 1x1",
+      "level": "III",
+      "movement_area": "Desplazarse",
+      "material": "4 conos",
+      "instructions": [
+        "A se desplaza lateralmente entre los conos como quiera.",
+        "B, de cara, lo tiene que copiar como un espejo.",
+        "5-6\" por repetición, descanso completo."
+      ],
+      "cue": "Posición defensiva baja y pasos cortos.",
+      "errors": "Cruzar las piernas · Subir el cuerpo",
+      "easier": "Duración de 4\".",
+      "harder": "A acaba con un sprint que B persigue.",
+      "ambiguities": []
+    },
+    {
+      "page": 52,
+      "name": "Presión: espalda · lateral · sprint",
+      "level": "III",
+      "movement_area": "Desplazarse",
+      "material": "4 conos",
+      "instructions": [
+        "Carrera de espaldas 6 m (como cuando defienden la salida de balón).",
+        "Desplazamiento lateral en diagonal 5 m.",
+        "Giro y sprint de recuperación hasta la otra línea."
+      ],
+      "cue": "Giro rápido de cadera: el cambio de defender a correr tiene que ser inmediato.",
+      "errors": "Girar con el cuerpo alto · Pararse en el cambio",
+      "easier": "Sin el sprint final.",
+      "harder": "A señal: el entrenador cambia la dirección.",
+      "ambiguities": []
+    },
+    {
+      "page": 52,
+      "name": "Ritmo de juego 15\"/15\"",
+      "level": "III",
+      "movement_area": "Desplazarse",
+      "material": "Pista entera",
+      "instructions": [
+        "15\" de trabajo: sprint de fondo a fondo, 2 desplazamientos laterales y sprint de vuelta.",
+        "15\" de descanso caminando.",
+        "Encadenar las repeticiones sin parar el cronómetro."
+      ],
+      "cue": "Simula la intensidad de un partido: trabajar como en defensa a toda pista.",
+      "errors": "Salir demasiado fuerte y no poder acabar · Desplazamientos laterales altos",
+      "easier": "Trabajo 10\" / descanso 20\".",
+      "harder": "Trabajo 20\" / descanso 20\".",
+      "ambiguities": []
+    },
+    {
+      "page": 52,
+      "name": "Sprint + recepción + entrada",
+      "level": "III",
+      "movement_area": "Jugar el balón",
+      "material": "Pista, balón",
+      "instructions": [
+        "Salida desde la esquina, sprint de 10 m.",
+        "El entrenador pasa el balón en carrera.",
+        "Recepción sin frenar y entrada."
+      ],
+      "cue": "Recibir corriendo: la velocidad no baja al coger el balón.",
+      "errors": "Pararse para recibir · Hacer pasos",
+      "easier": "Salida desde más cerca.",
+      "harder": "Un defensor sale 2 m detrás.",
+      "ambiguities": []
+    },
+    {
+      "page": 52,
+      "name": "Sprint de reacción 1x1",
+      "level": "III",
+      "movement_area": "Desplazarse",
+      "material": "Balón o cono",
+      "instructions": [
+        "Parejas en la línea de fondo, salidas variadas (de espaldas, de rodillas, tumbados).",
+        "El entrenador levanta un cono o un balón.",
+        "Sprint a coger primero el balón libre."
+      ],
+      "cue": "Reacción visual inmediata; primer paso agresivo.",
+      "errors": "Anticiparse antes de la señal",
+      "easier": "Salida de pie.",
+      "harder": "Quien coge el balón ataca 1x1 a canasta.",
+      "ambiguities": []
+    },
+    {
+      "page": 52,
+      "name": "Sprints de contraataque (3 carriles)",
+      "level": "III",
+      "movement_area": "Desplazarse",
+      "material": "Pista entera",
+      "instructions": [
+        "Grupos de 3 en la línea de fondo, uno por carril.",
+        "A la señal, sprint hasta la otra línea de fondo (28 m). El del carril central recibe un pase del entrenador y hace una entrada.",
+        "Vuelta caminando/trotando: es el descanso."
+      ],
+      "cue": "Las 3 primeras zancadas deciden el contraataque.",
+      "errors": "Salir recto · Frenar antes de la línea",
+      "easier": "Media pista (14 m).",
+      "harder": "Salida reactiva: el entrenador lanza el balón a un carril.",
+      "ambiguities": []
+    },
+    {
+      "page": 53,
+      "name": "1x1 a toda pista",
+      "level": "IV",
+      "movement_area": "Desplazarse",
+      "material": "Pista entera, balón",
+      "instructions": [
+        "El atacante sale botando desde la línea de fondo; el defensor lo presiona.",
+        "El atacante tiene que pasar el medio campo en menos de 8\".",
+        "Si llega, juega 1x1 a canasta. Cambio de rol."
+      ],
+      "cue": "El defensor gana si le obliga a cambiar de dirección 2 veces.",
+      "errors": "El defensor cruza las piernas · Presionar recto y alto",
+      "easier": "Atacante sin balón.",
+      "harder": "6\" para pasar medio campo.",
+      "ambiguities": []
+    },
+    {
+      "page": 53,
+      "name": "Contraataque 2x1",
+      "level": "IV",
+      "movement_area": "Jugar el balón",
+      "material": "Pista entera, balón",
+      "instructions": [
+        "Dos atacantes salen desde la línea de fondo, un defensor espera en medio campo.",
+        "Sprint por carriles abiertos; el defensor tiene que elegir a quién tapa.",
+        "Los atacantes deciden pasar o finalizar en 2-3 pases como máximo."
+      ],
+      "cue": "Carriles abiertos y a toda velocidad: la decisión llega corriendo.",
+      "errors": "Botar en vez de correr · Los dos atacantes por el mismo carril",
+      "easier": "2x0.",
+      "harder": "3x2 con un defensor que vuelve desde detrás.",
+      "ambiguities": []
+    }
+  ]
+}
