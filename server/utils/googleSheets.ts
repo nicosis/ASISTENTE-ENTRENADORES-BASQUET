@@ -1,5 +1,7 @@
 import { createSign } from 'node:crypto'
+import { sheetDataRange } from './sheetRanges.ts'
 import {
+  defaultTrainingCatalog,
   blockExercises,
   exercises,
   homeSessions,
@@ -7,7 +9,6 @@ import {
   mesocycles,
   macrocycles,
   trainingBlocks,
-  sessionVariants,
   tests,
   type AgeCategory,
   type BlockExerciseRecord,
@@ -21,11 +22,10 @@ import {
   type MesocycleRecord,
   type MacrocycleRecord,
   type TrainingBlockRecord,
-  type SessionVariantRecord,
   type TestRecord,
   type TrainingCatalogTables,
   type TrainingDay,
-} from '../../app/shared/training'
+} from '../../app/shared/training.ts'
 
 export interface GoogleSheetsCredentials {
   spreadsheetId: string
@@ -96,6 +96,7 @@ export interface OperationalTablesPayload {
   reviews?: SheetWeeklyReviewInput[]
   microcycles?: SheetMicrocycleInput[]
   includeCatalog?: boolean
+  catalog?: TrainingCatalogTables
 }
 
 export interface SheetsDatabaseSnapshot {
@@ -166,7 +167,6 @@ const SHEET_TITLES = {
   mesocycleSessions: 'mesocycle_sessions',
   trainingBlocks: 'training_blocks',
   blockExercises: 'block_exercises',
-  sessionVariants: 'session_variants',
   exercises: 'exercises',
   homeSessions: 'home_sessions',
   tests: 'tests',
@@ -181,45 +181,25 @@ const SHEET_TITLES = {
 
 type SheetKey = keyof typeof SHEET_TITLES
 
-const LEGACY_SHEET_TITLES: Record<SheetKey, readonly string[]> = {
-  macrocycles: ['plans', 'plantillas_macrociclo'],
-  mesocycles: ['plan_phases', 'mesociclos'],
-  mesocycleSessions: ['phase_sessions', 'sesiones_planificadas'],
-  trainingBlocks: ['session_blocks', 'bloques_sesion'],
-  blockExercises: ['ejercicios_bloque'],
-  sessionVariants: ['variantes_sesion'],
-  exercises: ['ejercicios'],
-  homeSessions: ['sesiones_transitorias'],
-  tests: ['evaluaciones'],
-  coaches: ['entrenadores'],
-  teams: ['equipos'],
-  players: ['jugadores'],
-  teamPlayers: ['equipo_jugadores'],
-  seasons: ['macrociclos'],
-  weeklyReviews: ['revisiones_microciclo'],
-  microcycles: ['microciclos'],
-}
-
 function findExistingSheetTitle(
   key: SheetKey,
   existingTitles: ReadonlySet<string>,
 ): string | undefined {
-  return [SHEET_TITLES[key], ...LEGACY_SHEET_TITLES[key]].find((title) =>
-    existingTitles.has(title),
-  )
+  const title = SHEET_TITLES[key]
+  return existingTitles.has(title) ? title : undefined
 }
 
-function getSheetKeyForTitle(title: string): SheetKey | undefined {
-  return (Object.keys(SHEET_TITLES) as SheetKey[]).find(
-    (key) => SHEET_TITLES[key] === title,
-  )
-}
 
 function normalizePrivateKey(rawKey: string): string {
   return rawKey.replace(/\\n/g, '\n').trim()
 }
 
-export async function getGoogleAccessToken(
+export async function readJsonBody<T = unknown>(res: Response): Promise<T> {
+  if (res.ok) return (await res.json()) as T
+  return (await res.json().catch(() => ({}))) as T
+}
+
+async function getGoogleAccessToken(
   credentials: GoogleSheetsCredentials,
 ): Promise<string> {
   const now = Math.floor(Date.now() / 1000)
@@ -252,7 +232,7 @@ export async function getGoogleAccessToken(
     }),
   })
 
-  const data = (await response.json()) as GoogleTokenResponse
+  const data = (await readJsonBody(response)) as GoogleTokenResponse
   if (!response.ok || !data.access_token) {
     throw new Error(
       data.error_description ||
@@ -267,6 +247,8 @@ export async function getGoogleAccessToken(
 export function buildTrainingSheetTables(
   operational?: OperationalTablesPayload,
 ): SheetTableDefinition[] {
+  const catalog = operational?.catalog ?? defaultTrainingCatalog
+  const { macrocycles, mesocycles, mesocycleSessions, trainingBlocks, blockExercises, exercises, homeSessions, tests } = catalog
   const activeCoaches =
     operational?.coaches !== undefined ? operational.coaches : []
   const activeTeams =
@@ -358,28 +340,6 @@ export function buildTrainingSheetTables(
       rgbColor: { red: 0.96, green: 0.62, blue: 0.04 },
     },
     {
-      title: SHEET_TITLES.sessionVariants,
-      headers: [
-        'id',
-        'mesocycle_session_id',
-        'variant_code',
-        'name',
-        'focus',
-        'week_start',
-        'week_end',
-      ],
-      rows: sessionVariants.map((item) => [
-        item.id,
-        item.mesocycleSessionId,
-        item.variantCode,
-        item.name,
-        item.focus,
-        item.weekStart,
-        item.weekEnd,
-      ]),
-      rgbColor: { red: 0.17, green: 0.55, blue: 0.68 },
-    },
-    {
       title: SHEET_TITLES.trainingBlocks,
       headers: ['id', 'mesocycle_session_id', 'block_order', 'name', 'minutes', 'format'],
       rows: trainingBlocks.map((item) => [
@@ -402,7 +362,7 @@ export function buildTrainingSheetTables(
         'station_label',
         'dose_formacion',
         'dose_liga',
-        'variant_id',
+        'week_doses_json',
       ],
       rows: blockExercises.map((item) => [
         item.id,
@@ -412,7 +372,7 @@ export function buildTrainingSheetTables(
         item.stationLabel,
         item.doseFormacion,
         item.doseLiga,
-        item.variantId || '',
+        item.weekDoses ? JSON.stringify(item.weekDoses) : '',
       ]),
       rgbColor: { red: 0.94, green: 0.27, blue: 0.27 },
     },
@@ -424,6 +384,8 @@ export function buildTrainingSheetTables(
         'name',
         'category',
         'focus',
+        'movement_level',
+        'movement_area',
         'material',
         'how',
         'cue',
@@ -437,6 +399,8 @@ export function buildTrainingSheetTables(
         item.name,
         item.category,
         item.focus,
+        item.movementLevel ?? '',
+        item.movementArea ?? '',
         item.material,
         item.how.join(' | '),
         item.cue,
@@ -458,6 +422,8 @@ export function buildTrainingSheetTables(
         'exercise_id',
         'dose_holiday_1',
         'dose_holiday_2',
+        'week_numbers_json',
+        'week_doses_json',
       ],
       rows: homeSessions.map((item) => [
         item.id,
@@ -469,6 +435,8 @@ export function buildTrainingSheetTables(
         item.exerciseId,
         item.doseHoliday1,
         item.doseHoliday2,
+        item.weekNumbers ? JSON.stringify(item.weekNumbers) : '',
+        item.weekDoses ? JSON.stringify(item.weekDoses) : '',
       ]),
       rgbColor: { red: 0.02, green: 0.71, blue: 0.83 },
     },
@@ -554,7 +522,7 @@ export function buildTrainingSheetTables(
           3,
           Math.max(1, season.trainingDays.length || 1),
         ) as Frequency
-        const macrocycleId = season.macrocycleId
+        const macrocycleId = season.macrocycleId ?? ''
         return [
           season.id,
           season.teamId,
@@ -617,6 +585,16 @@ export function buildTrainingSheetTables(
   ]
 }
 
+const OPERATIONAL_KEY_TITLES: ReadonlyArray<readonly [keyof OperationalTablesPayload, string]> = [
+  ['coaches', SHEET_TITLES.coaches],
+  ['teams', SHEET_TITLES.teams],
+  ['players', SHEET_TITLES.players],
+  ['teamPlayers', SHEET_TITLES.teamPlayers],
+  ['seasons', SHEET_TITLES.seasons],
+  ['reviews', SHEET_TITLES.weeklyReviews],
+  ['microcycles', SHEET_TITLES.microcycles],
+]
+
 const OPERATIONAL_TABLE_TITLES = new Set([
   SHEET_TITLES.coaches,
   SHEET_TITLES.teams,
@@ -625,6 +603,17 @@ const OPERATIONAL_TABLE_TITLES = new Set([
   SHEET_TITLES.seasons,
   SHEET_TITLES.weeklyReviews,
   SHEET_TITLES.microcycles,
+])
+
+const CATALOG_TABLE_TITLES = new Set([
+  SHEET_TITLES.macrocycles,
+  SHEET_TITLES.mesocycles,
+  SHEET_TITLES.mesocycleSessions,
+  SHEET_TITLES.trainingBlocks,
+  SHEET_TITLES.blockExercises,
+  SHEET_TITLES.exercises,
+  SHEET_TITLES.homeSessions,
+  SHEET_TITLES.tests,
 ])
 
 interface CachedDatabaseEntry {
@@ -696,6 +685,34 @@ function splitCommaNumbers(raw: string): number[] {
     .filter((num) => Number.isFinite(num))
 }
 
+function parseJsonCell(raw: string, column: string): unknown {
+  try {
+    return JSON.parse(raw)
+  } catch {
+    throw new Error(`Valor JSON inválido en la columna ${column} de Google Sheets: ${raw.slice(0, 80)}`)
+  }
+}
+
+function parseWeekDoses(raw: string): Record<number, string> | undefined {
+  if (!raw.trim()) return undefined
+  const value = parseJsonCell(raw, 'week_doses_json')
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('week_doses_json debe ser un objeto JSON indexado por semana.')
+  }
+  const entries = Object.entries(value).filter(([week, dose]) =>
+    /^\d+$/.test(week) && typeof dose === 'string' && dose.trim().length > 0,
+  )
+  return entries.length ? Object.fromEntries(entries.map(([week, dose]) => [Number(week), dose as string])) : undefined
+}
+
+function parseWeekNumbers(raw: string): number[] | undefined {
+  if (!raw.trim()) return undefined
+  const value = parseJsonCell(raw, 'week_numbers_json')
+  if (!Array.isArray(value)) throw new Error('week_numbers_json debe ser una lista JSON.')
+  const weeks = value.filter((week): week is number => Number.isInteger(week) && week > 0)
+  return weeks.length ? weeks : undefined
+}
+
 function splitCommaStrings(raw: string): string[] {
   if (!raw.trim()) return []
   return raw
@@ -721,6 +738,7 @@ function parseCompetitiveLevel(raw: string): CompetitiveLevel {
 }
 
 function parsePhaseType(raw: string): PhaseType {
+  if (raw === 'assessment') return 'assessment'
   return raw === 'holiday' ? 'holiday' : 'training'
 }
 
@@ -743,22 +761,33 @@ function parseHomeCode(raw: string): 'A' | 'B' | 'C' {
   return 'A'
 }
 
-function parsePlayersCell(raw: string): SheetPlayerInput[] {
+function parsePlayersCell(raw: string, teamOffset = 0): SheetPlayerInput[] {
   return splitPipeList(raw).map((entry, index) => {
     const colonIdx = entry.indexOf(':')
     if (colonIdx > 0) {
       const id = entry.slice(0, colonIdx).trim()
       const name = entry.slice(colonIdx + 1).trim()
       return {
-        id: id || `JUG${String(index + 1).padStart(4, '0')}`,
+        id: id || `JUG${String(teamOffset + index + 1).padStart(4, '0')}`,
         name: name || entry,
       }
     }
     return {
-      id: `JUG${String(index + 1).padStart(4, '0')}`,
+      id: `JUG${String(teamOffset + index + 1).padStart(4, '0')}`,
       name: entry,
     }
   })
+}
+
+async function isSheetEmpty(
+  baseUrl: string,
+  authHeaders: Record<string, string>,
+  title: string,
+): Promise<boolean> {
+  const res = await fetch(`${baseUrl}/values/${encodeURIComponent(title)}!A1:Z`, { headers: authHeaders })
+  if (!res.ok) throw new Error(`No se pudo leer la pestaña ${title} (${res.status}).`)
+  const body = await readJsonBody<{ values?: unknown[][] }>(res)
+  return !body.values?.length
 }
 
 export async function readDatabaseFromGoogleSheets(
@@ -778,7 +807,7 @@ export async function readDatabaseFromGoogleSheets(
   const baseUrl = `https://sheets.googleapis.com/v4/spreadsheets/${credentials.spreadsheetId}`
   const authHeaders = { Authorization: `Bearer ${token}` }
   const metadataRes = await fetch(baseUrl, { headers: authHeaders })
-  const metadata = (await metadataRes.json()) as SpreadsheetMetadata
+  const metadata = (await readJsonBody(metadataRes)) as SpreadsheetMetadata
   if (!metadataRes.ok) {
     throw new Error(
       metadata.error?.message ||
@@ -799,7 +828,7 @@ export async function readDatabaseFromGoogleSheets(
 
   const params = new URLSearchParams()
   for (const range of rangesToRead) {
-    params.append('ranges', `${range.title}!A2:Z500`)
+    params.append('ranges', sheetDataRange(range.title))
   }
 
   const url = `${baseUrl}/values:batchGet?${params.toString()}`
@@ -807,7 +836,7 @@ export async function readDatabaseFromGoogleSheets(
     headers: authHeaders,
   })
 
-  const data = (await res.json()) as BatchGetResponse
+  const data = (await readJsonBody(res)) as BatchGetResponse
   if (!res.ok) {
     throw new Error(
       data.error?.message ||
@@ -868,37 +897,6 @@ export async function readDatabaseFromGoogleSheets(
       }))
     : []
 
-  const variantRows = rowsByTab.get(SHEET_TITLES.sessionVariants) || []
-  const parsedSheetVariants: SessionVariantRecord[] = variantRows.length
-    ? variantRows.map((row) => {
-        const mesocycleSessionId = cellString(row, 1)
-        const variantCode = cellString(row, 2) === 'B' ? 'B' : 'A'
-        return {
-          id: cellString(row, 0),
-          mesocycleSessionId,
-          variantCode,
-          name: cellString(row, 3),
-          focus: cellString(row, 4),
-          weekStart: cellNumber(row, 5, 1),
-          weekEnd: cellNumber(row, 6, 45),
-        }
-      })
-    : []
-  const parsedVariantKeys = new Set(
-    parsedSheetVariants.map(
-      (variant) => `${variant.mesocycleSessionId}:${variant.variantCode}`,
-    ),
-  )
-  const parsedVariants: SessionVariantRecord[] = [
-    ...parsedSheetVariants,
-    ...sessionVariants.filter(
-      (variant) =>
-        !parsedVariantKeys.has(
-          `${variant.mesocycleSessionId}:${variant.variantCode}`,
-        ),
-    ),
-  ]
-
   const trainingBlockRows = rowsByTab.get(SHEET_TITLES.trainingBlocks) || []
   const parsedTrainingBlocks: TrainingBlockRecord[] = trainingBlockRows.length
     ? trainingBlockRows.map((row) => ({
@@ -921,12 +919,13 @@ export async function readDatabaseFromGoogleSheets(
         stationLabel: cellString(row, 4),
         doseFormacion: cellString(row, 5),
         doseLiga: cellString(row, 6, cellString(row, 5)),
-        variantId: cellString(row, 7) || undefined,
+        weekDoses: parseWeekDoses(cellString(row, 7)),
       }))
     : []
   const parsedBlockExercises: BlockExerciseRecord[] = parsedSheetBlockExercises
 
   const exerciseRows = rowsByTab.get(SHEET_TITLES.exercises) || []
+  const hasMovementClassification = exerciseRows.some(row => row.length >= 13)
   const parsedExercises: ExerciseRecord[] = exerciseRows.length
     ? exerciseRows.map((row) => ({
         id: cellString(row, 0),
@@ -934,12 +933,14 @@ export async function readDatabaseFromGoogleSheets(
         name: cellString(row, 2),
         category: cellString(row, 3),
         focus: cellString(row, 4),
-        material: cellString(row, 5),
-        how: splitPipeList(cellString(row, 6)),
-        cue: cellString(row, 7),
-        errors: splitPipeList(cellString(row, 8)),
-        easier: cellString(row, 9),
-        harder: cellString(row, 10),
+        movementLevel: hasMovementClassification ? cellString(row, 5) : '',
+        movementArea: hasMovementClassification ? cellString(row, 6) : '',
+        material: cellString(row, hasMovementClassification ? 7 : 5),
+        how: splitPipeList(cellString(row, hasMovementClassification ? 8 : 6)),
+        cue: cellString(row, hasMovementClassification ? 9 : 7),
+        errors: splitPipeList(cellString(row, hasMovementClassification ? 10 : 8)),
+        easier: cellString(row, hasMovementClassification ? 11 : 9),
+        harder: cellString(row, hasMovementClassification ? 12 : 10),
       }))
     : []
 
@@ -955,6 +956,8 @@ export async function readDatabaseFromGoogleSheets(
         exerciseId: cellString(row, 6),
         doseHoliday1: cellString(row, 7),
         doseHoliday2: cellString(row, 8),
+        weekNumbers: parseWeekNumbers(cellString(row, 9)),
+        weekDoses: parseWeekDoses(cellString(row, 10)),
       }))
     : []
 
@@ -982,7 +985,6 @@ export async function readDatabaseFromGoogleSheets(
   const teamRows = rowsByTab.get(SHEET_TITLES.teams) || []
   const parsedTeams: SheetTeamInput[] = teamRows.map((row) => {
     const col4 = cellString(row, 4)
-    const hasStatusCol = col4 === 'active' || col4 === 'archived'
     const status: 'active' | 'archived' =
       col4 === 'archived' ? 'archived' : 'active'
     return {
@@ -1013,6 +1015,7 @@ export async function readDatabaseFromGoogleSheets(
       cellString(row, 4) === 'active' || cellString(row, 4) === 'archived'
         ? cellString(row, 6)
         : cellString(row, 5),
+      index * 1000,
     ),
   }))
   const legacyPlayers = legacyPlayersByTeam.flatMap((item) => item.players)
@@ -1087,7 +1090,6 @@ export async function readDatabaseFromGoogleSheets(
       macrocycles: parsedMacrocycles,
       mesocycles: parsedMesocycles,
       mesocycleSessions: parsedMesocycleSessions,
-      sessionVariants: parsedVariants,
       trainingBlocks: parsedTrainingBlocks,
       blockExercises: parsedBlockExercises,
       exercises: parsedExercises,
@@ -1116,6 +1118,7 @@ export async function readDatabaseFromGoogleSheets(
 export async function syncTrainingTablesToGoogleSheets(
   credentials: GoogleSheetsCredentials,
   operational?: OperationalTablesPayload,
+  options?: { replaceCatalog?: boolean },
 ): Promise<SyncSheetsResult> {
   const token = await getGoogleAccessToken(credentials)
   const baseUrl = `https://sheets.googleapis.com/v4/spreadsheets/${credentials.spreadsheetId}`
@@ -1125,7 +1128,7 @@ export async function syncTrainingTablesToGoogleSheets(
   }
 
   const metaRes = await fetch(baseUrl, { headers: authHeaders })
-  const metadata = (await metaRes.json()) as SpreadsheetMetadata
+  const metadata = (await readJsonBody(metaRes)) as SpreadsheetMetadata
   if (!metaRes.ok) {
     throw new Error(
       metadata.error?.message ||
@@ -1141,14 +1144,34 @@ export async function syncTrainingTablesToGoogleSheets(
       operational?.players ||
       operational?.teamPlayers ||
       operational?.seasons ||
-      operational?.reviews
+      operational?.reviews ||
+      operational?.microcycles
     )
-  if (includeCatalog) {
-    throw new Error('El catálogo se administra directamente en Google Sheets y no puede sobrescribirse desde la aplicación.')
+  if (includeCatalog && !operational?.catalog) {
+    throw new Error('Para reemplazar el catálogo hay que enviar una instantánea completa del catálogo.')
   }
-  const allTables = buildTrainingSheetTables(operational).filter(
-    table => OPERATIONAL_TABLE_TITLES.has(table.title),
+  if (includeCatalog && !options?.replaceCatalog) {
+    throw new Error('La sustitución del catálogo solo se permite desde la herramienta de mantenimiento local.')
+  }
+  if (operational?.catalog && !includeCatalog) {
+    throw new Error('El catálogo solo puede reemplazarse con includeCatalog=true.')
+  }
+  if (operational?.catalog && [
+    operational.coaches, operational.teams, operational.players, operational.teamPlayers,
+    operational.seasons, operational.reviews, operational.microcycles,
+  ].some(value => value !== undefined)) {
+    throw new Error('La sustitución del catálogo debe ejecutarse separada de las tablas operativas.')
+  }
+  const catalogOnly = includeCatalog && operational?.catalog !== undefined && options?.replaceCatalog === true
+  const suppliedOperationalTitles = new Set(
+    OPERATIONAL_KEY_TITLES
+      .filter(([key]) => operational?.[key] !== undefined)
+      .map(([, title]) => title),
   )
+  const selectedTableTitles = catalogOnly
+    ? CATALOG_TABLE_TITLES
+    : new Set([...OPERATIONAL_TABLE_TITLES].filter((title) => suppliedOperationalTitles.has(title)))
+  const allTables = buildTrainingSheetTables(operational).filter(table => selectedTableTitles.has(table.title))
 
   const existingByTitle = new Map<string, number>()
   for (const sheet of metadata.sheets || []) {
@@ -1156,39 +1179,6 @@ export async function syncTrainingTablesToGoogleSheets(
     const id = sheet.properties?.sheetId
     if (title && typeof id === 'number') {
       existingByTitle.set(title, id)
-    }
-  }
-
-  const renameRequests: Array<Record<string, unknown>> = []
-  for (const table of allTables) {
-    if (existingByTitle.has(table.title)) continue
-    const tableKey = getSheetKeyForTitle(table.title)
-    if (!tableKey) continue
-    const legacyTitle = findExistingSheetTitle(tableKey, new Set(existingByTitle.keys()))
-    const legacySheetId = legacyTitle ? existingByTitle.get(legacyTitle) : undefined
-    if (legacyTitle && typeof legacySheetId === 'number') {
-      renameRequests.push({
-        updateSheetProperties: {
-          properties: { sheetId: legacySheetId, title: table.title },
-          fields: 'title',
-        },
-      })
-      existingByTitle.delete(legacyTitle)
-      existingByTitle.set(table.title, legacySheetId)
-    }
-  }
-
-  if (renameRequests.length > 0) {
-    const renameRes = await fetch(`${baseUrl}:batchUpdate`, {
-      method: 'POST',
-      headers: authHeaders,
-      body: JSON.stringify({ requests: renameRequests }),
-    })
-    if (!renameRes.ok) {
-      const errBody = (await renameRes.json()) as SpreadsheetMetadata
-      throw new Error(
-        errBody.error?.message || 'Failed to rename legacy sheets.',
-      )
     }
   }
 
@@ -1222,7 +1212,7 @@ export async function syncTrainingTablesToGoogleSheets(
       body: JSON.stringify({ requests: createRequests }),
     })
     if (!addRes.ok) {
-      const errBody = (await addRes.json()) as SpreadsheetMetadata
+      const errBody = (await readJsonBody(addRes)) as SpreadsheetMetadata
       throw new Error(
         errBody.error?.message || 'Failed to create missing sheets.',
       )
@@ -1231,12 +1221,12 @@ export async function syncTrainingTablesToGoogleSheets(
 
   const refreshedRes = await fetch(baseUrl, { headers: authHeaders })
   if (!refreshedRes.ok) {
-    const errBody = (await refreshedRes.json()) as SpreadsheetMetadata
+    const errBody = (await readJsonBody(refreshedRes)) as SpreadsheetMetadata
     throw new Error(
       errBody.error?.message || `Unable to refresh spreadsheet (${refreshedRes.status}).`,
     )
   }
-  const refreshedMeta = (await refreshedRes.json()) as SpreadsheetMetadata
+  const refreshedMeta = (await readJsonBody(refreshedRes)) as SpreadsheetMetadata
   const sheetIdsByTitle = new Map<string, number>()
   for (const sheet of refreshedMeta.sheets || []) {
     const title = sheet.properties?.title
@@ -1357,9 +1347,14 @@ export async function syncTrainingTablesToGoogleSheets(
     )
   }
 
-  const defaultSheetId =
-    sheetIdsByTitle.get('Hoja 1') ?? sheetIdsByTitle.get('Sheet1')
-  if (typeof defaultSheetId === 'number' && sheetIdsByTitle.size > 1) {
+  const defaultTitle = ['Hoja 1', 'Sheet1'].find((title) => sheetIdsByTitle.has(title))
+  const defaultSheetId = catalogOnly || !defaultTitle ? undefined : sheetIdsByTitle.get(defaultTitle)
+  if (
+    typeof defaultSheetId === 'number' &&
+    defaultTitle &&
+    sheetIdsByTitle.size > 1 &&
+    await isSheetEmpty(baseUrl, authHeaders, defaultTitle)
+  ) {
     formatRequests.push({
       deleteSheet: { sheetId: defaultSheetId },
     })
@@ -1371,7 +1366,7 @@ export async function syncTrainingTablesToGoogleSheets(
     body: JSON.stringify({ requests: [...writeRequests, ...formatRequests] }),
   })
   if (!writeRes.ok) {
-    const errBody = (await writeRes.json()) as SpreadsheetMetadata
+    const errBody = (await readJsonBody(writeRes)) as SpreadsheetMetadata
     throw new Error(
       errBody.error?.message || 'Failed to update table values and formatting in Google Sheets.',
     )
