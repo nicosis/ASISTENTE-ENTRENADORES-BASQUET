@@ -194,12 +194,12 @@ function normalizePrivateKey(rawKey: string): string {
   return rawKey.replace(/\\n/g, '\n').trim()
 }
 
-export async function readJsonBody<T = unknown>(res: Response): Promise<T> {
+async function readJsonBody<T = unknown>(res: Response): Promise<T> {
   if (res.ok) return (await res.json()) as T
   return (await res.json().catch(() => ({}))) as T
 }
 
-async function getGoogleAccessToken(
+export async function getGoogleAccessToken(
   credentials: GoogleSheetsCredentials,
 ): Promise<string> {
   const now = Math.floor(Date.now() / 1000)
