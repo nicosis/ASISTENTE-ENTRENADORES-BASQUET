@@ -92,14 +92,15 @@ export default defineEventHandler(async (event) => {
     const startsAt = sheetSeason?.startsAt ?? body.startsAt
     if (ageCategory === 'cadete' && startsAt) {
       const phaseCount = catalog.mesocycles.filter(item => item.macrocycleId === macrocycleId).length
-      if (phaseCount === 4) {
+      const annualPlan = catalog.macrocycles.some(item => item.id === macrocycleId && item.totalWeeks === 42)
+      if (phaseCount === 4 || annualPlan) {
         try {
           const holidays = sheetSeason?.holidayWeeks ?? (Array.isArray(body.holidayWeeks) ? body.holidayWeeks : [])
           catalog = alignCadeteCatalog(catalog, startsAt, holidays)
-          const week = getCadeteWeeks(startsAt, holidays)[weekNumber - 1]
+          const week = getCadeteWeeks(startsAt, holidays, annualPlan)[weekNumber - 1]
           if (!week) throw createError({ statusCode: 422, statusMessage: 'La semana está fuera de la temporada.' })
           if (week.holiday) throw createError({ statusCode: 422, statusMessage: 'Esta semana está marcada como vacaciones.' })
-          cadeteRestWeek = week.rest
+          cadeteRestWeek = !annualPlan && week.rest
         } catch {
           throw createError({ statusCode: 422, statusMessage: 'No se puede generar la sesión: revisa la fecha, la semana y las vacaciones.' })
         }

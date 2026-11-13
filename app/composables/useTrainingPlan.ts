@@ -36,7 +36,7 @@ export function useTrainingPlan(
     if (config.value.ageCategory !== 'cadete' || !config.value.startsAt) return catalogRef.value
     const plan = catalogRef.value.macrocycles.find(item => item.id === config.value.macrocycleId && item.ageCategory === 'cadete')
     const phases = catalogRef.value.mesocycles.filter(item => item.macrocycleId === plan?.id)
-    if (!plan || phases.length !== 4) return catalogRef.value
+    if (!plan || (phases.length !== 4 && plan.totalWeeks !== 42)) return catalogRef.value
     try {
       return alignCadeteCatalog(catalogRef.value, config.value.startsAt, config.value.holidayWeeks)
     } catch {
@@ -123,7 +123,7 @@ export function useTrainingPlan(
   const currentPhase = computed(() => currentWeekContext.value.phase)
 
   const weeklySessions = computed(() =>
-    currentPhase.value.id
+    currentPhase.value.id && currentPhase.value.type === 'training'
       ? getWeeklySessionsForMesocycle(
           currentPhase.value.id,
           config.value.frequency,

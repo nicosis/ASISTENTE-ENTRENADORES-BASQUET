@@ -2,7 +2,7 @@ export type Frequency = 1 | 2 | 3
 export type TrainingDay = 'dia1' | 'dia2' | 'dia3'
 export type AgeCategory = 'alevin' | 'infantil' | 'cadete' | 'juvenil'
 export type CompetitiveLevel = 'formacion' | 'liga'
-export type PhaseType = 'training' | 'holiday'
+export type PhaseType = 'training' | 'holiday' | 'assessment'
 
 export interface ExerciseRecord {
   id: string
@@ -10,6 +10,8 @@ export interface ExerciseRecord {
   name: string
   category: string
   focus: string
+  movementLevel?: string
+  movementArea?: string
   material: string
   how: string[]
   cue: string
@@ -67,16 +69,6 @@ export interface MesocycleSessionRecord {
   totalMinutes: number
 }
 
-export interface SessionVariantRecord {
-  id: string
-  mesocycleSessionId: string
-  variantCode: 'A' | 'B'
-  name: string
-  focus: string
-  weekStart: number
-  weekEnd: number
-}
-
 export interface TrainingBlockRecord {
   id: string
   sessionId: string
@@ -94,7 +86,7 @@ export interface BlockExerciseRecord {
   stationLabel: string
   doseFormacion: string
   doseLiga: string
-  variantId?: string
+  weekDoses?: Record<number, string>
 }
 
 export interface HomeSessionRecord {
@@ -107,6 +99,8 @@ export interface HomeSessionRecord {
   exerciseId: string
   doseHoliday1: string
   doseHoliday2: string
+  weekNumbers?: number[]
+  weekDoses?: Record<number, string>
 }
 
 export interface TestRecord {
@@ -148,7 +142,6 @@ export interface HydratedPhaseSession {
   loadIndex: number
   isDeload: boolean
   session: MesocycleSessionRecord
-  variant: SessionVariantRecord
   blocks: HydratedSessionBlock[]
 }
 
@@ -163,8 +156,6 @@ export const mesocycles: MesocycleRecord[] = []
 
 export const mesocycleSessions: MesocycleSessionRecord[] = []
 
-export const sessionVariants: SessionVariantRecord[] = []
-
 export const trainingBlocks: TrainingBlockRecord[] = []
 
 export const blockExercises: BlockExerciseRecord[] = []
@@ -177,7 +168,6 @@ export interface TrainingCatalogTables {
   macrocycles: MacrocycleRecord[]
   mesocycles: MesocycleRecord[]
   mesocycleSessions: MesocycleSessionRecord[]
-  sessionVariants: SessionVariantRecord[]
   trainingBlocks: TrainingBlockRecord[]
   blockExercises: BlockExerciseRecord[]
   exercises: ExerciseRecord[]
@@ -189,7 +179,6 @@ export const defaultTrainingCatalog: TrainingCatalogTables = {
   macrocycles,
   mesocycles,
   mesocycleSessions,
-  sessionVariants,
   trainingBlocks,
   blockExercises,
   exercises,
@@ -201,7 +190,6 @@ export type TrainingDataIssueCode =
   | 'missing-plan'
   | 'missing-phase'
   | 'missing-session'
-  | 'missing-session-variant'
   | 'missing-block'
   | 'missing-block-exercise'
   | 'missing-exercise'
@@ -210,6 +198,17 @@ export interface TrainingDataStatus {
   available: boolean
   code?: TrainingDataIssueCode
   message?: string
+}
+
+export function getHolidayDataStatus(
+  macrocycleId: string,
+  catalog: Pick<TrainingCatalogTables, 'homeSessions' | 'exercises'>,
+): TrainingDataStatus {
+  const activities = catalog.homeSessions.filter(item => item.macrocycleId === macrocycleId)
+  if (!activities.length) return { available: false, code: 'missing-session', message: 'No hay actividades de vacaciones configuradas.' }
+  const missing = activities.find(item => !catalog.exercises.some(exercise => exercise.id === item.exerciseId))
+  if (missing) return { available: false, code: 'missing-exercise', message: `No existe el ejercicio ${missing.exerciseId} referenciado por una sesión en casa.` }
+  return { available: true }
 }
 
 /**
@@ -277,20 +276,6 @@ export function getTrainingDataStatus(
     }
   }
 
-  let variant: SessionVariantRecord
-  try {
-    variant = selectSessionVariant(session.id, params.weekNumber, catalog)
-  } catch (error) {
-    if (error instanceof TrainingDataUnavailableError) {
-      return {
-        available: false,
-        code: error.code,
-        message: error.message,
-      }
-    }
-    throw error
-  }
-
   const blocks = catalog.trainingBlocks.filter(
     (item) => item.sessionId === session.id,
   )
@@ -304,7 +289,7 @@ export function getTrainingDataStatus(
 
   for (const block of blocks) {
     const blockItems = catalog.blockExercises.filter(
-      (item) => item.blockId === block.id && item.variantId === variant.id,
+      (item) => item.blockId === block.id,
     )
     if (!blockItems.length) {
       return {
@@ -343,11 +328,11 @@ export function getTrainingDataStatus(
 }
 
 export class TrainingDataUnavailableError extends Error {
-  constructor(
-    public readonly code: TrainingDataIssueCode,
-    message: string,
-  ) {
+  readonly code: TrainingDataIssueCode
+
+  constructor(code: TrainingDataIssueCode, message: string) {
     super(message)
+    this.code = code
     this.name = 'TrainingDataUnavailableError'
   }
 }
@@ -461,26 +446,6 @@ export function getWeeklySessionsForMesocycle(
   return direct.slice(0, frequency)
 }
 
-function selectSessionVariant(
-  sessionId: string,
-  weekNumber: number,
-  catalog: TrainingCatalogTables,
-): SessionVariantRecord {
-  const variants = catalog.sessionVariants.filter(
-    (variant) =>
-      variant.mesocycleSessionId === sessionId &&
-      weekNumber >= variant.weekStart &&
-      weekNumber <= variant.weekEnd,
-  )
-  if (!variants.length) {
-    return unavailable(
-      'missing-session-variant',
-      `No hay una variante configurada para la sesión ${sessionId} en la semana ${weekNumber}.`,
-    )
-  }
-  return variants[0]
-}
-
 export function getHydratedSession(
   params: {
     ageCategory?: AgeCategory
@@ -514,8 +479,6 @@ export function getHydratedSession(
     )
   }
 
-  const variant = selectSessionVariant(session.id, params.weekNumber || 1, catalog)
-
   const directBlocks = catalog.trainingBlocks
     .filter((block) => block.sessionId === session.id)
     .sort((a, b) => a.blockOrder - b.blockOrder)
@@ -529,7 +492,7 @@ export function getHydratedSession(
 
   const blocks: HydratedSessionBlock[] = directBlocks.map((block) => {
     const rawItems = catalog.blockExercises
-      .filter((item) => item.blockId === block.id && item.variantId === variant.id)
+      .filter((item) => item.blockId === block.id)
       .sort((a, b) => a.itemOrder - b.itemOrder)
 
     if (!rawItems.length) {
@@ -549,8 +512,9 @@ export function getHydratedSession(
           `No existe el ejercicio ${item.exerciseId} referenciado por la sesión.`,
         )
       }
-      const baseDose =
+      const baseDose = item.weekDoses?.[weekNumber] ?? (
         competitiveLevel === 'formacion' ? item.doseFormacion : item.doseLiga
+      )
 
       return {
         ...item,
@@ -573,7 +537,6 @@ export function getHydratedSession(
     loadIndex,
     isDeload,
     session,
-    variant,
     blocks,
   }
 }

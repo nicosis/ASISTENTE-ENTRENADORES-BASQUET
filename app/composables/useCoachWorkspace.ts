@@ -1,5 +1,6 @@
 import { computed, onMounted, ref } from 'vue'
 import {
+  getHolidayDataStatus,
   type AgeCategory,
   type CompetitiveLevel,
   type Frequency,
@@ -35,6 +36,7 @@ import {
 } from '~/composables/useCoachStorage'
 import { useTrainingPlan } from '~/composables/useTrainingPlan'
 import { alignCadeteCatalog, getCadeteWeeks } from '~/shared/cadeteCalendar'
+import { getCurrentSeasonStart } from '~/shared/cadeteAnnualPlan'
 import { createSerialTaskQueue } from '~/shared/serialTaskQueue'
 import { useWeeklyReviews } from '~/composables/useWeeklyReviews'
 
@@ -65,7 +67,7 @@ export {
 
 export function useCoachWorkspace() {
   const emptyTrainingCatalog: TrainingCatalogTables = {
-    macrocycles: [], mesocycles: [], mesocycleSessions: [], sessionVariants: [],
+    macrocycles: [], mesocycles: [], mesocycleSessions: [],
     trainingBlocks: [], blockExercises: [], exercises: [], homeSessions: [], tests: [],
   }
 
@@ -136,7 +138,7 @@ export function useCoachWorkspace() {
     name: '2026-27',
     ageCategory: 'cadete',
     competitiveLevel: 'liga',
-    startsAt: '2026-08-03',
+    startsAt: getCurrentSeasonStart(),
     trainingDays: ['Lunes', 'Miércoles', 'Viernes'],
     holidayWeeks: [],
     context: '',
@@ -144,7 +146,8 @@ export function useCoachWorkspace() {
   const draftCadeteWeeks = computed(() => {
     if (seasonDraft.value.ageCategory !== 'cadete') return []
     try {
-      return getCadeteWeeks(seasonDraft.value.startsAt)
+      const annualPlan = catalog.value.macrocycles.some(plan => plan.ageCategory === 'cadete' && plan.totalWeeks === 42)
+      return getCadeteWeeks(seasonDraft.value.startsAt, [], annualPlan)
     } catch {
       return []
     }
@@ -173,7 +176,8 @@ export function useCoachWorkspace() {
   const seasonDraftEndDate = computed(() => {
     if (seasonDraft.value.ageCategory === 'cadete') {
       try {
-        const weeks = getCadeteWeeks(seasonDraft.value.startsAt)
+        const annualPlan = catalog.value.macrocycles.some(plan => plan.ageCategory === 'cadete' && plan.totalWeeks === 42)
+        const weeks = getCadeteWeeks(seasonDraft.value.startsAt, [], annualPlan)
         return addDays(weeks[weeks.length - 1]!.weekStart, 6)
       } catch {
         return ''
@@ -219,7 +223,11 @@ export function useCoachWorkspace() {
 
   const trainingDataStatus = computed(() =>
     activeSeason.value
-      ? catalogTrainingDataStatus.value
+      ? currentPhase.value.id && currentPhase.value.type === 'holiday'
+        ? getHolidayDataStatus(activePlan.value.id, catalog.value)
+        : currentPhase.value.id && currentPhase.value.type === 'assessment'
+          ? { available: catalog.value.tests.some(item => item.macrocycleId === activePlan.value.id && item.milestoneWeeks.includes(`S${currentWeekNumber.value}`)), message: 'No hay pruebas configuradas para esta semana.' }
+        : catalogTrainingDataStatus.value
       : {
           available: false,
           message: activeTeam.value
@@ -237,11 +245,42 @@ export function useCoachWorkspace() {
   )
   const isCadeteHoliday = computed(() =>
     activeSeason.value?.ageCategory === 'cadete' &&
-    (activeSeason.value.holidayWeeks || []).includes(displayedWeekStart.value),
+    ((activeSeason.value.holidayWeeks || []).includes(displayedWeekStart.value) ||
+      (activePlan.value.totalWeeks === 42 && currentPhase.value.type === 'holiday')),
   )
-  const holidayHomeSessions = computed(() => catalog.value.homeSessions.filter(
-    item => item.macrocycleId === activeSeason.value?.macrocycleId,
-  ))
+  const holidayHomeSessions = computed(() => {
+    const matching = catalog.value.homeSessions.filter(item =>
+      item.macrocycleId === activeSeason.value?.macrocycleId &&
+      (!item.weekNumbers?.length || item.weekNumbers.includes(currentWeekNumber.value)),
+    )
+    const groups = new Map<string, {
+      id: string
+      name: string
+      minutes: number
+      format: string
+      items: Array<{ id: string; name: string; dose: string; cue: string }>
+    }>()
+    for (const item of matching) {
+      const groupId = `${item.macrocycleId}:${item.code}:${item.name}`
+      let group = groups.get(groupId)
+      if (!group) {
+        group = { id: groupId, name: item.name, minutes: item.minutes, format: item.format, items: [] }
+        groups.set(groupId, group)
+      }
+      const exercise = catalog.value.exercises.find(exercise => exercise.id === item.exerciseId)
+      if (!exercise) continue
+      group.items.push({
+        id: item.id,
+        name: exercise.name,
+        dose: item.weekDoses?.[currentWeekNumber.value] || item.doseHoliday1,
+        cue: exercise.cue,
+      })
+    }
+    return [...groups.values()]
+  })
+  const currentAssessmentTests = computed(() => catalog.value.tests
+    .filter(item => item.macrocycleId === activePlan.value.id && item.milestoneWeeks.includes(`S${currentWeekNumber.value}`))
+    .sort((first, second) => first.testOrder - second.testOrder))
 
   const canGoToPreviousWeek = computed(() => currentWeekNumber.value > 1)
   const canGoToNextWeek = computed(
@@ -603,7 +642,7 @@ export function useCoachWorkspace() {
       name: '2026-27',
       ageCategory: 'cadete',
       competitiveLevel: 'liga',
-      startsAt: '2026-08-03',
+      startsAt: getCurrentSeasonStart(),
       trainingDays: ['Lunes', 'Miércoles', 'Viernes'],
       holidayWeeks: [],
       context: '',
@@ -839,6 +878,7 @@ export function useCoachWorkspace() {
     displayedWeekStart,
     isCadeteHoliday,
     holidayHomeSessions,
+    currentAssessmentTests,
     canGoToPreviousWeek,
     canGoToNextWeek,
     weekLabel,

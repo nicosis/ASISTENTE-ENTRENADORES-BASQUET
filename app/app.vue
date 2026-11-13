@@ -46,6 +46,7 @@ const {
   displayedWeekStart,
   isCadeteHoliday,
   holidayHomeSessions,
+  currentAssessmentTests,
   canGoToPreviousWeek,
   canGoToNextWeek,
   weekLabel,
@@ -808,16 +809,32 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           <p class="eyebrow">SEMANA DE RECESO</p>
           <h3>Descanso de pista: trabajo autónomo en casa</h3>
           <p>
-            Esta semana ({{ weekLabel }}) corresponde a vacaciones. Las siguientes actividades son opcionales.
+            Esta semana ({{ weekLabel }}) corresponde a vacaciones. Realiza las actividades indicadas para esta semana.
           </p>
-          <ul>
-            <li v-for="home in holidayHomeSessions" :key="home.id">
-              {{ home.name }} · {{ home.doseHoliday1 }}
-            </li>
-          </ul>
+          <article v-for="home in holidayHomeSessions" :key="home.id" class="holiday-session-card">
+            <h4>{{ home.name }} · {{ home.minutes }} min</h4>
+            <p>{{ home.format }}</p>
+            <ul>
+              <li v-for="item in home.items" :key="item.id">
+                <strong>{{ item.name }}</strong> — {{ item.dose }}<br />
+                <small>{{ item.cue }}</small>
+              </li>
+            </ul>
+          </article>
         </section>
 
-        <template v-else>
+        <section v-if="currentAssessmentTests.length" class="panel-box">
+          <p class="eyebrow">COMBINE DEL CLUB · S{{ currentWeekNumber }}</p>
+          <h3>Evaluaciones de la temporada</h3>
+          <p>Registra los resultados en la hoja de combine del equipo.</p>
+          <ol>
+            <li v-for="test in currentAssessmentTests" :key="test.id">
+              <strong>{{ test.name }}</strong> — {{ test.protocol }}
+            </li>
+          </ol>
+        </section>
+
+        <template v-if="currentPhase.type === 'training' && !isCadeteHoliday">
           <div v-if="nextSessionCallout" class="weekly-next-session" role="status">
             <span class="eyebrow">REFERENCIA DE LA SEMANA</span>
             <strong>{{ nextSessionCallout }}</strong>
@@ -1150,7 +1167,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
               <div class="exercise-content">
                 <div class="exercise-meta-top">
                   <span>
-                    {{ item.stationLabel }} · {{ item.exercise.category }}
+                    {{ item.stationLabel }} · {{ item.exercise.movementLevel || item.exercise.category }}<span v-if="item.exercise.movementArea"> · {{ item.exercise.movementArea }}</span>
                   </span>
                   <code>Material: {{ item.exercise.material }}</code>
                 </div>
