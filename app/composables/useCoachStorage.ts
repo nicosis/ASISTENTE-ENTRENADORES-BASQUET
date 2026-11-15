@@ -49,7 +49,7 @@ export interface Season {
   competitiveLevel: CompetitiveLevel;
   startsAt: string;
   endsAt: string;
-  trainingDays: string[];
+  frequency: 1 | 2 | 3;
   holidayWeeks?: string[];
   context: string;
   status: "active" | "closed";

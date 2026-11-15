@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { getCadeteWeeks } from '../app/shared/cadeteCalendar.ts'
+import { easterSunday, getCadeteWeeks, holidayLabelForWeek } from '../app/shared/cadeteCalendar.ts'
 
 test('assigns each week to the period of its Monday through June', () => {
   const weeks = getCadeteWeeks('2026-08-03')
@@ -39,3 +39,22 @@ test('a new period starts a fresh three-week cycle', () => {
   const firstM1 = weeks.findIndex((week) => week.period === 'M1')
   assert.deepEqual(weeks.slice(firstM1, firstM1 + 4).map((week) => week.rest), [false, false, false, true])
 })
+
+test('computes Easter Sunday for the Gregorian calendar', () => {
+  assert.equal(easterSunday(2026).toISOString().slice(0, 10), '2026-04-05')
+  assert.equal(easterSunday(2027).toISOString().slice(0, 10), '2027-03-28')
+  assert.equal(easterSunday(2028).toISOString().slice(0, 10), '2028-04-16')
+})
+
+test('suggests Christmas and Semana Santa weeks by real date', () => {
+  const labels = getCadeteWeeks('2026-08-17')
+    .map((week, index) => ({ number: index + 1, label: holidayLabelForWeek(week) }))
+    .filter((item) => item.label !== null)
+  assert.deepEqual(labels, [
+    { number: 19, label: 'Navidad' },
+    { number: 20, label: 'Navidad' },
+    { number: 21, label: 'Navidad' },
+    { number: 32, label: 'Semana Santa' },
+  ])
+})
+

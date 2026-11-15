@@ -57,6 +57,8 @@ export interface MicrocycleRecord {
   objective: string
   loadIndex: number
   status: MicrocycleStatus
+  /** Sesiones completadas de la semana, contadas en orden (0 … frequency). */
+  sessionsDone: number
 }
 
 export interface MesocycleSessionRecord {
@@ -424,6 +426,29 @@ export function getMesocycleForWeek(
     loadIndex,
     isDeload,
   }
+}
+
+// Sessions already scheduled in the season before weekNumber: every training week
+// before it adds `frequency` sessions, while holiday or rest weeks add none.
+export function getSeasonSessionOffset(
+  macrocycleId: string,
+  weekNumber: number,
+  frequency: Frequency,
+  isHolidayWeek: (week: number) => boolean,
+  catalog: TrainingCatalogTables = defaultTrainingCatalog,
+): number {
+  let sessions = 0
+  for (let week = 1; week < weekNumber; week++) {
+    if (isHolidayWeek(week)) continue
+    try {
+      if (getMesocycleForWeek(macrocycleId, week, catalog).phase.type === 'training') {
+        sessions += frequency
+      }
+    } catch {
+      continue
+    }
+  }
+  return sessions
 }
 
 export function getWeeklySessionsForMesocycle(

@@ -1,10 +1,12 @@
 import { computed, type Ref } from 'vue'
 import { alignCadeteCatalog } from '~/shared/cadeteCalendar'
+import { addDays, mondayFor } from '~/composables/useCoachStorage'
 import {
   getTrainingDataStatus,
   getHydratedSession,
   getMesocycleForWeek,
   getMesocycles,
+  getSeasonSessionOffset,
   getWeeklySessionsForMesocycle,
   type AgeCategory,
   type CompetitiveLevel,
@@ -133,6 +135,19 @@ export function useTrainingPlan(
       : [],
   )
 
+  const seasonSessionOffset = computed(() => {
+    if (!activePlan.value.id || !config.value.startsAt) return 0
+    const holidays = new Set(config.value.holidayWeeks ?? [])
+    const seasonMonday = mondayFor(config.value.startsAt)
+    return getSeasonSessionOffset(
+      activePlan.value.id,
+      config.value.weekNumber,
+      config.value.frequency,
+      (week) => holidays.has(addDays(seasonMonday, (week - 1) * 7)),
+      catalog.value,
+    )
+  })
+
   const hydratedPreviewSession = computed(() =>
     trainingDataStatus.value.available
       ? getHydratedSession(
@@ -157,6 +172,7 @@ export function useTrainingPlan(
     currentWeekContext,
     currentPhase,
     weeklySessions,
+    seasonSessionOffset,
     hydratedPreviewSession,
   }
 }

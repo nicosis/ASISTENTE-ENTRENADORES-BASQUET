@@ -35,7 +35,7 @@ test('preserves phase loads and week ranges for a 42-week catalog', () => {
 test('annual calendar identifies holidays and ends with the final combine', () => {
   const weeks = getCadeteWeeks('2026-08-17', [], true)
   assert.equal(weeks.length, 42)
-  assert.deepEqual([19, 20, 33].map(week => weeks[week - 1].holiday), [true, true, true])
+  assert.deepEqual([19, 20, 33].map(week => weeks[week - 1].holiday), [false, false, false])
   assert.equal(weeks[41].weekStart, '2027-05-31')
   assert.equal(weeks[3].rest, false)
 })

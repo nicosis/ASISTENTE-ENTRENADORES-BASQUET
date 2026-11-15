@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import {
   ageCategoryOptions,
   blockPalette,
   competitiveLevelOptions,
   formattedDate,
   useCoachWorkspace,
-  weekdays,
 } from '~/composables/useCoachWorkspace'
+import { isoToSpanishDate, spanishDateToIso } from '~/shared/spanishDate'
 
 const {
   coach,
@@ -40,6 +40,7 @@ const {
   currentWeekContext,
   currentPhase,
   weeklySessions,
+  seasonSessionOffset,
   hydratedPreviewSession,
   currentWeekNumber,
   selectedDay,
@@ -51,7 +52,11 @@ const {
   canGoToNextWeek,
   weekLabel,
   annualWeekLabel,
-  sessionDates,
+  nextWeekMicrocycle,
+  nextSessionIndex,
+  setActiveWeekSessionsDone,
+  setDraftFrequency,
+  draftHolidaySuggestions,
   activeWeekReview,
   seasonReviews,
   selectedHistoryReview,
@@ -74,7 +79,6 @@ const {
   archiveTeam,
   restoreTeam,
   deleteTeamCascade,
-  toggleDraftDay,
   createSeason,
   closeSeason,
   reopenSeason,
@@ -107,6 +111,7 @@ function teamInitials(name: string): string {
 }
 
 const teamSearch = ref('')
+const showAllHolidayWeeks = ref(false)
 const noteInput = ref<HTMLTextAreaElement | null>(null)
 const filteredTeams = computed(() => {
   const query = teamSearch.value.trim().toLocaleLowerCase('es')
@@ -114,6 +119,31 @@ const filteredTeams = computed(() => {
     `${team.name} ${team.club}`.toLocaleLowerCase('es').includes(query),
   )
 })
+const startsAtText = ref('')
+const startsAtInvalid = computed(() => startsAtText.value.trim() !== '' && !spanishDateToIso(startsAtText.value))
+watch(
+  () => seasonDraft.value.startsAt,
+  (iso) => {
+    if (spanishDateToIso(startsAtText.value) !== iso) startsAtText.value = isoToSpanishDate(iso)
+  },
+  { immediate: true },
+)
+function handleStartsAtInput(value: string): void {
+  startsAtText.value = value
+  const iso = spanishDateToIso(value)
+  if (iso) seasonDraft.value.startsAt = iso
+}
+const startsAtPicker = ref<HTMLInputElement | null>(null)
+function openStartsAtPicker(): void {
+  const picker = startsAtPicker.value
+  if (!picker) return
+  if (typeof picker.showPicker === 'function') picker.showPicker()
+  else picker.click()
+}
+function pickStartsAt(iso: string): void {
+  if (spanishDateToIso(isoToSpanishDate(iso)) === iso) seasonDraft.value.startsAt = iso
+}
+
 const seasonProgress = computed(() => {
   if (!activeSeason.value || !activeSeasonEndDate.value) return null
   const start = Date.parse(`${activeSeason.value.startsAt}T00:00:00Z`)
@@ -123,12 +153,13 @@ const seasonProgress = computed(() => {
   if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null
   return Math.round(Math.max(0, Math.min(1, (today - start) / (end - start))) * 100)
 })
-function isPastSession(index: number): boolean {
-  const date = sessionDates.value[index]
-  if (!date) return false
-  const today = new Date()
-  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-  return date < todayKey
+const doneCount = computed(() =>
+  nextSessionIndex.value < 0 ? frequency.value : nextSessionIndex.value,
+)
+
+function handleFrequencyChange(event: Event): void {
+  const value = Number((event.target as HTMLSelectElement).value)
+  setDraftFrequency(value === 2 || value === 3 ? value : 1)
 }
 
 async function openFloatingNote(): Promise<void> {
@@ -137,33 +168,6 @@ async function openFloatingNote(): Promise<void> {
   noteInput.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   noteInput.value?.focus({ preventScroll: true })
 }
-
-const nextSessionIndex = computed(() => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const weekStart = new Date(`${displayedWeekStart.value}T00:00:00`)
-  const weekEnd = new Date(weekStart)
-  weekEnd.setDate(weekEnd.getDate() + 6)
-  if (today < weekStart || today > weekEnd) return -1
-
-  return sessionDates.value.findIndex((date) => {
-    const sessionDate = new Date(`${date}T00:00:00`)
-    return sessionDate >= today
-  })
-})
-
-const nextSessionCallout = computed(() => {
-  const index = nextSessionIndex.value
-  const item = weeklySessions.value[index]
-  const date = sessionDates.value[index]
-  if (index < 0 || !item || !date) return ''
-
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const sessionDate = new Date(`${date}T00:00:00`)
-  const timing = sessionDate.getTime() === today.getTime() ? 'Hoy' : 'Próxima sesión'
-  return `${timing}: ${item.name} · ${formattedDate(date)} · ${item.totalMinutes} min`
-})
 
 const sessionExerciseCount = computed(() =>
   session.value?.trainingBlocks.reduce((total, block) => total + block.items.length, 0) || 0,
@@ -531,50 +535,73 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           </label>
           <label>
             Inicio de temporada
-            <input
-              v-model="seasonDraft.startsAt"
-              type="date"
-              required
-            />
-            <small>Para cadete, selecciona un lunes de agosto.</small>
+            <span class="date-field">
+              <input
+                :value="startsAtText"
+                type="text"
+                inputmode="numeric"
+                placeholder="dd/mm/aaaa"
+                maxlength="10"
+                autocomplete="off"
+                aria-describedby="starts-at-hint"
+                required
+                @input="handleStartsAtInput(($event.target as HTMLInputElement).value)"
+              />
+              <button type="button" class="date-picker-button" aria-label="Abrir calendario" @click="openStartsAtPicker">📅</button>
+              <input
+                ref="startsAtPicker"
+                class="visually-hidden-picker"
+                type="date"
+                tabindex="-1"
+                aria-hidden="true"
+                :value="seasonDraft.startsAt"
+                @change="pickStartsAt(($event.target as HTMLInputElement).value)"
+              />
+            </span>
+            <small v-if="startsAtInvalid" class="field-error">Escribe una fecha válida con formato dd/mm/aaaa.</small>
+            <small v-else id="starts-at-hint">Para cadete, escribe un lunes de agosto (dd/mm/aaaa).</small>
           </label>
-          <label>
-            Final de temporada
-            <input
-              :value="seasonDraftEndDate"
-              type="date"
-              readonly
-            />
-            <small>Calculado según el calendario de la temporada.</small>
-          </label>
+          <div class="computed-field">
+            <span>Final de temporada</span>
+            <strong>{{ seasonDraftEndDate ? formattedDate(seasonDraftEndDate) : '—' }}</strong>
+            <small>Se calcula automáticamente según el calendario de la temporada.</small>
+          </div>
         </div>
         <fieldset>
           <legend>
-            Días de entrenamiento físico <small>Elige 1, 2 o 3 días.</small>
+            Sesiones por semana <small>Cuántas sesiones de entrenamiento tiene el equipo cada semana.</small>
           </legend>
-          <div class="day-pills">
-            <label v-for="day in weekdays" :key="day">
-              <input
-                type="checkbox"
-                :checked="seasonDraft.trainingDays.includes(day)"
-                :disabled="
-                  !seasonDraft.trainingDays.includes(day) &&
-                  seasonDraft.trainingDays.length >= 3
-                "
-                @change="toggleDraftDay(day)"
-              />
-              <span>{{ day }}</span>
+          <label class="frequency-select">
+            <select :value="seasonDraft.frequency" class="form-select" @change="handleFrequencyChange">
+              <option :value="1">1 sesión por semana</option>
+              <option :value="2">2 sesiones por semana</option>
+              <option :value="3">3 sesiones por semana</option>
+            </select>
+          </label>
+        </fieldset>
+        <fieldset class="holiday-fieldset" v-if="seasonDraft.ageCategory === 'cadete' && draftCadeteWeeks.length">
+          <legend>Vacaciones</legend>
+          <p v-if="!showAllHolidayWeeks">
+            Sugerimos Navidad y Semana Santa según las fechas reales. Desmarca las que no apliquen.
+          </p>
+          <p v-else>Marca cualquier semana sin entrenamiento.</p>
+          <div class="holiday-grid">
+            <label
+              v-for="week in showAllHolidayWeeks ? draftCadeteWeeks : draftHolidaySuggestions"
+              :key="week.weekStart"
+              class="holiday-option"
+            >
+              <input v-model="seasonDraft.holidayWeeks" type="checkbox" :value="week.weekStart" />
+              <span class="holiday-option-text">
+                <strong>S{{ week.weekNumber }} · {{ formattedDate(week.weekStart) }}</strong>
+                <em v-if="week.label">{{ week.label }}</em>
+              </span>
             </label>
           </div>
-        </fieldset>
-        <fieldset v-if="seasonDraft.ageCategory === 'cadete' && draftCadeteWeeks.length">
-          <legend>Semanas de vacaciones</legend>
-          <p>Selecciona el lunes de cada semana sin entrenamiento.</p>
-          <div class="day-pills">
-            <label v-for="week in draftCadeteWeeks" :key="week.weekStart">
-              <input v-model="seasonDraft.holidayWeeks" type="checkbox" :value="week.weekStart" />
-              <span>{{ formattedDate(week.weekStart) }}</span>
-            </label>
+          <div class="holiday-actions">
+            <button class="secondary-button" type="button" @click="showAllHolidayWeeks = !showAllHolidayWeeks">
+              {{ showAllHolidayWeeks ? 'Mostrar solo sugeridas' : 'Elegir otras semanas' }}
+            </button>
           </div>
         </fieldset>
         <label>
@@ -691,9 +718,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         <div>
           <span>ENTRENOS (`frequency`)</span>
           <strong>
-            {{ frequency }} {{ frequency === 1 ? 'día' : 'días' }} / semana ({{
-              activeSeason?.trainingDays.join(', ')
-            }})
+            {{ frequency }} {{ frequency === 1 ? 'día' : 'días' }} / semana
           </strong>
         </div>
         <div>
@@ -835,32 +860,31 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         </section>
 
         <template v-if="currentPhase.type === 'training' && !isCadeteHoliday">
-          <div v-if="nextSessionCallout" class="weekly-next-session" role="status">
-            <span class="eyebrow">REFERENCIA DE LA SEMANA</span>
-            <strong>{{ nextSessionCallout }}</strong>
-          </div>
+          <section class="week-outlook" aria-label="Esta semana y la próxima">
+            <article class="week-outlook-card">
+              <span class="eyebrow">ESTA SEMANA</span>
+              <strong>{{ weekLabel }}</strong>
+              <p>{{ doneCount }} de {{ frequency }} sesiones hechas</p>
+            </article>
+            <article v-if="nextWeekMicrocycle" class="week-outlook-card">
+              <span class="eyebrow">PRÓXIMA SEMANA</span>
+              <strong>Semana {{ nextWeekMicrocycle.weekNumber }} · {{ formattedDate(nextWeekMicrocycle.weekStart) }}</strong>
+              <p>{{ frequency }} {{ frequency === 1 ? 'sesión' : 'sesiones' }}<span v-if="nextWeekMicrocycle.objective"> · {{ nextWeekMicrocycle.objective }}</span></p>
+            </article>
+          </section>
 
           <section class="session-grid">
           <article
             v-for="(item, index) in weeklySessions"
             :key="item.id"
-            :class="{ 'is-next': nextSessionIndex === index, 'is-past': isPastSession(index) }"
+            :class="{ 'is-next': nextSessionIndex === index, 'is-done': index < doneCount }"
           >
-            <span>
-              SESIÓN {{ index + 1 }} · {{
-                item.day.toUpperCase()
-              }}
-            </span>
-            <span v-if="nextSessionIndex === index" class="session-state-label">
-              {{ new Date(`${sessionDates[index]}T00:00:00`).getTime() === new Date(new Date().toDateString()).getTime() ? 'Sesión de hoy' : 'Próxima sesión' }}
-            </span>
+            <span>SESIÓN {{ seasonSessionOffset + index + 1 }} · DÍA {{ index + 1 }}</span>
+            <span v-if="nextSessionIndex === index" class="session-state-label">Próxima sesión</span>
+            <span v-else-if="index < doneCount" class="session-state-label">Hecha</span>
             <h3>{{ item.name }}</h3>
             <p class="session-focus">{{ item.focus }}</p>
-            <p>
-              {{ activeSeason?.trainingDays[index] }} ·
-              {{ formattedDate(sessionDates[index] || displayedWeekStart) }} ·
-              <strong>{{ item.totalMinutes }} min</strong>
-            </p>
+            <p><strong>{{ item.totalMinutes }} min</strong></p>
             <div class="card-actions">
               <button
                 class="primary-button"
@@ -873,6 +897,14 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
                     ? 'Preparando…'
                     : 'Ver bloques y ejercicios →'
                 }}
+              </button>
+              <button
+                class="secondary-button"
+                type="button"
+                :disabled="nextSessionIndex !== index && index !== doneCount - 1"
+                @click="nextSessionIndex === index ? setActiveWeekSessionsDone(index + 1) : setActiveWeekSessionsDone(index)"
+              >
+                {{ index === doneCount - 1 && nextSessionIndex !== index ? 'Deshacer' : 'Marcar como hecha' }}
               </button>
             </div>
           </article>
@@ -1201,14 +1233,14 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
 
 <style>
 :root {
-  --bg: #f5f3ec;
-  --surface: #fffefa;
-  --ink: #1e382b;
-  --muted: #647168;
-  --line: #d9ded5;
-  --soft: #e9f0e6;
-  --accent: #e66b48;
-  --button: #203d30;
+  --bg: #f2f4f8;
+  --surface: #ffffff;
+  --ink: #13233a;
+  --muted: #5b6b80;
+  --line: #d5dde8;
+  --soft: #e6edf6;
+  --accent: #ff7a1a;
+  --button: #13233a;
 }
 * {
   box-sizing: border-box;
@@ -1238,7 +1270,7 @@ button {
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgba(32, 61, 48, 0.22);
+  background: rgba(19, 35, 58, 0.22);
   backdrop-filter: blur(3px);
 }
 .database-loading-card {
@@ -1250,7 +1282,7 @@ button {
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--surface);
-  box-shadow: 0 18px 45px rgba(32, 61, 48, 0.18);
+  box-shadow: 0 18px 45px rgba(19, 35, 58, 0.18);
   text-align: center;
 }
 .database-loading-card span:last-child {
@@ -1277,7 +1309,7 @@ button {
   height: 72px;
   padding: 0 clamp(22px, 5vw, 76px);
   border-bottom: 1px solid var(--line);
-  background: rgba(255, 254, 250, 0.92);
+  background: rgba(255, 255, 255, 0.92);
 }
 .brand {
   display: flex;
@@ -1287,8 +1319,7 @@ button {
   color: var(--ink);
   background: transparent;
   font:
-    700 21px Georgia,
-    serif;
+    700 21px "Barlow Condensed", "Arial Narrow", sans-serif;
 }
 .brand-ball,
 .coach-avatar {
@@ -1354,8 +1385,7 @@ button {
 .auth-page h1 {
   margin: 0;
   font:
-    600 clamp(38px, 6vw, 56px) / 1 Georgia,
-    serif;
+    600 clamp(38px, 6vw, 56px) / 1 "Barlow Condensed", "Arial Narrow", sans-serif;
   letter-spacing: -0.045em;
 }
 .auth-page > p:not(.eyebrow) {
@@ -1393,7 +1423,7 @@ button {
 }
 .eyebrow {
   margin: 0 0 8px;
-  color: #62806d;
+  color: #3f6a9a;
   font-size: 11px;
   font-weight: 750;
   letter-spacing: 0.1em;
@@ -1410,9 +1440,8 @@ button {
 .team-heading h1 {
   margin: 0;
   font:
-    600 clamp(40px, 6vw, 62px) / 0.96 Georgia,
-    serif;
-  letter-spacing: -0.05em;
+    600 clamp(40px, 6vw, 62px) / 0.96 "Barlow Condensed", "Arial Narrow", sans-serif;
+  letter-spacing: 0.01em;
 }
 .heading-row p,
 .form-page > p,
@@ -1434,12 +1463,12 @@ button {
   background: var(--button);
 }
 .secondary-button {
-  border: 1px solid #bdc8bd;
-  color: #365443;
+  border: 1px solid #bcc8d8;
+  color: #2a3f5c;
   background: transparent;
 }
 .primary-button:hover {
-  background: #315744;
+  background: #1e3553;
 }
 .danger-button {
   border-radius: 8px;
@@ -1460,19 +1489,19 @@ button {
   gap: 8px;
 }
 .role-badge {
-  border: 1px solid #bdc8bd;
+  border: 1px solid #bcc8d8;
   border-radius: 999px;
   padding: 3px 9px;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.06em;
-  color: #365443;
-  background: #eef3ee;
+  color: #2a3f5c;
+  background: #eef3fa;
 }
 .role-badge.admin {
-  border-color: #e66b48;
+  border-color: #ff7a1a;
   color: #fff;
-  background: #e66b48;
+  background: #ff7a1a;
 }
 .seasons-switcher-bar {
   display: flex;
@@ -1514,7 +1543,20 @@ button {
 .season-progress { display: grid; gap: 8px; margin: 18px 0; color: var(--muted); font-size: 13px; }
 .season-progress div { display: flex; justify-content: space-between; gap: 12px; }
 .season-progress progress { width: 100%; height: 10px; accent-color: var(--button); }
-.session-grid article.is-past { background: #f0f0ed; border-color: #d5d5d0; }
+.session-grid article.is-done { background: #eef0f4; border-color: #d3d8e0; }
+.week-outlook { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 18px 0 24px; }
+.week-outlook-card { display: grid; gap: 6px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.week-outlook-card strong { font-size: 17px; }
+.week-outlook-card p { margin: 0; color: var(--muted); font-size: 14px; }
+.computed-field { display: grid; gap: 7px; color: var(--muted); font-size: 13px; font-weight: 700; }
+.computed-field strong { padding: 11px 12px; border: 1px dashed var(--line); border-radius: 8px; color: var(--ink); background: var(--soft); font-size: 15px; }
+.computed-field small { font-weight: 400; }
+.frequency-select { display: block; max-width: 280px; margin-top: 10px; }
+.date-field { position: relative; display: flex; gap: 6px; align-items: center; }
+.date-field input[type="text"] { flex: 1; min-width: 0; }
+.date-picker-button { flex: none; padding: 8px 10px; border: 1px solid #bcc8d8; border-radius: 8px; background: transparent; cursor: pointer; }
+.visually-hidden-picker { position: absolute; right: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.frequency-select select { width: 100%; }
 .floating-note { display: none; }
 .team-card {
   position: relative;
@@ -1548,25 +1590,25 @@ button {
 }
 .team-card.is-archived {
   opacity: 0.82;
-  background: #f6f4ee;
+  background: #f3f5f9;
 }
 .team-card:hover {
   transform: translateY(-3px);
-  border-color: #829b87;
+  border-color: #8aa0b8;
 }
 .team-status {
   display: inline-block;
   border-radius: 999px;
   padding: 5px 9px;
-  background: #edf4ed;
+  background: #edf2f9;
 }
 .team-status.team-status-archived {
-  color: #765a40;
-  background: #f0e8dc;
+  color: #6b4f36;
+  background: #f5ede2;
 }
 .team-card-top span,
 .team-card em {
-  color: #69806f;
+  color: #5f7491;
   font-size: 11px;
   font-style: normal;
   font-weight: 700;
@@ -1587,9 +1629,8 @@ button {
 .team-card h2 {
   margin: 5px 0 0;
   font:
-    600 27px Georgia,
-    serif;
-  letter-spacing: -0.04em;
+    600 27px "Barlow Condensed", "Arial Narrow", sans-serif;
+  letter-spacing: 0.01em;
 }
 .team-card p {
   margin: 0;
@@ -1619,23 +1660,23 @@ button {
   border-top: 1px dashed var(--line);
 }
 .card-mini-btn {
-  border: 1px solid #cbd4cb;
+  border: 1px solid #cdd6e2;
   border-radius: 6px;
   padding: 5px 9px;
   font-size: 11px;
   font-weight: 700;
-  color: #365443;
-  background: #f5f7f4;
+  color: #2a3f5c;
+  background: #f4f7fb;
 }
 .card-mini-btn:hover {
-  background: #e7ede7;
+  background: #e5ebf3;
 }
 .card-mini-btn.restore {
-  border-color: #69806f;
-  color: #203d30;
+  border-color: #5f7491;
+  color: #13233a;
 }
 .card-mini-btn.danger {
-  border-color: #e29b8f;
+  border-color: #f0a77f;
   color: #a13422;
   background: #fff5f3;
 }
@@ -1646,7 +1687,7 @@ button {
 .close {
   border: 0;
   padding: 0;
-  color: #52725e;
+  color: #3d5a7a;
   background: transparent;
   text-decoration: underline;
 }
@@ -1668,7 +1709,7 @@ button {
 .form-page label {
   display: grid;
   gap: 7px;
-  color: #405a4a;
+  color: #2f4663;
   font-size: 13px;
   font-weight: 700;
 }
@@ -1683,11 +1724,11 @@ legend small {
 .form-page textarea,
 .review-section textarea {
   width: 100%;
-  border: 1px solid #cbd4ca;
+  border: 1px solid #cdd6e2;
   border-radius: 8px;
   padding: 11px;
   color: var(--ink);
-  background: #fffefa;
+  background: #ffffff;
   resize: vertical;
 }
 .form-grid {
@@ -1702,7 +1743,7 @@ fieldset {
 }
 legend {
   margin-bottom: 10px;
-  color: #405a4a;
+  color: #2f4663;
   font-size: 13px;
   font-weight: 700;
 }
@@ -1717,7 +1758,7 @@ legend {
 }
 .day-pills span {
   display: block;
-  border: 1px solid #cbd4ca;
+  border: 1px solid #cdd6e2;
   border-radius: 999px;
   padding: 8px 10px;
   color: var(--muted);
@@ -1753,15 +1794,14 @@ legend {
   border-left: 1px solid var(--line);
 }
 .season-summary span {
-  color: #69806f;
+  color: #5f7491;
   font-size: 10px;
   font-weight: 750;
   letter-spacing: 0.08em;
 }
 .season-summary strong {
   font:
-    600 16px Georgia,
-    serif;
+    600 16px "Barlow Condensed", "Arial Narrow", sans-serif;
 }
 
 /* Mesociclos de la temporada */
@@ -1783,8 +1823,7 @@ legend {
 .phases-header h3 {
   margin: 0;
   font:
-    600 20px Georgia,
-    serif;
+    600 20px "Barlow Condensed", "Arial Narrow", sans-serif;
 }
 .phase-badge {
   border-radius: 999px;
@@ -1836,7 +1875,7 @@ legend {
   font-size: 12px;
 }
 .phase-row-objective span {
-  color: #69806f;
+  color: #5f7491;
   font-size: 10px;
   font-weight: 750;
   letter-spacing: 0.08em;
@@ -1853,7 +1892,7 @@ legend {
   gap: 4px;
   min-height: 78px;
   padding: 10px 11px;
-  border: 1px solid #cbd4ca;
+  border: 1px solid #cdd6e2;
   border-radius: 7px;
   color: var(--ink);
   background: var(--surface);
@@ -1861,12 +1900,12 @@ legend {
 }
 .week-cell:hover {
   border-color: var(--accent);
-  background: #f7faf5;
+  background: #f7f9fd;
 }
 .week-cell.current {
   border-color: var(--accent);
   box-shadow: inset 3px 0 0 var(--accent);
-  background: #e9f1e8;
+  background: #e6edf6;
 }
 .week-cell-number {
   font-size: 12px;
@@ -1890,7 +1929,7 @@ legend {
   padding: 2px 6px;
   border-radius: 4px;
   color: #9c4c21;
-  background: #fbe7dc;
+  background: #ffe9d6;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -1925,9 +1964,8 @@ legend {
 .review-section h2 {
   margin: 0;
   font:
-    600 32px Georgia,
-    serif;
-  letter-spacing: -0.04em;
+    600 32px "Barlow Condensed", "Arial Narrow", sans-serif;
+  letter-spacing: 0.01em;
 }
 .section-heading {
   display: flex;
@@ -1957,7 +1995,7 @@ legend {
 }
 .plio-chip {
   background: var(--soft);
-  border-color: #b8cbb9;
+  border-color: #bccbdc;
 }
 .week-navigation {
   display: flex;
@@ -1993,7 +2031,7 @@ legend {
   background: var(--surface);
 }
 .session-grid article > span {
-  color: #69806f;
+  color: #5f7491;
   font-size: 10px;
   font-weight: 750;
   letter-spacing: 0.08em;
@@ -2001,8 +2039,7 @@ legend {
 .session-grid h3 {
   margin: 0;
   font:
-    600 22px Georgia,
-    serif;
+    600 22px "Barlow Condensed", "Arial Narrow", sans-serif;
 }
 .session-focus {
   color: var(--ink) !important;
@@ -2024,6 +2061,58 @@ legend {
   padding: 8px 11px;
   font-size: 12px;
 }
+.card-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.holiday-fieldset > p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.holiday-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+.holiday-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.holiday-option:has(input:checked) {
+  border-color: var(--accent);
+  background: #fff6ef;
+}
+.holiday-option input {
+  flex: none;
+  margin-top: 3px;
+}
+.holiday-option-text {
+  display: grid;
+  gap: 2px;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.35;
+}
+.holiday-option-text em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+}
+.holiday-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+}
 .holiday-notice-card {
   margin: 20px 0 42px;
   padding: 24px;
@@ -2034,8 +2123,7 @@ legend {
 .holiday-notice-card h3 {
   margin: 4px 0 8px;
   font:
-    600 24px Georgia,
-    serif;
+    600 24px "Barlow Condensed", "Arial Narrow", sans-serif;
 }
 
 /* Team detail panels */
@@ -2048,8 +2136,7 @@ legend {
 .panel-box h2 {
   margin: 0 0 6px;
   font:
-    600 26px Georgia,
-    serif;
+    600 26px "Barlow Condensed", "Arial Narrow", sans-serif;
 }
 .panel-lead {
   margin: 0 0 16px;
@@ -2105,9 +2192,8 @@ legend {
 .note-editor h2 {
   margin: 0;
   font:
-    600 28px Georgia,
-    serif;
-  letter-spacing: -0.04em;
+    600 28px "Barlow Condensed", "Arial Narrow", sans-serif;
+  letter-spacing: 0.01em;
 }
 .note-editor > div:last-child {
   display: grid;
@@ -2115,11 +2201,11 @@ legend {
 }
 .note-editor textarea {
   width: 100%;
-  border: 1px solid #cbd4ca;
+  border: 1px solid #cdd6e2;
   border-radius: 8px;
   padding: 11px;
   color: var(--ink);
-  background: #fffefa;
+  background: #ffffff;
   resize: vertical;
 }
 .review-actions {
@@ -2135,7 +2221,7 @@ legend {
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(24, 43, 32, 0.46);
+  background: rgba(14, 28, 46, 0.46);
 }
 .history-modal {
   width: min(760px, 100%);
@@ -2144,7 +2230,7 @@ legend {
   padding: 25px;
   border-radius: 14px;
   background: var(--surface);
-  box-shadow: 0 24px 80px rgba(17, 35, 25, 0.28);
+  box-shadow: 0 24px 80px rgba(12, 26, 44, 0.28);
 }
 .history-modal .close {
   float: right;
@@ -2152,8 +2238,7 @@ legend {
 .history-modal h2 {
   margin: 0;
   font:
-    600 34px Georgia,
-    serif;
+    600 34px "Barlow Condensed", "Arial Narrow", sans-serif;
   letter-spacing: -0.045em;
 }
 .history-layout {
@@ -2204,9 +2289,8 @@ legend {
 .session-page > h1 {
   margin: 0;
   font:
-    600 clamp(36px, 6vw, 52px) / 0.98 Georgia,
-    serif;
-  letter-spacing: -0.05em;
+    600 clamp(36px, 6vw, 52px) / 0.98 "Barlow Condensed", "Arial Narrow", sans-serif;
+  letter-spacing: 0.01em;
 }
 .session-rationale {
   max-width: 680px;
@@ -2258,8 +2342,7 @@ legend {
 .session-block-header h2 {
   margin: 2px 0 4px;
   font:
-    600 24px Georgia,
-    serif;
+    600 24px "Barlow Condensed", "Arial Narrow", sans-serif;
 }
 .session-block-header p {
   margin: 0;
@@ -2286,7 +2369,7 @@ legend {
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 11px;
-  background: #fffefa;
+  background: #ffffff;
 }
 .exercise-content {
   padding: 14px 18px;
@@ -2298,7 +2381,7 @@ legend {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  color: #69806f;
+  color: #5f7491;
   font-size: 11px;
   font-weight: 750;
 }
@@ -2309,15 +2392,14 @@ legend {
 .exercise-content h3 {
   margin: 0;
   font:
-    600 21px Georgia,
-    serif;
+    600 21px "Barlow Condensed", "Arial Narrow", sans-serif;
 }
 .dose-pill {
   display: inline-block;
   justify-self: start;
   border-radius: 6px;
   padding: 3px 8px;
-  background: #fbe7dc;
+  background: #ffe9d6;
   color: #b5431b;
   font-size: 12.5px;
 }
@@ -2352,10 +2434,10 @@ legend {
   margin: 16px auto 0;
   padding: 12px 16px;
   max-width: 1320px;
-  border: 1px solid #e2b49f;
+  border: 1px solid #f5bf94;
   border-radius: 10px;
   color: #7f321f;
-  background: #fff3ed;
+  background: #fff4ea;
 }
 .data-unavailable-banner span {
   flex: 1;
@@ -2364,14 +2446,13 @@ legend {
 .empty-state {
   margin-top: 34px;
   padding: 35px;
-  border: 1px dashed #b7c5b7;
+  border: 1px dashed #b7c4d6;
   border-radius: 13px;
   text-align: center;
 }
 .empty-state h2 {
   font:
-    600 28px Georgia,
-    serif;
+    600 28px "Barlow Condensed", "Arial Narrow", sans-serif;
 }
 .connection-status {
   display: inline-flex;
@@ -2381,7 +2462,7 @@ legend {
   font-size: 12px;
   font-weight: 700;
 }
-.connection-status.connected { color: #365443; }
+.connection-status.connected { color: #2a3f5c; }
 .connection-status small { color: var(--muted); font-weight: 500; }
 .refresh-button {
   border: 1px solid var(--line);
@@ -2400,17 +2481,17 @@ legend {
   font-size: 13px;
   line-height: 1.45;
 }
-.microcycle-status { color: #52725e !important; font-size: 12px !important; }
+.microcycle-status { color: #3d5a7a !important; font-size: 12px !important; }
 .session-grid article.is-next {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(230, 107, 72, 0.14);
+  box-shadow: 0 0 0 3px rgba(255, 122, 26, 0.14);
 }
 .session-state-label {
   justify-self: start;
   border-radius: 999px;
   padding: 4px 8px;
   color: #9c4c21 !important;
-  background: #fbe7dc;
+  background: #ffe9d6;
   font-size: 10px !important;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -2454,7 +2535,7 @@ legend {
   padding: 14px 16px;
   border-left: 4px solid var(--accent);
   border-radius: 8px;
-  background: #fbe7dc;
+  background: #ffe9d6;
 }
 .weekly-next-session strong { color: #7c3f24; font-size: 15px; }
 .session-overview {
@@ -2480,7 +2561,7 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid rgba(230, 107, 72, 0.65);
+  outline: 3px solid rgba(255, 122, 26, 0.65);
   outline-offset: 2px;
 }
 @media (max-width: 820px) {
@@ -2597,5 +2678,12 @@ textarea:focus-visible {
   .block-jump-nav a { text-align: center; }
   .session-block-header h2 { font-size: 21px; }
   .session-timebar div { font-size: 10px; }
+}
+h1,
+h2,
+.brand {
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 </style>

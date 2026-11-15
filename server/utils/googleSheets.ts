@@ -71,7 +71,7 @@ export interface SheetSeasonInput {
   competitiveLevel: CompetitiveLevel
   startsAt: string
   endsAt: string
-  trainingDays: string[]
+  frequency: Frequency
   holidayWeeks?: string[]
   context: string
   status: 'active' | 'closed'
@@ -512,16 +512,11 @@ export function buildTrainingSheetTables(
         'frequency',
         'starts_at',
         'ends_at',
-        'training_days',
         'context',
         'status',
         'holiday_weeks',
       ],
       rows: activeSeasons.map((season) => {
-        const freq = Math.min(
-          3,
-          Math.max(1, season.trainingDays.length || 1),
-        ) as Frequency
         const macrocycleId = season.macrocycleId ?? ''
         return [
           season.id,
@@ -531,10 +526,9 @@ export function buildTrainingSheetTables(
           season.category,
           season.ageCategory,
           season.competitiveLevel,
-          freq,
+          season.frequency,
           season.startsAt,
           season.endsAt,
-          season.trainingDays.join(', '),
           season.context,
           season.status,
           (season.holidayWeeks || []).join(', '),
@@ -567,6 +561,7 @@ export function buildTrainingSheetTables(
         'objective',
         'load_index',
         'status',
+        'sessions_done',
       ],
       rows: activeMicrocycles.map((item) => [
         item.id,
@@ -579,6 +574,7 @@ export function buildTrainingSheetTables(
         item.objective,
         item.loadIndex,
         item.status,
+        item.sessionsDone,
       ]),
       rgbColor: { red: 0.18, green: 0.56, blue: 0.42 },
     },
@@ -660,6 +656,10 @@ function normalizeTrainingBlockId(value: string): string {
 function normalizeMicrocycleId(value: string): string {
   const legacyMatch = value.match(/^MIC(\d{4})$/)
   return legacyMatch ? `MIC${legacyMatch[1].padStart(6, '0')}` : value
+}
+
+function parseFrequency(value: number): Frequency {
+  return value === 2 || value === 3 ? value : 1
 }
 
 function cellNumber(row: string[], index: number, fallback = 0): number {
@@ -1058,10 +1058,10 @@ function parseOperationalTables(rowsByTab: Map<string, string[][]>): SheetsDatab
       competitiveLevel: parseCompetitiveLevel(cellString(row, 6)),
       startsAt: cellString(row, 8, '2026-10-12'),
       endsAt: cellString(row, 9, '2027-05-30'),
-      trainingDays: splitCommaStrings(cellString(row, 10)),
-      context: cellString(row, 11),
-      status: cellString(row, 12) === 'closed' ? 'closed' : 'active',
-      holidayWeeks: splitCommaStrings(cellString(row, 13)),
+      frequency: parseFrequency(cellNumber(row, 7, 1)),
+      context: cellString(row, 10),
+      status: cellString(row, 11) === 'closed' ? 'closed' : 'active',
+      holidayWeeks: splitCommaStrings(cellString(row, 12)),
     }
   })
 
@@ -1086,6 +1086,7 @@ function parseOperationalTables(rowsByTab: Map<string, string[][]>): SheetsDatab
     objective: cellString(row, 7),
     loadIndex: cellNumber(row, 8, 0),
     status: parseMicrocycleStatus(cellString(row, 9)),
+    sessionsDone: cellNumber(row, 10, 0),
   }))
 
   return {

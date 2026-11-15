@@ -1,6 +1,5 @@
 export type CadetePeriod = 'PT' | 'M1' | 'M2' | 'M3'
 import type { TrainingCatalogTables } from './training'
-import { getAnnualPlanWeek } from './cadeteAnnualPlan.ts'
 
 export interface CadeteWeek {
   weekStart: string
@@ -22,9 +21,8 @@ export function getCadeteWeeks(startDate: string, holidayWeeks: string[] = [], a
   if (annualPlan) {
     const weeks = Array.from({ length: 42 }, (_, index): CadeteWeek => {
       const number = index + 1
-      const kind = getAnnualPlanWeek(number).kind
       const weekStart = new Date(start.getTime() + index * 7 * 86400000).toISOString().slice(0, 10)
-      const holiday = kind === 'christmas' || kind === 'easter' || holidayWeeks.includes(weekStart)
+      const holiday = holidayWeeks.includes(weekStart)
       const period: CadetePeriod = number <= 6 ? 'PT' : number <= 20 ? 'M1' : number <= 33 ? 'M2' : 'M3'
       return { weekStart, period, holiday, rest: holiday }
     })
@@ -91,4 +89,44 @@ export function alignCadeteCatalog(catalog: TrainingCatalogTables, startDate: st
     macrocycles: catalog.macrocycles.map(item => item.id === plan.id ? { ...item, totalWeeks: weeks.length } : item),
     mesocycles: catalog.mesocycles.map(item => replacements.get(item.id) ?? item),
   }
+}
+
+const DAY_MS = 86400000
+
+/** Easter Sunday (UTC midnight) for a Gregorian year, anonymous Gregorian algorithm. */
+export function easterSunday(year: number): Date {
+  const a = year % 19
+  const b = Math.floor(year / 100)
+  const c = year % 100
+  const d = Math.floor(b / 4)
+  const e = b % 4
+  const f = Math.floor((b + 8) / 25)
+  const g = Math.floor((b - f + 1) / 3)
+  const h = (19 * a + b - d - g + 15) % 30
+  const i = Math.floor(c / 4)
+  const k = c % 4
+  const l = (32 + 2 * e + 2 * i - h - k) % 7
+  const m = Math.floor((a + 11 * h + 22 * l) / 451)
+  const month = Math.floor((h + l - 7 * m + 114) / 31)
+  const day = ((h + l - 7 * m + 114) % 31) + 1
+  return new Date(Date.UTC(year, month - 1, day))
+}
+
+export type HolidayLabel = 'Navidad' | 'Semana Santa'
+
+/**
+ * Suggested break for a cadete week, by real date:
+ * Christmas = any day from 22 Dec to 6 Jan; Semana Santa = Monday of Holy Week to Easter Sunday.
+ */
+export function holidayLabelForWeek(week: CadeteWeek): HolidayLabel | null {
+  const monday = Date.parse(`${week.weekStart}T00:00:00Z`)
+  for (let offset = 0; offset < 7; offset += 1) {
+    const day = new Date(monday + offset * DAY_MS)
+    const month = day.getUTCMonth() + 1
+    const date = day.getUTCDate()
+    if ((month === 12 && date >= 22) || (month === 1 && date <= 6)) return 'Navidad'
+    const easter = easterSunday(day.getUTCFullYear()).getTime()
+    if (day.getTime() >= easter - 6 * DAY_MS && day.getTime() <= easter) return 'Semana Santa'
+  }
+  return null
 }

@@ -1,4 +1,4 @@
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import {
   getHolidayDataStatus,
   type AgeCategory,
@@ -21,7 +21,6 @@ import {
   mondayFor,
   nextId,
   nextMicrocycleId,
-  weekdays,
   type CoachProfile,
   type CoachRole,
   type DayId,
@@ -35,7 +34,7 @@ import {
   type WeeklyReview,
 } from '~/composables/useCoachStorage'
 import { useTrainingPlan } from '~/composables/useTrainingPlan'
-import { alignCadeteCatalog, getCadeteWeeks } from '~/shared/cadeteCalendar'
+import { alignCadeteCatalog, getCadeteWeeks, holidayLabelForWeek } from '~/shared/cadeteCalendar'
 import { getCurrentSeasonStart } from '~/shared/cadeteAnnualPlan'
 import { createSerialTaskQueue } from '~/shared/serialTaskQueue'
 import { useWeeklyReviews } from '~/composables/useWeeklyReviews'
@@ -62,7 +61,6 @@ export {
   blockPalette,
   competitiveLevelOptions,
   formattedDate,
-  weekdays,
 }
 
 export function useCoachWorkspace() {
@@ -131,7 +129,7 @@ export function useCoachWorkspace() {
     ageCategory: AgeCategory
     competitiveLevel: CompetitiveLevel
     startsAt: string
-    trainingDays: string[]
+    frequency: Frequency
     holidayWeeks: string[]
     context: string
   }>({
@@ -139,7 +137,7 @@ export function useCoachWorkspace() {
     ageCategory: 'cadete',
     competitiveLevel: 'liga',
     startsAt: getCurrentSeasonStart(),
-    trainingDays: ['Lunes', 'Miércoles', 'Viernes'],
+    frequency: 3,
     holidayWeeks: [],
     context: '',
   })
@@ -147,11 +145,26 @@ export function useCoachWorkspace() {
     if (seasonDraft.value.ageCategory !== 'cadete') return []
     try {
       const annualPlan = catalog.value.macrocycles.some(plan => plan.ageCategory === 'cadete' && plan.totalWeeks === 42)
-      return getCadeteWeeks(seasonDraft.value.startsAt, [], annualPlan)
+      return getCadeteWeeks(seasonDraft.value.startsAt, [], annualPlan).map((week, index) => ({
+        ...week,
+        weekNumber: index + 1,
+        label: holidayLabelForWeek(week),
+      }))
     } catch {
       return []
     }
   })
+
+  const draftHolidaySuggestions = computed(() =>
+    draftCadeteWeeks.value.filter((week) => week.label !== null),
+  )
+
+  /** Preselects the real-date suggestions (Christmas and Semana Santa) for the draft start date. */
+  function applySuggestedHolidays(): void {
+    seasonDraft.value.holidayWeeks = draftHolidaySuggestions.value.map((week) => week.weekStart)
+  }
+
+  watch(() => seasonDraft.value.startsAt, () => applySuggestedHolidays())
 
   const activeTeam = computed(() =>
     teams.value.find((team) => team.id === activeTeamId.value),
@@ -192,11 +205,7 @@ export function useCoachWorkspace() {
   })
 
   const frequency = computed<Frequency>(
-    () =>
-      Math.min(
-        3,
-        Math.max(1, activeSeason.value?.trainingDays.length || 1),
-      ) as Frequency,
+    () => activeSeason.value?.frequency ?? 1,
   )
 
   const planConfig = computed(() => ({
@@ -218,6 +227,7 @@ export function useCoachWorkspace() {
     currentWeekContext,
     currentPhase,
     weeklySessions,
+    seasonSessionOffset,
     hydratedPreviewSession,
   } = useTrainingPlan(planConfig, catalog)
 
@@ -321,13 +331,25 @@ export function useCoachWorkspace() {
     return `Semana ${normalizedWeekNumber} · ${startLabel} – ${endLabel}`
   }
 
-  const sessionDates = computed(() =>
-    weeklySessions.value.map((_, index) => {
-      const dayName = activeSeason.value?.trainingDays[index]
-      const dayOffset = Math.max(0, weekdays.indexOf(dayName || 'Lunes'))
-      return addDays(displayedWeekStart.value, dayOffset)
-    }),
+  const nextWeekMicrocycle = computed(() =>
+    microcycles.value.find(
+      (item) =>
+        item.seasonId === activeSeason.value?.id &&
+        item.weekNumber === currentWeekNumber.value + 1,
+    ),
   )
+
+  const nextSessionIndex = computed(() => {
+    const done = activeMicrocycle.value?.sessionsDone ?? 0
+    return done < frequency.value ? done : -1
+  })
+
+  function setActiveWeekSessionsDone(count: number): void {
+    const microcycle = activeMicrocycle.value
+    if (!microcycle) return
+    microcycle.sessionsDone = Math.min(frequency.value, Math.max(0, count))
+    saveState()
+  }
 
   async function syncToGoogleSheets(): Promise<void> {
     const payload = {
@@ -337,7 +359,6 @@ export function useCoachWorkspace() {
       teamPlayers: teamPlayers.value.map((item) => ({ ...item })),
       seasons: seasons.value.map((item) => ({
         ...item,
-        trainingDays: [...item.trainingDays],
         holidayWeeks: item.holidayWeeks ? [...item.holidayWeeks] : undefined,
       })),
       reviews: reviews.value.map((item) => ({ ...item })),
@@ -643,24 +664,17 @@ export function useCoachWorkspace() {
       ageCategory: 'cadete',
       competitiveLevel: 'liga',
       startsAt: getCurrentSeasonStart(),
-      trainingDays: ['Lunes', 'Miércoles', 'Viernes'],
+      frequency: 3,
       holidayWeeks: [],
       context: '',
     }
+    applySuggestedHolidays()
     saveState()
     view.value = 'create-season'
   }
 
-  function toggleDraftDay(day: string): void {
-    const current = seasonDraft.value.trainingDays
-    if (current.includes(day)) {
-      if (current.length === 1) return
-      seasonDraft.value.trainingDays = current.filter((item) => item !== day)
-    } else if (current.length < 3) {
-      seasonDraft.value.trainingDays = [...current, day].sort(
-        (first, second) => weekdays.indexOf(first) - weekdays.indexOf(second),
-      )
-    }
+  function setDraftFrequency(value: Frequency): void {
+    seasonDraft.value.frequency = value
   }
 
   function createSeason(): void {
@@ -692,9 +706,6 @@ export function useCoachWorkspace() {
       }
     }
     const seasonMacrocycle = seasonCatalog.macrocycles.find(item => item.id === resolvedMacrocycle.id)!
-    const sortedDays = [...seasonDraft.value.trainingDays].sort(
-      (first, second) => weekdays.indexOf(first) - weekdays.indexOf(second),
-    )
     const newSeason: Season = {
       id: nextId(
         'TEM',
@@ -711,7 +722,7 @@ export function useCoachWorkspace() {
       competitiveLevel: seasonDraft.value.competitiveLevel,
       startsAt: seasonDraft.value.startsAt,
       endsAt: seasonDraftEndDate.value,
-      trainingDays: sortedDays,
+      frequency: seasonDraft.value.frequency,
       holidayWeeks: seasonDraft.value.ageCategory === 'cadete' ? [...seasonDraft.value.holidayWeeks] : [],
       context: seasonDraft.value.context.trim(),
       status: 'active',
@@ -743,6 +754,7 @@ export function useCoachWorkspace() {
             ? mesocycle.weeklyLoads[weekNumber - mesocycle.weekStart] || 0
             : 0,
           status: 'planned',
+          sessionsDone: 0,
         }
       },
     )
@@ -872,6 +884,7 @@ export function useCoachWorkspace() {
     currentWeekContext,
     currentPhase,
     weeklySessions,
+    seasonSessionOffset,
     hydratedPreviewSession,
     currentWeekNumber,
     selectedDay,
@@ -883,7 +896,9 @@ export function useCoachWorkspace() {
     canGoToNextWeek,
     weekLabel,
     annualWeekLabel,
-    sessionDates,
+    nextWeekMicrocycle,
+    nextSessionIndex,
+    setActiveWeekSessionsDone,
     activeWeekReview,
     seasonReviews,
     selectedHistoryReview,
@@ -906,7 +921,9 @@ export function useCoachWorkspace() {
     archiveTeam,
     restoreTeam,
     deleteTeamCascade,
-    toggleDraftDay,
+    setDraftFrequency,
+    draftHolidaySuggestions,
+    applySuggestedHolidays,
     createSeason,
     closeSeason,
     reopenSeason,
