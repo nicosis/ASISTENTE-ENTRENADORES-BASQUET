@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { getExerciseImages } from '~/shared/exerciseImages'
+import { exerciseImagesInConstruction } from '~/shared/exerciseImages'
 
 const props = defineProps<{ exerciseId: string; exerciseName: string }>()
 const failedUrls = ref<string[]>([])
@@ -13,13 +13,10 @@ interface ExerciseImage {
   url?: string
 }
 
-const images = computed(() => {
-  const urls = getExerciseImages(props.exerciseId)
-  return [
-    { label: 'Posición inicial', url: urls?.initial },
-    { label: 'Posición final', url: urls?.final },
-  ]
-})
+const images = computed(() => [
+  { label: 'Posición inicial', url: exerciseImagesInConstruction.initial },
+  { label: 'Posición final', url: exerciseImagesInConstruction.final },
+])
 
 function markUnavailable(url: string): void {
   if (!failedUrls.value.includes(url)) failedUrls.value.push(url)
@@ -48,6 +45,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
 <template>
   <div class="exercise-images" :aria-label="`Imágenes de ${exerciseName}`">
     <span class="exercise-id-badge">{{ exerciseId }}</span>
+    <p class="exercise-images-note">Imágenes en construcción</p>
     <figure v-for="image in images" :key="image.label" class="exercise-image">
       <figcaption>{{ image.label }}</figcaption>
       <button
@@ -130,6 +128,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.04em;
+}
+.exercise-images-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
 }
 .exercise-image { min-width: 0; margin: 0; }
 .exercise-image figcaption { margin-bottom: 5px; font-size: 11px; font-weight: 700; }
