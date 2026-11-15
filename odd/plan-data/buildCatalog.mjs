@@ -71,7 +71,7 @@ for (const source of sessions.trainingSessions) {
   const sessionId = `${phaseKey}-D${dayNumber}`
   mesocycleSessions.push({
     id: sessionId, mesocycleId: phaseKey, day: `dia${dayNumber}`,
-    order: dayNumber, name: source.day, focus: phase.name,
+    order: dayNumber, name: `Día ${dayNumber}`, focus: phase.name,
     totalMinutes: source.blocks.reduce((total, block) => total + block.minutes, 0),
   })
   for (const sourceBlock of source.blocks) {

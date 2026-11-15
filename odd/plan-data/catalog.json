@@ -326,7 +326,7 @@
       "mesocycleId": "CAD42-P01",
       "day": "dia1",
       "order": 1,
-      "name": "Lunes",
+      "name": "Día 1",
       "focus": "Reencuentro y tests",
       "totalMinutes": 25
     },
@@ -335,7 +335,7 @@
       "mesocycleId": "CAD42-P01",
       "day": "dia2",
       "order": 2,
-      "name": "Miércoles",
+      "name": "Día 2",
       "focus": "Reencuentro y tests",
       "totalMinutes": 25
     },
@@ -344,7 +344,7 @@
       "mesocycleId": "CAD42-P01",
       "day": "dia3",
       "order": 3,
-      "name": "Viernes",
+      "name": "Día 3",
       "focus": "Reencuentro y tests",
       "totalMinutes": 25
     },
@@ -353,7 +353,7 @@
       "mesocycleId": "CAD42-P02",
       "day": "dia1",
       "order": 1,
-      "name": "Lunes",
+      "name": "Día 1",
       "focus": "Construcción",
       "totalMinutes": 25
     },
@@ -362,7 +362,7 @@
       "mesocycleId": "CAD42-P02",
       "day": "dia2",
       "order": 2,
-      "name": "Miércoles",
+      "name": "Día 2",
       "focus": "Construcción",
       "totalMinutes": 25
     },
@@ -371,7 +371,7 @@
       "mesocycleId": "CAD42-P02",
       "day": "dia3",
       "order": 3,
-      "name": "Viernes",
+      "name": "Día 3",
       "focus": "Construcción",
       "totalMinutes": 25
     },
@@ -380,7 +380,7 @@
       "mesocycleId": "CAD42-P03",
       "day": "dia1",
       "order": 1,
-      "name": "Lunes",
+      "name": "Día 1",
       "focus": "Fuerza base",
       "totalMinutes": 25
     },
@@ -389,7 +389,7 @@
       "mesocycleId": "CAD42-P03",
       "day": "dia2",
       "order": 2,
-      "name": "Miércoles",
+      "name": "Día 2",
       "focus": "Fuerza base",
       "totalMinutes": 25
     },
@@ -398,7 +398,7 @@
       "mesocycleId": "CAD42-P03",
       "day": "dia3",
       "order": 3,
-      "name": "Viernes",
+      "name": "Día 3",
       "focus": "Fuerza base",
       "totalMinutes": 25
     },
@@ -407,7 +407,7 @@
       "mesocycleId": "CAD42-P04",
       "day": "dia1",
       "order": 1,
-      "name": "Lunes",
+      "name": "Día 1",
       "focus": "Fuerza y potencia",
       "totalMinutes": 25
     },
@@ -416,7 +416,7 @@
       "mesocycleId": "CAD42-P04",
       "day": "dia2",
       "order": 2,
-      "name": "Miércoles",
+      "name": "Día 2",
       "focus": "Fuerza y potencia",
       "totalMinutes": 25
     },
@@ -425,7 +425,7 @@
       "mesocycleId": "CAD42-P04",
       "day": "dia3",
       "order": 3,
-      "name": "Viernes",
+      "name": "Día 3",
       "focus": "Fuerza y potencia",
       "totalMinutes": 25
     },
@@ -434,7 +434,7 @@
       "mesocycleId": "CAD42-P05",
       "day": "dia1",
       "order": 1,
-      "name": "Lunes",
+      "name": "Día 1",
       "focus": "Potencia y velocidad",
       "totalMinutes": 25
     },
@@ -443,7 +443,7 @@
       "mesocycleId": "CAD42-P05",
       "day": "dia2",
       "order": 2,
-      "name": "Miércoles",
+      "name": "Día 2",
       "focus": "Potencia y velocidad",
       "totalMinutes": 25
     },
@@ -452,7 +452,7 @@
       "mesocycleId": "CAD42-P05",
       "day": "dia3",
       "order": 3,
-      "name": "Viernes",
+      "name": "Día 3",
       "focus": "Potencia y velocidad",
       "totalMinutes": 25
     },
@@ -461,7 +461,7 @@
       "mesocycleId": "CAD42-P07",
       "day": "dia1",
       "order": 1,
-      "name": "Lunes",
+      "name": "Día 1",
       "focus": "Reentrada y fuerza",
       "totalMinutes": 25
     },
@@ -470,7 +470,7 @@
       "mesocycleId": "CAD42-P07",
       "day": "dia2",
       "order": 2,
-      "name": "Miércoles",
+      "name": "Día 2",
       "focus": "Reentrada y fuerza",
       "totalMinutes": 25
     },
@@ -479,7 +479,7 @@
       "mesocycleId": "CAD42-P07",
       "day": "dia3",
       "order": 3,
-      "name": "Viernes",
+      "name": "Día 3",
       "focus": "Reentrada y fuerza",
       "totalMinutes": 25
     },
@@ -488,7 +488,7 @@
       "mesocycleId": "CAD42-P08",
       "day": "dia1",
       "order": 1,
-      "name": "Lunes",
+      "name": "Día 1",
       "focus": "Potencia reactiva",
       "totalMinutes": 25
     },
@@ -497,7 +497,7 @@
       "mesocycleId": "CAD42-P08",
       "day": "dia2",
       "order": 2,
-      "name": "Miércoles",
+      "name": "Día 2",
       "focus": "Potencia reactiva",
       "totalMinutes": 25
     },
@@ -506,7 +506,7 @@
       "mesocycleId": "CAD42-P08",
       "day": "dia3",
       "order": 3,
-      "name": "Viernes",
+      "name": "Día 3",
       "focus": "Potencia reactiva",
       "totalMinutes": 25
     },
@@ -515,7 +515,7 @@
       "mesocycleId": "CAD42-P09",
       "day": "dia1",
       "order": 1,
-      "name": "Lunes",
+      "name": "Día 1",
       "focus": "Pico de rendimiento",
       "totalMinutes": 25
     },
@@ -524,7 +524,7 @@
       "mesocycleId": "CAD42-P09",
       "day": "dia2",
       "order": 2,
-      "name": "Miércoles",
+      "name": "Día 2",
       "focus": "Pico de rendimiento",
       "totalMinutes": 25
     },
@@ -533,7 +533,7 @@
       "mesocycleId": "CAD42-P09",
       "day": "dia3",
       "order": 3,
-      "name": "Viernes",
+      "name": "Día 3",
       "focus": "Pico de rendimiento",
       "totalMinutes": 25
     },
@@ -542,7 +542,7 @@
       "mesocycleId": "CAD42-P11",
       "day": "dia1",
       "order": 1,
-      "name": "Lunes",
+      "name": "Día 1",
       "focus": "Transferencia",
       "totalMinutes": 25
     },
@@ -551,7 +551,7 @@
       "mesocycleId": "CAD42-P11",
       "day": "dia2",
       "order": 2,
-      "name": "Miércoles",
+      "name": "Día 2",
       "focus": "Transferencia",
       "totalMinutes": 25
     },
@@ -560,7 +560,7 @@
       "mesocycleId": "CAD42-P11",
       "day": "dia3",
       "order": 3,
-      "name": "Viernes",
+      "name": "Día 3",
       "focus": "Transferencia",
       "totalMinutes": 25
     },
@@ -569,7 +569,7 @@
       "mesocycleId": "CAD42-P12",
       "day": "dia1",
       "order": 1,
-      "name": "Lunes",
+      "name": "Día 1",
       "focus": "Fases finales",
       "totalMinutes": 25
     },
@@ -578,7 +578,7 @@
       "mesocycleId": "CAD42-P12",
       "day": "dia2",
       "order": 2,
-      "name": "Miércoles",
+      "name": "Día 2",
       "focus": "Fases finales",
       "totalMinutes": 25
     },
@@ -587,7 +587,7 @@
       "mesocycleId": "CAD42-P12",
       "day": "dia3",
       "order": 3,
-      "name": "Viernes",
+      "name": "Día 3",
       "focus": "Fases finales",
       "totalMinutes": 25
     }
