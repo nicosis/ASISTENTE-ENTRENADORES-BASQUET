@@ -19,7 +19,7 @@ Hay dos grupos de hojas. Los nombres son los que lee el código hoy.
 | --- | --- |
 | `macrocycles` | Plan anual completo (42 semanas, categoría cadete). |
 | `mesocycles` | Fases: 10 de entrenamiento, más las semanas de vacaciones (Navidad y Semana Santa) y el combine final. Cada fase tiene su rango de semanas, cargas y reglas. |
-| `mesocycle_sessions` | Sesiones de una fase, una por día (lunes, miércoles, viernes). |
+| `mesocycle_sessions` | Plantilla de sesiones de una fase: `day` (`dia1`–`dia3`), `order` y `name`. El nombre es «Día N» en el generador local; la hoja debe actualizarse a mano porque `sheets-sync` no escribe el catálogo. |
 | `training_blocks` | Bloques de una sesión (activa, rápido, fuerte, juega), con sus minutos y formato. |
 | `block_exercises` | Ejercicio dentro de un bloque, con su dosis de formación, de liga y la dosis de cada semana. |
 | `exercises` | Ficha de cada ejercicio: nombre, área de movimiento, nivel de aproximación, material, cómo se hace, indicación clave, errores, versión más fácil y más difícil. |
@@ -50,9 +50,21 @@ Las filas actuales de la operación son de prueba. Las pestañas se conservan va
 ## Cómo se genera una sesión
 
 1. Se toma la semana de la temporada y, a partir de ella, la fase.
-2. Se toma la sesión de esa fase para el día pedido.
+2. Se toman las primeras N sesiones de la fase (N = frecuencia de la temporada), ordenadas por `order`.
 3. Cada bloque muestra sus ejercicios de `block_exercises`, con la dosis de la semana.
 4. Si falta una sesión, un bloque o una dosis, la aplicación informa el motivo.
+
+En la pantalla de la semana, cada tarjeta muestra `SESIÓN N · DÍA M`. **N** es el número acumulado en toda la temporada: suma `frequency` por cada semana de entrenamiento anterior, y las semanas de vacaciones no suman (`getSeasonSessionOffset` en `app/shared/training.ts`). **M** es el orden dentro de la semana.
+
+## Cómo se crea una temporada
+
+El flujo completo, con las pestañas que toca cada paso, está en `odd/docs/flujo-creacion-temporada.pdf`. En resumen:
+
+1. El formulario pide el inicio (`dd/mm/aaaa`, con calendario), la frecuencia, las vacaciones (solo cadete) y el contexto.
+2. Al crear la temporada se cierran las activas del equipo, se crea una fila en `seasons` y se generan las semanas en `microcycles` (42 en cadete).
+3. La operación se sincroniza con `POST /api/sheets-sync`. El catálogo no se toca.
+
+Las sesiones no se generan al crear la temporada; se calculan al abrir cada día.
 
 ## Google Sheets
 
@@ -73,6 +85,10 @@ No subas `.env` ni la clave privada al repositorio.
 ```bash
 node odd/plan-data/importCatalog.mjs --replace-catalog
 ```
+
+## Imágenes de ejercicios
+
+Las imágenes están en construcción. Todas las vistas usan `public/images/exercises/imagen-base.jpg` con el aviso «Imágenes en construcción» (`app/shared/exerciseImages.ts`). Las imágenes anteriores siguen en el historial de git si hay que recuperarlas.
 
 ## Estructura del código
 
@@ -116,3 +132,5 @@ node --test tests/*.test.mjs
 4. Decidir si el nivel formación/liga sigue existiendo; no aparece en el PDF.
 5. Evitar que snapshots de distintos clientes se pisen.
 6. Evaluar una base de datos transaccional para producción y generación de PDF.
+7. Actualizar en Sheets la columna `name` de `mesocycle_sessions` (30 filas) de «Lunes», «Miércoles» y «Viernes» a «Día 1», «Día 2» y «Día 3». La aplicación no puede hacerlo.
+8. Decidir si las semanas de vacaciones deben aparecer como semanas sin sesiones en la numeración de la temporada (hoy no suman).
