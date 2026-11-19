@@ -11,7 +11,6 @@ export interface SeasonSessionRecord {
   day: TrainingDay
   mesocycleId: string
   sessionId: string
-  firstExerciseId: string
 }
 
 export interface SeasonSessionInput {
@@ -53,7 +52,6 @@ export function buildSeasonSessions(
         day,
         mesocycleId: phase.id,
         sessionId: session?.id ?? '',
-        firstExerciseId: firstExerciseOf(session?.id, catalog),
       })
     }
   }
@@ -74,16 +72,19 @@ function phaseForWeek(
   )
 }
 
-function firstExerciseOf(sessionId: string | undefined, catalog: TrainingCatalogTables): string {
-  if (!sessionId) return ''
+/**
+ * First exercise of a session: block with the lowest blockOrder, then its item with the lowest itemOrder.
+ * Derived from the catalog on demand, so it never goes stale.
+ */
+export function firstExerciseIdOf(sessionId: string, catalog: TrainingCatalogTables): string | undefined {
   const block = catalog.trainingBlocks
     .filter((item) => item.sessionId === sessionId)
     .sort((first, second) => first.blockOrder - second.blockOrder)[0]
-  if (!block) return ''
+  if (!block) return undefined
   const item = catalog.blockExercises
     .filter((entry) => entry.blockId === block.id)
     .sort((first, second) => first.itemOrder - second.itemOrder)[0]
-  return item?.exerciseId ?? ''
+  return item?.exerciseId
 }
 
 function mondayOf(isoDate: string): number {

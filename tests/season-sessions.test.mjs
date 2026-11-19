@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { buildSeasonSessions } from '../app/shared/seasonSessions.ts'
+import { buildSeasonSessions, firstExerciseIdOf } from '../app/shared/seasonSessions.ts'
 
 const catalog = JSON.parse(readFileSync(fileURLToPath(new URL('../odd/plan-data/catalog.json', import.meta.url)), 'utf8'))
 const macrocycleId = catalog.macrocycles[0].id
@@ -25,7 +25,6 @@ test('numbers the first session of the season as week 1, day 1 with its first bl
     day: 'dia1',
     mesocycleId: 'CAD42-P01',
     sessionId: 'CAD42-P01-D1',
-    firstExerciseId: 'CAD42-E017',
   })
 })
 
@@ -47,8 +46,12 @@ test('skips holiday weeks when counting sessions', () => {
   assert.equal(session40.day, 'dia1')
   assert.equal(session40.mesocycleId, 'CAD42-P04')
   assert.equal(session40.sessionId, 'CAD42-P04-D1')
-  assert.equal(session40.firstExerciseId, 'CAD42-E017')
   assert.equal(rows.some((row) => row.weekNumber === 19), false)
+})
+
+test('derives the first exercise of a session from block 1, item 1', () => {
+  assert.equal(firstExerciseIdOf('CAD42-P04-D1', catalog), 'CAD42-E017')
+  assert.equal(firstExerciseIdOf('NO-EXISTE', catalog), undefined)
 })
 
 test('uses the season frequency to number sessions', () => {

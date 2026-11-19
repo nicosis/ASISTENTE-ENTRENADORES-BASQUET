@@ -594,7 +594,6 @@ export function buildTrainingSheetTables(
         'day',
         'mesocycle_id',
         'session_id',
-        'first_exercise_id',
       ],
       rows: activeSeasonSessions.map((item) => [
         item.seasonId,
@@ -603,7 +602,6 @@ export function buildTrainingSheetTables(
         item.day,
         item.mesocycleId,
         item.sessionId,
-        item.firstExerciseId,
       ]),
       rgbColor: { red: 0.45, green: 0.3, blue: 0.7 },
     },
@@ -1128,7 +1126,6 @@ function parseOperationalTables(rowsByTab: Map<string, string[][]>): SheetsDatab
     day: parseTrainingDay(cellString(row, 3)),
     mesocycleId: normalizeMesocycleId(cellString(row, 4)),
     sessionId: cellString(row, 5),
-    firstExerciseId: cellString(row, 6),
   }))
 
   return {

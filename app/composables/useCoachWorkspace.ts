@@ -673,6 +673,13 @@ export function useCoachWorkspace() {
       .sort((first, second) => first.sessionNumber - second.sessionNumber),
   )
 
+  /** Season session row for the session currently open (current week and selected day). */
+  const selectedSeasonSession = computed(() =>
+    activeSeasonSessions.value.find(
+      (row) => row.weekNumber === currentWeekNumber.value && row.day === selectedDay.value,
+    ),
+  )
+
   /** Points the week selector at the season week that contains today. */
   function syncCurrentWeekWithToday(): void {
     const season = activeSeason.value
@@ -943,6 +950,7 @@ export function useCoachWorkspace() {
     microcycles,
     seasonSessions,
     activeSeasonSessions,
+    selectedSeasonSession,
     teamSeasons,
     reviews,
     activeTeam,

@@ -8,6 +8,7 @@ import {
   useCoachWorkspace,
 } from '~/composables/useCoachWorkspace'
 import { isoToSpanishDate, spanishDateToIso } from '~/shared/spanishDate'
+import { firstExerciseIdOf } from '~/shared/seasonSessions'
 
 const {
   coach,
@@ -18,6 +19,7 @@ const {
   view,
   activeTeamTab,
   activeSeasonSessions,
+  selectedSeasonSession,
   catalog: trainingCatalog,
   showArchivedTeams,
   dbSource,
@@ -146,7 +148,9 @@ function pickStartsAt(iso: string): void {
   if (spanishDateToIso(isoToSpanishDate(iso)) === iso) seasonDraft.value.startsAt = iso
 }
 
-function exerciseNameFor(exerciseId: string): string {
+function firstExerciseNameOf(sessionId: string): string {
+  const exerciseId = firstExerciseIdOf(sessionId, trainingCatalog)
+  if (!exerciseId) return '—'
   return trainingCatalog.exercises.find((item) => item.id === exerciseId)?.name ?? exerciseId
 }
 const seasonProgress = computed(() => {
@@ -947,7 +951,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
                   <td>S{{ row.weekNumber }}</td>
                   <td>{{ row.day }}</td>
                   <td>{{ row.sessionId }}</td>
-                  <td>{{ exerciseNameFor(row.firstExerciseId) }}</td>
+                  <td>{{ firstExerciseNameOf(row.sessionId) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -1158,7 +1162,10 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       >
         ← Volver a la semana {{ session.weekNumber }}
       </button>
-      <p class="eyebrow">
+      <p v-if="selectedSeasonSession" class="eyebrow">
+        SESIÓN {{ selectedSeasonSession.sessionNumber }} DE LA TEMPORADA · SEMANA {{ selectedSeasonSession.weekNumber }} · DÍA {{ selectedSeasonSession.day.replace('dia', '') }} · {{ session.duration }} MINUTOS TOTALES
+      </p>
+      <p v-else class="eyebrow">
         SESIÓN · {{ session.duration }} MINUTOS TOTALES
       </p>
       <h1>{{ session.objective }}</h1>
