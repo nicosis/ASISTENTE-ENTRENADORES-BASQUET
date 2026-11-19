@@ -36,6 +36,8 @@ import {
 import { useTrainingPlan } from '~/composables/useTrainingPlan'
 import { alignCadeteCatalog, getCadeteWeeks, holidayLabelForWeek } from '~/shared/cadeteCalendar'
 import { getCurrentSeasonStart } from '~/shared/cadeteAnnualPlan'
+import { currentSeasonWeek } from '~/shared/seasonWeek'
+import { buildSeasonSessions, type SeasonSessionRecord } from '~/shared/seasonSessions'
 import { createSerialTaskQueue } from '~/shared/serialTaskQueue'
 import { useWeeklyReviews } from '~/composables/useWeeklyReviews'
 
@@ -87,6 +89,7 @@ export function useCoachWorkspace() {
   const seasons = ref<Season[]>([])
   const reviews = ref<WeeklyReview[]>([])
   const microcycles = ref<MicrocycleRecord[]>([])
+  const seasonSessions = ref<SeasonSessionRecord[]>([])
   const activeTeamId = ref('')
   const activeSeasonId = ref('')
   const currentWeekNumber = ref(1)
@@ -363,6 +366,7 @@ export function useCoachWorkspace() {
       })),
       reviews: reviews.value.map((item) => ({ ...item })),
       microcycles: microcycles.value.map((item) => ({ ...item })),
+      seasonSessions: seasonSessions.value.map((item) => ({ ...item })),
       includeCatalog: false,
     }
     await syncQueue.enqueue(async ({ isLatest }) => {
@@ -449,8 +453,12 @@ export function useCoachWorkspace() {
       seasons.value = response.operational.seasons
       reviews.value = response.operational.reviews
       microcycles.value = response.operational.microcycles
+      seasonSessions.value = response.operational.seasonSessions
       syncActiveCoachRoleFromCatalog()
+      if (import.meta.dev && !signedIn.value) devAutoSignIn()
       ensureValidSelections()
+      backfillSeasonSessions()
+      syncCurrentWeekWithToday()
     } catch (loadError) {
       if (readId !== latestDatabaseRead || !canApply()) return
       dbSource.value = 'unavailable'
@@ -462,6 +470,7 @@ export function useCoachWorkspace() {
       seasons.value = []
       reviews.value = []
       microcycles.value = []
+      seasonSessions.value = []
       activeTeamId.value = ''
       activeSeasonId.value = ''
       error.value = loadError instanceof Error
@@ -504,6 +513,16 @@ export function useCoachWorkspace() {
     loginName.value = coach.value.name
     loginRole.value = coach.value.role
     signedIn.value = false
+  }
+
+  /** Dev only: skips the login form by reusing a coach already in Sheets. Does not write to Sheets. */
+  function devAutoSignIn(): void {
+    const devCoach = coaches.value.find((item) => item.role === 'admin') ?? coaches.value[0]
+    if (!devCoach) return
+    coach.value = { ...devCoach }
+    loginName.value = devCoach.name
+    loginRole.value = devCoach.role
+    signedIn.value = true
   }
 
   function signIn(): void {
@@ -582,6 +601,9 @@ export function useCoachWorkspace() {
     microcycles.value = microcycles.value.filter(
       (microcycle) => !removedSeasonIds.has(microcycle.seasonId),
     )
+    seasonSessions.value = seasonSessions.value.filter(
+      (row) => !removedSeasonIds.has(row.seasonId),
+    )
     if (archivedTeams.value.length === 0) {
       showArchivedTeams.value = false
     }
@@ -614,13 +636,61 @@ export function useCoachWorkspace() {
     saveState()
   }
 
+  /** Session rows for one season, built from the catalog; empty when the season has no plan. */
+  function sessionsForSeason(season: Season, catalogTables: TrainingCatalogTables): SeasonSessionRecord[] {
+    if (!season.macrocycleId) return []
+    const plan = catalogTables.macrocycles.find((item) => item.id === season.macrocycleId)
+    if (!plan) return []
+    return buildSeasonSessions(
+      {
+        id: season.id,
+        macrocycleId: season.macrocycleId,
+        startsAt: season.startsAt,
+        frequency: season.frequency,
+        holidayWeeks: season.holidayWeeks ?? [],
+      },
+      plan.totalWeeks,
+      catalogTables,
+    )
+  }
+
+  /** One-time fill for seasons that have no session rows in Sheets yet; the rows are then synced. */
+  function backfillSeasonSessions(): void {
+    let added = false
+    for (const season of seasons.value) {
+      if (seasonSessions.value.some((row) => row.seasonId === season.id)) continue
+      const rows = sessionsForSeason(season, catalog.value)
+      if (!rows.length) continue
+      seasonSessions.value.push(...rows)
+      added = true
+    }
+    if (added) saveState()
+  }
+
+  const activeSeasonSessions = computed(() =>
+    seasonSessions.value
+      .filter((row) => row.seasonId === activeSeasonId.value)
+      .sort((first, second) => first.sessionNumber - second.sessionNumber),
+  )
+
+  /** Points the week selector at the season week that contains today. */
+  function syncCurrentWeekWithToday(): void {
+    const season = activeSeason.value
+    if (!season) {
+      currentWeekNumber.value = 1
+      return
+    }
+    const plan = catalog.value.macrocycles.find((item) => item.id === season.macrocycleId)
+    currentWeekNumber.value = plan ? currentSeasonWeek(season.startsAt, plan.totalWeeks) : 1
+  }
+
   function selectSeason(seasonId: string): void {
     const target = seasons.value.find(
       (item) => item.id === seasonId && item.teamId === activeTeamId.value,
     )
     if (!target) return
     activeSeasonId.value = target.id
-    currentWeekNumber.value = 1
+    syncCurrentWeekWithToday()
     session.value = null
   }
 
@@ -634,7 +704,7 @@ export function useCoachWorkspace() {
       ) || seasons.value.find((item) => item.teamId === teamId)
     activeSeasonId.value = foundSeason?.id || ''
     selectedDay.value = 'dia1'
-    currentWeekNumber.value = 1
+    syncCurrentWeekWithToday()
     session.value = null
     view.value = 'team'
   }
@@ -768,8 +838,9 @@ export function useCoachWorkspace() {
       })
     seasons.value.push(newSeason)
     microcycles.value.push(...generatedMicrocycles)
+    seasonSessions.value.push(...sessionsForSeason(newSeason, seasonCatalog))
     activeSeasonId.value = newSeason.id
-    currentWeekNumber.value = 1
+    syncCurrentWeekWithToday()
     saveState()
     view.value = 'team'
   }
@@ -870,6 +941,8 @@ export function useCoachWorkspace() {
     visibleTeams,
     seasons,
     microcycles,
+    seasonSessions,
+    activeSeasonSessions,
     teamSeasons,
     reviews,
     activeTeam,

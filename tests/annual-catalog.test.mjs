@@ -12,7 +12,7 @@ const catalog = JSON.parse(await readFile(new URL('../odd/plan-data/catalog.json
 test('builds a complete Sheets snapshot from the 42-week PDF catalog', () => {
   const tables = buildTrainingSheetTables({ catalog, includeCatalog: true })
   const tableByName = new Map(tables.map(table => [table.title, table]))
-  assert.equal(tables.length, 15)
+  assert.equal(tables.length, 16)
   assert.equal(tableByName.get('macrocycles').rows.length, 1)
   assert.equal(tableByName.get('mesocycles').rows.length, 13)
   assert.equal(tableByName.get('mesocycle_sessions').rows.length, 30)

@@ -17,6 +17,8 @@ const {
   signedIn,
   view,
   activeTeamTab,
+  activeSeasonSessions,
+  catalog: trainingCatalog,
   showArchivedTeams,
   dbSource,
   lastSyncedAt,
@@ -144,6 +146,9 @@ function pickStartsAt(iso: string): void {
   if (spanishDateToIso(isoToSpanishDate(iso)) === iso) seasonDraft.value.startsAt = iso
 }
 
+function exerciseNameFor(exerciseId: string): string {
+  return trainingCatalog.exercises.find((item) => item.id === exerciseId)?.name ?? exerciseId
+}
 const seasonProgress = computed(() => {
   if (!activeSeason.value || !activeSeasonEndDate.value) return null
   const start = Date.parse(`${activeSeason.value.startsAt}T00:00:00Z`)
@@ -780,6 +785,13 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         >
           Plantilla
         </button>
+        <button
+          type="button"
+          :class="{ active: activeTeamTab === 'sessions' }"
+          @click="activeTeamTab = 'sessions'"
+        >
+          Sesiones de la temporada
+        </button>
       </nav>
 
       <!-- PESTAÑA 1: SESIONES DE LA SEMANA -->
@@ -913,6 +925,36 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       </template>
 
       <!-- PESTAÑA 3: PLANTILLA DEL EQUIPO -->
+      <template v-else-if="trainingDataStatus.available && activeTeamTab === 'sessions'">
+        <section class="season-sessions" aria-label="Sesiones de la temporada">
+          <p class="eyebrow">SESIONES DE LA TEMPORADA</p>
+          <h3>Orden de sesiones (solo lectura, desde Google Sheets)</h3>
+          <p v-if="!activeSeasonSessions.length">No hay sesiones registradas para esta temporada.</p>
+          <div v-else class="season-sessions-scroll">
+            <table class="season-sessions-table">
+              <thead>
+                <tr>
+                  <th scope="col">Sesión</th>
+                  <th scope="col">Semana</th>
+                  <th scope="col">Día</th>
+                  <th scope="col">Sesión</th>
+                  <th scope="col">Primer ejercicio</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in activeSeasonSessions" :key="row.sessionNumber">
+                  <td>{{ row.sessionNumber }}</td>
+                  <td>S{{ row.weekNumber }}</td>
+                  <td>{{ row.day }}</td>
+                  <td>{{ row.sessionId }}</td>
+                  <td>{{ exerciseNameFor(row.firstExerciseId) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </template>
+
       <template v-else-if="trainingDataStatus.available && activeTeamTab === 'roster'">
         <section class="panel-box roster-panel">
           <div class="section-heading">
@@ -1379,6 +1421,22 @@ button {
 .logout-button:hover {
   color: var(--ink);
 }
+.season-sessions-scroll {
+  overflow-x: auto;
+}
+
+.season-sessions-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.season-sessions-table th,
+.season-sessions-table td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid currentColor;
+}
+
 .auth-page {
   max-width: 560px;
 }

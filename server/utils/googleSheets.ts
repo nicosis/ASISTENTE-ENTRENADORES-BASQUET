@@ -26,6 +26,7 @@ import {
   type TrainingCatalogTables,
   type TrainingDay,
 } from '../../app/shared/training.ts'
+import type { SeasonSessionRecord } from '../../app/shared/seasonSessions.ts'
 
 export interface GoogleSheetsCredentials {
   spreadsheetId: string
@@ -86,6 +87,7 @@ export interface SheetWeeklyReviewInput {
 }
 
 export type SheetMicrocycleInput = MicrocycleRecord
+export type SheetSeasonSessionInput = SeasonSessionRecord
 
 export interface OperationalTablesPayload {
   coaches?: SheetCoachInput[]
@@ -95,6 +97,7 @@ export interface OperationalTablesPayload {
   seasons?: SheetSeasonInput[]
   reviews?: SheetWeeklyReviewInput[]
   microcycles?: SheetMicrocycleInput[]
+  seasonSessions?: SheetSeasonSessionInput[]
   includeCatalog?: boolean
   catalog?: TrainingCatalogTables
 }
@@ -113,6 +116,7 @@ export interface SheetsDatabaseSnapshot {
     seasons: SheetSeasonInput[]
     reviews: SheetWeeklyReviewInput[]
     microcycles: SheetMicrocycleInput[]
+    seasonSessions: SheetSeasonSessionInput[]
   }
 }
 
@@ -177,6 +181,7 @@ const SHEET_TITLES = {
   seasons: 'seasons',
   weeklyReviews: 'weekly_reviews',
   microcycles: 'microcycles',
+  seasonSessions: 'season_sessions',
 } as const
 
 type SheetKey = keyof typeof SHEET_TITLES
@@ -263,6 +268,8 @@ export function buildTrainingSheetTables(
     operational?.reviews !== undefined ? operational.reviews : []
   const activeMicrocycles =
     operational?.microcycles !== undefined ? operational.microcycles : []
+  const activeSeasonSessions =
+    operational?.seasonSessions !== undefined ? operational.seasonSessions : []
 
   return [
     {
@@ -578,6 +585,28 @@ export function buildTrainingSheetTables(
       ]),
       rgbColor: { red: 0.18, green: 0.56, blue: 0.42 },
     },
+    {
+      title: SHEET_TITLES.seasonSessions,
+      headers: [
+        'season_id',
+        'session_number',
+        'week_number',
+        'day',
+        'mesocycle_id',
+        'session_id',
+        'first_exercise_id',
+      ],
+      rows: activeSeasonSessions.map((item) => [
+        item.seasonId,
+        item.sessionNumber,
+        item.weekNumber,
+        item.day,
+        item.mesocycleId,
+        item.sessionId,
+        item.firstExerciseId,
+      ]),
+      rgbColor: { red: 0.45, green: 0.3, blue: 0.7 },
+    },
   ]
 }
 
@@ -589,6 +618,7 @@ const OPERATIONAL_KEY_TITLES: ReadonlyArray<readonly [keyof OperationalTablesPay
   ['seasons', SHEET_TITLES.seasons],
   ['reviews', SHEET_TITLES.weeklyReviews],
   ['microcycles', SHEET_TITLES.microcycles],
+  ['seasonSessions', SHEET_TITLES.seasonSessions],
 ]
 
 const OPERATIONAL_TABLE_TITLES = new Set([
@@ -599,6 +629,7 @@ const OPERATIONAL_TABLE_TITLES = new Set([
   SHEET_TITLES.seasons,
   SHEET_TITLES.weeklyReviews,
   SHEET_TITLES.microcycles,
+  SHEET_TITLES.seasonSessions,
 ])
 
 const CATALOG_TABLE_TITLES = new Set([
@@ -1089,6 +1120,17 @@ function parseOperationalTables(rowsByTab: Map<string, string[][]>): SheetsDatab
     sessionsDone: cellNumber(row, 10, 0),
   }))
 
+  const seasonSessionRows = rowsByTab.get(SHEET_TITLES.seasonSessions) || []
+  const parsedSeasonSessions: SheetSeasonSessionInput[] = seasonSessionRows.map((row) => ({
+    seasonId: cellString(row, 0),
+    sessionNumber: cellNumber(row, 1, 0),
+    weekNumber: cellNumber(row, 2, 1),
+    day: parseTrainingDay(cellString(row, 3)),
+    mesocycleId: normalizeMesocycleId(cellString(row, 4)),
+    sessionId: cellString(row, 5),
+    firstExerciseId: cellString(row, 6),
+  }))
+
   return {
     coaches: parsedCoaches,
     teams: parsedTeams,
@@ -1097,6 +1139,7 @@ function parseOperationalTables(rowsByTab: Map<string, string[][]>): SheetsDatab
     seasons: parsedSeasons,
     reviews: parsedReviews,
     microcycles: parsedMicrocycles,
+    seasonSessions: parsedSeasonSessions,
   }
 }
 
@@ -1162,7 +1205,8 @@ export async function syncTrainingTablesToGoogleSheets(
       operational?.teamPlayers ||
       operational?.seasons ||
       operational?.reviews ||
-      operational?.microcycles
+      operational?.microcycles ||
+      operational?.seasonSessions
     )
   if (includeCatalog && !operational?.catalog) {
     throw new Error('Para reemplazar el catálogo hay que enviar una instantánea completa del catálogo.')
@@ -1175,7 +1219,7 @@ export async function syncTrainingTablesToGoogleSheets(
   }
   if (operational?.catalog && [
     operational.coaches, operational.teams, operational.players, operational.teamPlayers,
-    operational.seasons, operational.reviews, operational.microcycles,
+    operational.seasons, operational.reviews, operational.microcycles, operational.seasonSessions,
   ].some(value => value !== undefined)) {
     throw new Error('La sustitución del catálogo debe ejecutarse separada de las tablas operativas.')
   }

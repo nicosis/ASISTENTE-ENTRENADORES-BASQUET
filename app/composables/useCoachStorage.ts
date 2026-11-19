@@ -15,7 +15,7 @@ export type View =
   | "create-team"
   | "create-season"
   | "session";
-export type TeamTab = "week" | "annual" | "roster";
+export type TeamTab = "week" | "annual" | "roster" | "sessions";
 export type CoachRole = "admin" | "coach";
 export type TeamStatus = "active" | "archived";
 
