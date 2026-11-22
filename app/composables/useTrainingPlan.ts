@@ -9,7 +9,6 @@ import {
   getSeasonSessionOffset,
   getWeeklySessionsForMesocycle,
   type AgeCategory,
-  type CompetitiveLevel,
   type Frequency,
   type MesocycleRecord,
   type MesocycleWeekContext,
@@ -22,7 +21,6 @@ export interface SeasonPlanConfig {
   macrocycleId?: string
   mesocycleId?: string
   ageCategory: AgeCategory
-  competitiveLevel: CompetitiveLevel
   frequency: Frequency
   weekNumber: number
   selectedDay: TrainingDay
@@ -58,15 +56,10 @@ export function useTrainingPlan(
     phaseOrder: 0,
     type: 'training',
     name: '',
-    weeksCount: 0,
     weekStart: 0,
     weekEnd: 0,
-    color: '#4f7cac',
     objective: '',
-    loadRules: [],
-    plioRule: '',
-    weeklyProgressionNote: '',
-    weeklyLoads: [],
+    load: 0,
   }))
 
   const trainingDataStatus = computed(() =>
@@ -129,7 +122,6 @@ export function useTrainingPlan(
       ? getWeeklySessionsForMesocycle(
           currentPhase.value.id,
           config.value.frequency,
-          config.value.competitiveLevel,
           catalog.value,
         )
       : [],
@@ -155,7 +147,6 @@ export function useTrainingPlan(
             ageCategory: config.value.ageCategory,
             macrocycleId: config.value.macrocycleId,
             mesocycleId: config.value.mesocycleId,
-            competitiveLevel: config.value.competitiveLevel,
             frequency: config.value.frequency,
             weekNumber: config.value.weekNumber,
             day: config.value.selectedDay,

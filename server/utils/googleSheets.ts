@@ -12,7 +12,6 @@ import {
   tests,
   type AgeCategory,
   type BlockExerciseRecord,
-  type CompetitiveLevel,
   type ExerciseRecord,
   type Frequency,
   type HomeSessionRecord,
@@ -50,16 +49,20 @@ export interface SheetTeamPlayerInput {
   teamId: string
   playerId: string
   status: 'active' | 'inactive'
-  joinedAt: string
-  leftAt: string | null
 }
 
 export interface SheetTeamInput {
   id: string
-  coachId: string
   name: string
   club: string
   status: 'active' | 'archived'
+}
+
+export interface SheetTeamCoachInput {
+  id: string
+  teamId: string
+  coachId: string
+  role: 'owner' | 'editor' | 'viewer'
 }
 
 export interface SheetSeasonInput {
@@ -69,9 +72,7 @@ export interface SheetSeasonInput {
   name: string
   category: string
   ageCategory: AgeCategory
-  competitiveLevel: CompetitiveLevel
   startsAt: string
-  endsAt: string
   frequency: Frequency
   holidayWeeks?: string[]
   context: string
@@ -83,7 +84,6 @@ export interface SheetWeeklyReviewInput {
   seasonId: string
   weekStart: string
   text: string
-  createdAt: string
 }
 
 export type SheetMicrocycleInput = MicrocycleRecord
@@ -92,6 +92,7 @@ export type SheetSeasonSessionInput = SeasonSessionRecord
 export interface OperationalTablesPayload {
   coaches?: SheetCoachInput[]
   teams?: SheetTeamInput[]
+  teamCoaches?: SheetTeamCoachInput[]
   players?: SheetPlayerInput[]
   teamPlayers?: SheetTeamPlayerInput[]
   seasons?: SheetSeasonInput[]
@@ -111,6 +112,7 @@ export interface SheetsDatabaseSnapshot {
   operational: {
     coaches: SheetCoachInput[]
     teams: SheetTeamInput[]
+    teamCoaches: SheetTeamCoachInput[]
     players: SheetPlayerInput[]
     teamPlayers: SheetTeamPlayerInput[]
     seasons: SheetSeasonInput[]
@@ -171,11 +173,13 @@ const SHEET_TITLES = {
   mesocycleSessions: 'mesocycle_sessions',
   trainingBlocks: 'training_blocks',
   blockExercises: 'block_exercises',
+  blockExerciseDoses: 'block_exercise_doses',
   exercises: 'exercises',
   homeSessions: 'home_sessions',
   tests: 'tests',
   coaches: 'coaches',
   teams: 'teams',
+  teamCoaches: 'team_coaches',
   players: 'players',
   teamPlayers: 'team_players',
   seasons: 'seasons',
@@ -296,15 +300,10 @@ export function buildTrainingSheetTables(
         'phase_order',
         'type',
         'name',
-        'weeks_count',
         'week_start',
         'week_end',
-        'color',
         'objective',
-        'load_rules',
-        'plio_rule',
-        'weekly_progression_note',
-        'weekly_loads',
+        'load',
       ],
       rows: mesocycles.map((item) => [
         item.id,
@@ -312,15 +311,10 @@ export function buildTrainingSheetTables(
         item.phaseOrder,
         item.type,
         item.name,
-        item.weeksCount,
         item.weekStart,
         item.weekEnd,
-        item.color,
         item.objective,
-        item.loadRules.join(' | '),
-        item.plioRule,
-        item.weeklyProgressionNote,
-        item.weeklyLoads.join(', '),
+        item.load,
       ]),
       rgbColor: { red: 0.06, green: 0.73, blue: 0.51 },
     },
@@ -367,9 +361,6 @@ export function buildTrainingSheetTables(
         'exercise_id',
         'item_order',
         'station_label',
-        'dose_formacion',
-        'dose_liga',
-        'week_doses_json',
       ],
       rows: blockExercises.map((item) => [
         item.id,
@@ -377,17 +368,24 @@ export function buildTrainingSheetTables(
         item.exerciseId,
         item.itemOrder,
         item.stationLabel,
-        item.doseFormacion,
-        item.doseLiga,
-        item.weekDoses ? JSON.stringify(item.weekDoses) : '',
       ]),
+      rgbColor: { red: 0.94, green: 0.27, blue: 0.27 },
+    },
+    {
+      title: SHEET_TITLES.blockExerciseDoses,
+      headers: ['block_exercise_id', 'week', 'dose'],
+      rows: blockExercises.flatMap((item) =>
+        Object.keys(item.weekDoses)
+          .map(Number)
+          .sort((a, b) => a - b)
+          .map((week) => [item.id, week, item.weekDoses[week]]),
+      ),
       rgbColor: { red: 0.94, green: 0.27, blue: 0.27 },
     },
     {
       title: SHEET_TITLES.exercises,
       headers: [
         'id',
-        'slug',
         'name',
         'category',
         'focus',
@@ -402,7 +400,6 @@ export function buildTrainingSheetTables(
       ],
       rows: exercises.map((item) => [
         item.id,
-        item.slug,
         item.name,
         item.category,
         item.focus,
@@ -428,7 +425,6 @@ export function buildTrainingSheetTables(
         'format',
         'exercise_id',
         'dose_holiday_1',
-        'dose_holiday_2',
         'week_numbers_json',
         'week_doses_json',
       ],
@@ -441,7 +437,6 @@ export function buildTrainingSheetTables(
         item.format,
         item.exerciseId,
         item.doseHoliday1,
-        item.doseHoliday2,
         item.weekNumbers ? JSON.stringify(item.weekNumbers) : '',
         item.weekDoses ? JSON.stringify(item.weekDoses) : '',
       ]),
@@ -477,17 +472,23 @@ export function buildTrainingSheetTables(
       title: SHEET_TITLES.teams,
       headers: [
         'id',
-        'coach_id',
         'name',
         'club',
         'status',
       ],
       rows: activeTeams.map((team) => [
         team.id,
-        team.coachId,
         team.name,
         team.club,
         team.status === 'archived' ? 'archived' : 'active',
+      ]),
+      rgbColor: { red: 0.13, green: 0.53, blue: 0.38 },
+    },
+    {
+      title: SHEET_TITLES.teamCoaches,
+      headers: ['id', 'team_id', 'coach_id', 'role'],
+      rows: (operational?.teamCoaches ?? []).map((membership) => [
+        membership.id, membership.teamId, membership.coachId, membership.role,
       ]),
       rgbColor: { red: 0.13, green: 0.53, blue: 0.38 },
     },
@@ -499,10 +500,9 @@ export function buildTrainingSheetTables(
     },
     {
       title: SHEET_TITLES.teamPlayers,
-      headers: ['id', 'team_id', 'player_id', 'status', 'joined_at', 'left_at'],
+      headers: ['id', 'team_id', 'player_id', 'status'],
       rows: activeTeamPlayers.map((membership) => [
         membership.id, membership.teamId, membership.playerId, membership.status,
-        membership.joinedAt, membership.leftAt || '',
       ]),
       rgbColor: { red: 0.72, green: 0.35, blue: 0.18 },
     },
@@ -515,10 +515,8 @@ export function buildTrainingSheetTables(
         'name',
         'category',
         'age_category',
-        'competitive_level',
         'frequency',
         'starts_at',
-        'ends_at',
         'context',
         'status',
         'holiday_weeks',
@@ -532,10 +530,8 @@ export function buildTrainingSheetTables(
           season.name,
           season.category,
           season.ageCategory,
-          season.competitiveLevel,
           season.frequency,
           season.startsAt,
-          season.endsAt,
           season.context,
           season.status,
           (season.holidayWeeks || []).join(', '),
@@ -545,13 +541,12 @@ export function buildTrainingSheetTables(
     },
     {
       title: SHEET_TITLES.weeklyReviews,
-      headers: ['id', 'season_id', 'week_start', 'text', 'created_at'],
+      headers: ['id', 'season_id', 'week_start', 'text'],
       rows: activeReviews.map((review) => [
         review.id,
         review.seasonId,
         review.weekStart,
         review.text,
-        review.createdAt,
       ]),
       rgbColor: { red: 0.78, green: 0.45, blue: 0.18 },
     },
@@ -611,6 +606,7 @@ export function buildTrainingSheetTables(
 const OPERATIONAL_KEY_TITLES: ReadonlyArray<readonly [keyof OperationalTablesPayload, string]> = [
   ['coaches', SHEET_TITLES.coaches],
   ['teams', SHEET_TITLES.teams],
+  ['teamCoaches', SHEET_TITLES.teamCoaches],
   ['players', SHEET_TITLES.players],
   ['teamPlayers', SHEET_TITLES.teamPlayers],
   ['seasons', SHEET_TITLES.seasons],
@@ -622,6 +618,7 @@ const OPERATIONAL_KEY_TITLES: ReadonlyArray<readonly [keyof OperationalTablesPay
 const OPERATIONAL_TABLE_TITLES = new Set([
   SHEET_TITLES.coaches,
   SHEET_TITLES.teams,
+  SHEET_TITLES.teamCoaches,
   SHEET_TITLES.players,
   SHEET_TITLES.teamPlayers,
   SHEET_TITLES.seasons,
@@ -636,6 +633,7 @@ const CATALOG_TABLE_TITLES = new Set([
   SHEET_TITLES.mesocycleSessions,
   SHEET_TITLES.trainingBlocks,
   SHEET_TITLES.blockExercises,
+  SHEET_TITLES.blockExerciseDoses,
   SHEET_TITLES.exercises,
   SHEET_TITLES.homeSessions,
   SHEET_TITLES.tests,
@@ -670,6 +668,11 @@ function cellString(row: string[], index: number, fallback = ''): string {
   return typeof val === 'string' ? val.trim() : fallback
 }
 
+function parseTeamCoachRole(value: string): SheetTeamCoachInput['role'] {
+  if (value === 'owner' || value === 'editor') return value
+  return 'viewer'
+}
+
 function normalizeMacrocycleId(value: string): string {
   return value
 }
@@ -694,7 +697,8 @@ function parseFrequency(value: number): Frequency {
 function cellNumber(row: string[], index: number, fallback = 0): number {
   const raw = cellString(row, index)
   if (!raw) return fallback
-  const parsed = Number(raw)
+  // Sheets returns formatted values: Spanish locales show decimals with a comma ("4,5").
+  const parsed = Number(raw.replace(',', '.'))
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
@@ -704,14 +708,6 @@ function splitPipeList(raw: string): string[] {
     .split('|')
     .map((item) => item.trim())
     .filter(Boolean)
-}
-
-function splitCommaNumbers(raw: string): number[] {
-  if (!raw.trim()) return []
-  return raw
-    .split(',')
-    .map((item) => Number(item.trim()))
-    .filter((num) => Number.isFinite(num))
 }
 
 function parseJsonCell(raw: string, column: string): unknown {
@@ -760,10 +756,6 @@ function parseAgeCategory(raw: string): AgeCategory {
     return raw
   }
   return 'cadete'
-}
-
-function parseCompetitiveLevel(raw: string): CompetitiveLevel {
-  return raw === 'formacion' ? 'formacion' : 'liga'
 }
 
 function parsePhaseType(raw: string): PhaseType {
@@ -895,15 +887,10 @@ function parseCatalogTables(rowsByTab: Map<string, string[][]>): TrainingCatalog
         phaseOrder: cellNumber(row, 2, 1),
         type: parsePhaseType(cellString(row, 3)),
         name: cellString(row, 4),
-        weeksCount: cellNumber(row, 5, 4),
-        weekStart: cellNumber(row, 6, 1),
-        weekEnd: cellNumber(row, 7, 4),
-        color: cellString(row, 8, '#4f7cac'),
-        objective: cellString(row, 9),
-        loadRules: splitPipeList(cellString(row, 10)),
-        plioRule: cellString(row, 11),
-        weeklyProgressionNote: cellString(row, 12),
-        weeklyLoads: splitCommaNumbers(cellString(row, 13)),
+        weekStart: cellNumber(row, 5, 1),
+        weekEnd: cellNumber(row, 6, 1),
+        objective: cellString(row, 7),
+        load: cellNumber(row, 8, 0),
       }))
     : []
 
@@ -932,38 +919,49 @@ function parseCatalogTables(rowsByTab: Map<string, string[][]>): TrainingCatalog
       }))
     : []
 
+  const weekDosesByBlockExerciseId = new Map<string, Record<number, string>>()
+  for (const row of rowsByTab.get(SHEET_TITLES.blockExerciseDoses) || []) {
+    const blockExerciseId = cellString(row, 0)
+    const week = cellNumber(row, 1, 0)
+    const dose = cellString(row, 2)
+    if (!blockExerciseId || week <= 0 || !dose) continue
+    const weekDoses = weekDosesByBlockExerciseId.get(blockExerciseId) ?? {}
+    weekDoses[week] = dose
+    weekDosesByBlockExerciseId.set(blockExerciseId, weekDoses)
+  }
+
   const blockExerciseRows = rowsByTab.get(SHEET_TITLES.blockExercises) || []
   const parsedSheetBlockExercises: BlockExerciseRecord[] = blockExerciseRows.length
-    ? blockExerciseRows.map((row) => ({
-        id: cellString(row, 0),
-        blockId: normalizeTrainingBlockId(cellString(row, 1)),
-        exerciseId: cellString(row, 2),
-        itemOrder: cellNumber(row, 3, 1),
-        stationLabel: cellString(row, 4),
-        doseFormacion: cellString(row, 5),
-        doseLiga: cellString(row, 6, cellString(row, 5)),
-        weekDoses: parseWeekDoses(cellString(row, 7)),
-      }))
+    ? blockExerciseRows.map((row) => {
+        const id = cellString(row, 0)
+        return {
+          id,
+          blockId: normalizeTrainingBlockId(cellString(row, 1)),
+          exerciseId: cellString(row, 2),
+          itemOrder: cellNumber(row, 3, 1),
+          stationLabel: cellString(row, 4),
+          weekDoses: weekDosesByBlockExerciseId.get(id) ?? {},
+        }
+      })
     : []
   const parsedBlockExercises: BlockExerciseRecord[] = parsedSheetBlockExercises
 
   const exerciseRows = rowsByTab.get(SHEET_TITLES.exercises) || []
-  const hasMovementClassification = exerciseRows.some(row => row.length >= 13)
+  const hasMovementClassification = exerciseRows.some(row => row.length >= 12)
   const parsedExercises: ExerciseRecord[] = exerciseRows.length
     ? exerciseRows.map((row) => ({
         id: cellString(row, 0),
-        slug: cellString(row, 1),
-        name: cellString(row, 2),
-        category: cellString(row, 3),
-        focus: cellString(row, 4),
-        movementLevel: hasMovementClassification ? cellString(row, 5) : '',
-        movementArea: hasMovementClassification ? cellString(row, 6) : '',
-        material: cellString(row, hasMovementClassification ? 7 : 5),
-        how: splitPipeList(cellString(row, hasMovementClassification ? 8 : 6)),
-        cue: cellString(row, hasMovementClassification ? 9 : 7),
-        errors: splitPipeList(cellString(row, hasMovementClassification ? 10 : 8)),
-        easier: cellString(row, hasMovementClassification ? 11 : 9),
-        harder: cellString(row, hasMovementClassification ? 12 : 10),
+        name: cellString(row, 1),
+        category: cellString(row, 2),
+        focus: cellString(row, 3),
+        movementLevel: hasMovementClassification ? cellString(row, 4) : '',
+        movementArea: hasMovementClassification ? cellString(row, 5) : '',
+        material: cellString(row, hasMovementClassification ? 6 : 4),
+        how: splitPipeList(cellString(row, hasMovementClassification ? 7 : 5)),
+        cue: cellString(row, hasMovementClassification ? 8 : 6),
+        errors: splitPipeList(cellString(row, hasMovementClassification ? 9 : 7)),
+        easier: cellString(row, hasMovementClassification ? 10 : 8),
+        harder: cellString(row, hasMovementClassification ? 11 : 9),
       }))
     : []
 
@@ -978,9 +976,8 @@ function parseCatalogTables(rowsByTab: Map<string, string[][]>): TrainingCatalog
         format: cellString(row, 5),
         exerciseId: cellString(row, 6),
         doseHoliday1: cellString(row, 7),
-        doseHoliday2: cellString(row, 8),
-        weekNumbers: parseWeekNumbers(cellString(row, 9)),
-        weekDoses: parseWeekDoses(cellString(row, 10)),
+        weekNumbers: parseWeekNumbers(cellString(row, 8)),
+        weekDoses: parseWeekDoses(cellString(row, 9)),
       }))
     : []
 
@@ -1020,17 +1017,24 @@ function parseOperationalTables(rowsByTab: Map<string, string[][]>): SheetsDatab
 
   const teamRows = rowsByTab.get(SHEET_TITLES.teams) || []
   const parsedTeams: SheetTeamInput[] = teamRows.map((row) => {
-    const col4 = cellString(row, 4)
+    const statusCell = cellString(row, 3)
     const status: 'active' | 'archived' =
-      col4 === 'archived' ? 'archived' : 'active'
+      statusCell === 'archived' ? 'archived' : 'active'
     return {
       id: cellString(row, 0),
-      coachId: cellString(row, 1, 'ENT0001'),
-      name: cellString(row, 2),
-      club: cellString(row, 3),
+      name: cellString(row, 1),
+      club: cellString(row, 2),
       status,
     }
   })
+
+  const teamCoachRows = rowsByTab.get(SHEET_TITLES.teamCoaches) || []
+  const parsedTeamCoaches: SheetTeamCoachInput[] = teamCoachRows.map((row) => ({
+    id: cellString(row, 0),
+    teamId: cellString(row, 1),
+    coachId: cellString(row, 2),
+    role: parseTeamCoachRole(cellString(row, 3)),
+  })).filter((membership) => membership.id && membership.teamId && membership.coachId)
 
   const playerRows = rowsByTab.get(SHEET_TITLES.players) || []
   const parsedPlayers: SheetPlayerInput[] = playerRows.map((row) => ({
@@ -1040,7 +1044,6 @@ function parseOperationalTables(rowsByTab: Map<string, string[][]>): SheetsDatab
   const parsedTeamPlayers: SheetTeamPlayerInput[] = membershipRows.map((row) => ({
     id: cellString(row, 0), teamId: cellString(row, 1), playerId: cellString(row, 2),
     status: cellString(row, 3) === 'inactive' ? 'inactive' : 'active',
-    joinedAt: cellString(row, 4), leftAt: cellString(row, 5) || null,
   })).filter((membership) => membership.id && membership.teamId && membership.playerId)
 
   // Legacy `equipos.players` data is read once and projected into the normalized
@@ -1061,7 +1064,7 @@ function parseOperationalTables(rowsByTab: Map<string, string[][]>): SheetsDatab
     new Map([...legacyPlayers, ...parsedPlayers].map((player) => [player.id, player])).values(),
   )
   const legacyTeamPlayers = legacyPlayersByTeam.flatMap((item, teamIndex) =>
-    item.players.map((player, playerIndex) => ({ id: `EJU${String(teamIndex * 1000 + playerIndex + 1).padStart(4, '0')}`, teamId: item.teamId, playerId: player.id, status: 'active' as const, joinedAt: '', leftAt: null })),
+    item.players.map((player, playerIndex) => ({ id: `EJU${String(teamIndex * 1000 + playerIndex + 1).padStart(4, '0')}`, teamId: item.teamId, playerId: player.id, status: 'active' as const })),
   )
   const validPlayerIds = new Set(uniquePlayers.map((player) => player.id))
   const validTeamIds = new Set(parsedTeams.map((team) => team.id))
@@ -1084,13 +1087,11 @@ function parseOperationalTables(rowsByTab: Map<string, string[][]>): SheetsDatab
       name: cellString(row, 3),
       category: cellString(row, 4),
       ageCategory,
-      competitiveLevel: parseCompetitiveLevel(cellString(row, 6)),
-      startsAt: cellString(row, 8, '2026-10-12'),
-      endsAt: cellString(row, 9, '2027-05-30'),
-      frequency: parseFrequency(cellNumber(row, 7, 1)),
-      context: cellString(row, 10),
-      status: cellString(row, 11) === 'closed' ? 'closed' : 'active',
-      holidayWeeks: splitCommaStrings(cellString(row, 12)),
+      startsAt: cellString(row, 7, '2026-10-12'),
+      frequency: parseFrequency(cellNumber(row, 6, 1)),
+      context: cellString(row, 8),
+      status: cellString(row, 9) === 'closed' ? 'closed' : 'active',
+      holidayWeeks: splitCommaStrings(cellString(row, 10)),
     }
   })
 
@@ -1100,7 +1101,6 @@ function parseOperationalTables(rowsByTab: Map<string, string[][]>): SheetsDatab
     seasonId: cellString(row, 1),
     weekStart: cellString(row, 2),
     text: cellString(row, 3),
-    createdAt: cellString(row, 4),
   }))
 
   const microcycleRows = rowsByTab.get(SHEET_TITLES.microcycles) || []
@@ -1131,6 +1131,7 @@ function parseOperationalTables(rowsByTab: Map<string, string[][]>): SheetsDatab
   return {
     coaches: parsedCoaches,
     teams: parsedTeams,
+    teamCoaches: parsedTeamCoaches,
     players: uniquePlayers,
     teamPlayers: migratedTeamPlayers,
     seasons: parsedSeasons,
@@ -1198,6 +1199,7 @@ export async function syncTrainingTablesToGoogleSheets(
     !(
       operational?.coaches ||
       operational?.teams ||
+      operational?.teamCoaches ||
       operational?.players ||
       operational?.teamPlayers ||
       operational?.seasons ||
@@ -1215,7 +1217,7 @@ export async function syncTrainingTablesToGoogleSheets(
     throw new Error('El catálogo solo puede reemplazarse con includeCatalog=true.')
   }
   if (operational?.catalog && [
-    operational.coaches, operational.teams, operational.players, operational.teamPlayers,
+    operational.coaches, operational.teams, operational.teamCoaches, operational.players, operational.teamPlayers,
     operational.seasons, operational.reviews, operational.microcycles, operational.seasonSessions,
   ].some(value => value !== undefined)) {
     throw new Error('La sustitución del catálogo debe ejecutarse separada de las tablas operativas.')

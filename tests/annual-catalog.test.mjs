@@ -12,9 +12,18 @@ const catalog = JSON.parse(await readFile(new URL('../odd/plan-data/catalog.json
 test('builds a complete Sheets snapshot from the 42-week PDF catalog', () => {
   const tables = buildTrainingSheetTables({ catalog, includeCatalog: true })
   const tableByName = new Map(tables.map(table => [table.title, table]))
-  assert.equal(tables.length, 16)
+  assert.equal(tables.length, 18)
+  for (const phase of catalog.mesocycles) {
+    assert.deepEqual(Object.keys(phase).sort(), ['id', 'load', 'macrocycleId', 'name', 'objective', 'phaseOrder', 'type', 'weekEnd', 'weekStart'])
+  }
+  const expectedDoseRows = catalog.blockExercises.reduce((total, item) => total + Object.keys(item.weekDoses).length, 0)
+  assert.deepEqual(tableByName.get('block_exercise_doses').headers, ['block_exercise_id', 'week', 'dose'])
+  assert.equal(tableByName.get('block_exercise_doses').rows.length, expectedDoseRows)
+  assert.deepEqual(tableByName.get('block_exercises').headers, ['id', 'block_id', 'exercise_id', 'item_order', 'station_label'])
+  assert.deepEqual(tableByName.get('team_coaches').headers, ['id', 'team_id', 'coach_id', 'role'])
+  assert.equal(tableByName.get('team_coaches').rows.length, 0)
   assert.equal(tableByName.get('macrocycles').rows.length, 1)
-  assert.equal(tableByName.get('mesocycles').rows.length, 13)
+  assert.equal(tableByName.get('mesocycles').rows.length, 11)
   assert.equal(tableByName.get('mesocycle_sessions').rows.length, 30)
   assert.equal(tableByName.get('training_blocks').rows.length, 120)
   assert.equal(tableByName.get('block_exercises').rows.length, 300)
@@ -29,8 +38,10 @@ test('builds a complete Sheets snapshot from the 42-week PDF catalog', () => {
 test('serializes week-specific and holiday-week doses as Sheets JSON columns', () => {
   const tables = new Map(buildTrainingSheetTables({ catalog, includeCatalog: true }).map(table => [table.title, table]))
   const blockExercises = tables.get('block_exercises')
-  assert.equal(blockExercises.headers.at(-1), 'week_doses_json')
-  assert.deepEqual(JSON.parse(blockExercises.rows[0].at(-1)), { 1: 'World\'s greatest stretch · 3 por lado', 2: 'World\'s greatest stretch · 3 por lado', 3: 'World\'s greatest stretch · 3 por lado' })
+  const blockExerciseDoses = tables.get('block_exercise_doses')
+  const firstExerciseDoses = blockExerciseDoses.rows.filter(row => row[0] === blockExercises.rows[0][0])
+  assert.deepEqual(firstExerciseDoses.slice(0, 3).map(row => row[1]), [1, 2, 3])
+  assert.equal(firstExerciseDoses[0][2], 'World\'s greatest stretch · 3 por lado')
   const home = tables.get('home_sessions')
   assert.equal(home.headers.at(-2), 'week_numbers_json')
   assert.deepEqual(JSON.parse(home.rows[0].at(-2)), [19, 20])

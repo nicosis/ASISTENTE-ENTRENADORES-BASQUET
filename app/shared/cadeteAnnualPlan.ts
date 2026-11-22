@@ -2,7 +2,7 @@ import type { TrainingDay } from './training'
 
 export type AnnualWeekKind =
   | 'reunion' | 'construction' | 'base-strength' | 'strength-power' | 'power-speed'
-  | 'christmas' | 'return-strength' | 'reactive-power' | 'peak' | 'easter'
+  | 'return-strength' | 'reactive-power' | 'peak'
   | 'transfer' | 'finals' | 'combine'
 
 export interface AnnualPlanWeek {
@@ -30,12 +30,10 @@ const ranges: ReadonlyArray<{ start: number; end: number; kind: AnnualWeekKind }
   { start: 4, end: 6, kind: 'construction' },
   { start: 7, end: 10, kind: 'base-strength' },
   { start: 11, end: 14, kind: 'strength-power' },
-  { start: 15, end: 18, kind: 'power-speed' },
-  { start: 19, end: 20, kind: 'christmas' },
+  { start: 15, end: 20, kind: 'power-speed' },
   { start: 21, end: 24, kind: 'return-strength' },
   { start: 25, end: 28, kind: 'reactive-power' },
-  { start: 29, end: 32, kind: 'peak' },
-  { start: 33, end: 33, kind: 'easter' },
+  { start: 29, end: 33, kind: 'peak' },
   { start: 34, end: 37, kind: 'transfer' },
   { start: 38, end: 41, kind: 'finals' },
   { start: 42, end: 42, kind: 'combine' },

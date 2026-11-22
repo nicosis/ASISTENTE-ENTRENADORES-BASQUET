@@ -1,6 +1,5 @@
 import {
   type AgeCategory,
-  type CompetitiveLevel,
   type HydratedSessionBlock,
   type MesocycleSessionRecord,
   type MesocycleRecord,
@@ -15,7 +14,7 @@ export type View =
   | "create-team"
   | "create-season"
   | "session";
-export type TeamTab = "week" | "annual" | "roster" | "sessions";
+export type TeamTab = "week" | "annual" | "assessments" | "roster";
 export type CoachRole = "admin" | "coach";
 export type TeamStatus = "active" | "archived";
 
@@ -35,8 +34,13 @@ export interface TeamPlayer {
   teamId: string;
   playerId: string;
   status: "active" | "inactive";
-  joinedAt: string;
-  leftAt: string | null;
+}
+
+export interface TeamCoach {
+  id: string;
+  teamId: string;
+  coachId: string;
+  role: "owner" | "editor" | "viewer";
 }
 
 export interface Season {
@@ -46,9 +50,7 @@ export interface Season {
   name: string;
   category: string;
   ageCategory: AgeCategory;
-  competitiveLevel: CompetitiveLevel;
   startsAt: string;
-  endsAt: string;
   frequency: 1 | 2 | 3;
   holidayWeeks?: string[];
   context: string;
@@ -57,7 +59,6 @@ export interface Season {
 
 export interface Team {
   id: string;
-  coachId: string;
   name: string;
   club: string;
   status: TeamStatus;
@@ -68,7 +69,6 @@ export interface WeeklyReview {
   seasonId: string;
   weekStart: string;
   text: string;
-  createdAt: string;
 }
 
 export interface GeneratedSessionResponse {
@@ -97,11 +97,6 @@ export const ageCategoryOptions: SelectOption<AgeCategory>[] = [
   { value: "juvenil", label: "Juvenil (U18)" },
 ];
 
-export const competitiveLevelOptions: SelectOption<CompetitiveLevel>[] = [
-  { value: "formacion", label: "Equipo Formación" },
-  { value: "liga", label: "Equipo Liga" },
-];
-
 export const blockPalette: string[] = [
   "#69806f",
   "#e66b48",
@@ -126,10 +121,6 @@ export function isAgeCategory(value: unknown): value is AgeCategory {
     value === "cadete" ||
     value === "juvenil"
   );
-}
-
-export function isCompetitiveLevel(value: unknown): value is CompetitiveLevel {
-  return value === "formacion" || value === "liga";
 }
 
 export function isTeamStatus(value: unknown): value is TeamStatus {
@@ -189,17 +180,8 @@ export function mondayFor(value: string): string {
   return dateKey(date);
 }
 
-export function categoryLabelFor(
-  ageCategory: AgeCategory,
-  competitiveLevel: CompetitiveLevel,
-): string {
-  const cat =
-    ageCategoryOptions.find((item) => item.value === ageCategory)?.label ||
-    "Cadete (U16)";
-  const lvl =
-    competitiveLevelOptions.find((item) => item.value === competitiveLevel)
-      ?.label || "Equipo Liga";
-  return `${cat} · ${lvl}`;
+export function categoryLabelFor(ageCategory: AgeCategory): string {
+  return ageCategoryOptions.find((item) => item.value === ageCategory)?.label || "Cadete (U16)";
 }
 
 export function coachIdFor(name: string): string {

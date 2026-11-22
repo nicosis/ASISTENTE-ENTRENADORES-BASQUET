@@ -3,7 +3,6 @@ import {
   getHydratedSession,
   TrainingDataUnavailableError,
   type AgeCategory,
-  type CompetitiveLevel,
   type Frequency,
   type TrainingCatalogTables,
   type TrainingDay,
@@ -18,7 +17,6 @@ interface GenerateTrainingBody {
   macrocycleId?: string
   mesocycleId?: string
   ageCategory?: AgeCategory
-  competitiveLevel?: CompetitiveLevel
   startsAt?: string
   holidayWeeks?: string[]
   seasonId?: string
@@ -83,10 +81,6 @@ export default defineEventHandler(async (event) => {
       body.ageCategory === 'juvenil'
         ? body.ageCategory
         : 'cadete'
-    const competitiveLevel: CompetitiveLevel =
-      body.competitiveLevel === 'formacion' || body.competitiveLevel === 'liga'
-        ? body.competitiveLevel
-        : 'liga'
 
     let cadeteRestWeek = false
     const startsAt = sheetSeason?.startsAt ?? body.startsAt
@@ -131,7 +125,6 @@ export default defineEventHandler(async (event) => {
         ageCategory,
         macrocycleId,
         mesocycleId,
-        competitiveLevel,
         frequency,
         weekNumber,
         day,

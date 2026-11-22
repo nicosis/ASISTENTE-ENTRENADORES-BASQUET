@@ -23,8 +23,8 @@ test('numbers the first session of the season as week 1, day 1 with its first bl
     sessionNumber: 1,
     weekNumber: 1,
     day: 'dia1',
-    mesocycleId: 'CAD42-P01',
-    sessionId: 'CAD42-P01-D1',
+    mesocycleId: 'CAD27-MES01',
+    sessionId: 'CAD27-MES01-D01',
   })
 })
 
@@ -44,13 +44,13 @@ test('skips holiday weeks when counting sessions', () => {
   const session40 = rows.find((row) => row.sessionNumber === 40)
   assert.equal(session40.weekNumber, 14)
   assert.equal(session40.day, 'dia1')
-  assert.equal(session40.mesocycleId, 'CAD42-P04')
-  assert.equal(session40.sessionId, 'CAD42-P04-D1')
+  assert.equal(session40.mesocycleId, 'CAD27-MES04')
+  assert.equal(session40.sessionId, 'CAD27-MES04-D01')
   assert.equal(rows.some((row) => row.weekNumber === 19), false)
 })
 
 test('derives the first exercise of a session from block 1, item 1', () => {
-  assert.equal(firstExerciseIdOf('CAD42-P04-D1', catalog), 'CAD42-E017')
+  assert.equal(firstExerciseIdOf('CAD27-MES04-D01', catalog), 'EX0017')
   assert.equal(firstExerciseIdOf('NO-EXISTE', catalog), undefined)
 })
 

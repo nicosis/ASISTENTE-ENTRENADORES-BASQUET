@@ -63,7 +63,7 @@ export function alignCadeteCatalog(catalog: TrainingCatalogTables, startDate: st
   if (plan.totalWeeks === 42) {
     let nextWeek = 1
     for (const phase of phases) {
-      if (phase.weekStart !== nextWeek || phase.weekEnd < phase.weekStart || phase.weeksCount !== phase.weekEnd - phase.weekStart + 1) {
+      if (phase.weekStart !== nextWeek || phase.weekEnd < phase.weekStart) {
         throw new Error('Las fases del plan cadete deben cubrir las 42 semanas sin huecos ni solapamientos.')
       }
       nextWeek = phase.weekEnd + 1
@@ -80,8 +80,7 @@ export function alignCadeteCatalog(catalog: TrainingCatalogTables, startDate: st
     const matching = weeks.filter(week => week.period === periods[index])
     if (first < 0) throw new Error('Falta un período de cadete en el calendario.')
     return [phase.id, {
-      ...phase, weekStart: first + 1, weekEnd: first + matching.length, weeksCount: matching.length,
-      weeklyLoads: matching.map(week => week.rest ? 3 : phase.weeklyLoads[0] ?? 5),
+      ...phase, weekStart: first + 1, weekEnd: first + matching.length,
     }] as const
   }))
   return {
@@ -116,7 +115,7 @@ export type HolidayLabel = 'Navidad' | 'Semana Santa'
 
 /**
  * Suggested break for a cadete week, by real date:
- * Christmas = any day from 22 Dec to 6 Jan; Semana Santa = Monday of Holy Week to Easter Sunday.
+ * Christmas = any day from 22 to 31 December; Semana Santa = Monday of Holy Week to Easter Sunday.
  */
 export function holidayLabelForWeek(week: CadeteWeek): HolidayLabel | null {
   const monday = Date.parse(`${week.weekStart}T00:00:00Z`)
@@ -124,9 +123,16 @@ export function holidayLabelForWeek(week: CadeteWeek): HolidayLabel | null {
     const day = new Date(monday + offset * DAY_MS)
     const month = day.getUTCMonth() + 1
     const date = day.getUTCDate()
-    if ((month === 12 && date >= 22) || (month === 1 && date <= 6)) return 'Navidad'
+    if (month === 12 && date >= 22) return 'Navidad'
     const easter = easterSunday(day.getUTCFullYear()).getTime()
     if (day.getTime() >= easter - 6 * DAY_MS && day.getTime() <= easter) return 'Semana Santa'
   }
   return null
+}
+
+/** Season holiday weeks (Monday dates) suggested from the real Christmas and Semana Santa dates. */
+export function suggestedHolidayWeeks(startDate: string): string[] {
+  return getCadeteWeeks(startDate)
+    .filter((week) => holidayLabelForWeek(week) !== null)
+    .map((week) => week.weekStart)
 }

@@ -7,22 +7,17 @@ const phase = (overrides) => ({
   phaseOrder: 1,
   type: 'training',
   name: 'Fase',
-  weeksCount: 1,
-  color: '#000000',
   objective: '',
-  loadRules: [],
-  plioRule: '',
-  weeklyProgressionNote: '',
-  weeklyLoads: [5],
+  load: 5,
   ...overrides,
 })
 
 const catalog = {
   macrocycles: [{ id: 'plan', name: 'Plan', ageCategory: 'cadete', totalWeeks: 4 }],
   mesocycles: [
-    phase({ id: 'a', phaseOrder: 1, weekStart: 1, weekEnd: 2, weeksCount: 2, weeklyLoads: [5, 5] }),
-    phase({ id: 'b', phaseOrder: 2, type: 'holiday', weekStart: 3, weekEnd: 3, weeksCount: 1 }),
-    phase({ id: 'c', phaseOrder: 3, weekStart: 4, weekEnd: 4, weeksCount: 1 }),
+    phase({ id: 'a', phaseOrder: 1, weekStart: 1, weekEnd: 2, load: 5 }),
+    phase({ id: 'b', phaseOrder: 2, type: 'holiday', weekStart: 3, weekEnd: 3, load: 0 }),
+    phase({ id: 'c', phaseOrder: 3, weekStart: 4, weekEnd: 4, load: 5 }),
   ],
   // Other tables are not read by this helper.
   sessions: [], variants: [], blocks: [], blockExercises: [], exercises: [], homeSessions: [], tests: [],
