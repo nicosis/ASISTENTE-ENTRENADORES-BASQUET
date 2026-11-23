@@ -1370,7 +1370,6 @@
       "blockId": "CAD27-MES01-D01-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "1": "World's greatest stretch · 3 por lado",
         "2": "World's greatest stretch · 3 por lado",
@@ -1382,7 +1381,6 @@
       "blockId": "CAD27-MES01-D01-B01",
       "exerciseId": "EX0035",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "1": "Pasos laterales en posición defensiva · 2 × 10 pasos",
         "2": "Pasos laterales en posición defensiva · 2 × 10 pasos",
@@ -1394,7 +1392,6 @@
       "blockId": "CAD27-MES01-D01-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "1": "Movilidad de tobillo en la pared · 8 por lado",
         "2": "Movilidad de tobillo en la pared · 8 por lado",
@@ -1406,7 +1403,6 @@
       "blockId": "CAD27-MES01-D01-B01",
       "exerciseId": "EX0020",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "1": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
         "2": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
@@ -1418,7 +1414,6 @@
       "blockId": "CAD27-MES01-D01-B02",
       "exerciseId": "EX0038",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 2 × 3",
         "2": "S2 3 × 3",
@@ -1430,7 +1425,6 @@
       "blockId": "CAD27-MES01-D01-B02",
       "exerciseId": "EX0034",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 2 × 6",
         "2": "S2 2 × 8",
@@ -1442,7 +1436,6 @@
       "blockId": "CAD27-MES01-D01-B03",
       "exerciseId": "EX0030",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 2 × 8 · 6-8 kg",
         "2": "S2 3 × 8",
@@ -1454,7 +1447,6 @@
       "blockId": "CAD27-MES01-D01-B03",
       "exerciseId": "EX0019",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 2 × 8",
         "2": "S2 3 × 8",
@@ -1466,7 +1458,6 @@
       "blockId": "CAD27-MES01-D01-B03",
       "exerciseId": "EX0028",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 2 × 8 por brazo · 6 kg",
         "2": "S2 3 × 8",
@@ -1478,7 +1469,6 @@
       "blockId": "CAD27-MES01-D01-B03",
       "exerciseId": "EX0009",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 20\"",
         "2": "S2 25\"",
@@ -1490,7 +1480,6 @@
       "blockId": "CAD27-MES01-D01-B04",
       "exerciseId": "EX0065",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 4 sprints",
         "2": "S2 5 sprints",
@@ -1502,7 +1491,6 @@
       "blockId": "CAD27-MES01-D02-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "1": "World's greatest stretch · 3 por lado",
         "2": "World's greatest stretch · 3 por lado",
@@ -1514,7 +1502,6 @@
       "blockId": "CAD27-MES01-D02-B01",
       "exerciseId": "EX0035",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "1": "Pasos laterales en posición defensiva · 2 × 10 pasos",
         "2": "Pasos laterales en posición defensiva · 2 × 10 pasos",
@@ -1526,7 +1513,6 @@
       "blockId": "CAD27-MES01-D02-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "1": "Movilidad de tobillo en la pared · 8 por lado",
         "2": "Movilidad de tobillo en la pared · 8 por lado",
@@ -1538,7 +1524,6 @@
       "blockId": "CAD27-MES01-D02-B01",
       "exerciseId": "EX0020",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "1": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
         "2": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
@@ -1550,7 +1535,6 @@
       "blockId": "CAD27-MES01-D02-B02",
       "exerciseId": "EX0052",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 4 × 10 m",
         "2": "S2 5 × 10 m",
@@ -1562,7 +1546,6 @@
       "blockId": "CAD27-MES01-D02-B02",
       "exerciseId": "EX0046",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 2 por lado · solo frenada",
         "2": "S2 3 por lado",
@@ -1574,7 +1557,6 @@
       "blockId": "CAD27-MES01-D02-B03",
       "exerciseId": "EX0027",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 2 × 8 por pierna",
         "2": "S2 3 × 8",
@@ -1586,7 +1568,6 @@
       "blockId": "CAD27-MES01-D02-B03",
       "exerciseId": "EX0042",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 2 × 6 por lado sin peso",
         "2": "S2 3 × 6",
@@ -1598,7 +1579,6 @@
       "blockId": "CAD27-MES01-D02-B03",
       "exerciseId": "EX0008",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 2 × 10\" corta",
         "2": "S2 3 × 15\" corta",
@@ -1610,7 +1590,6 @@
       "blockId": "CAD27-MES01-D02-B04",
       "exerciseId": "EX0061",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 4 × 5\"",
         "2": "S2 5 × 5\"",
@@ -1622,7 +1601,6 @@
       "blockId": "CAD27-MES01-D03-B01",
       "exerciseId": "EX0012",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "1": "Rotación torácica en cuadrupedia · 5 por lado",
         "2": "Rotación torácica en cuadrupedia · 5 por lado",
@@ -1634,7 +1612,6 @@
       "blockId": "CAD27-MES01-D03-B01",
       "exerciseId": "EX0026",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "1": "Puente de glúteos · 10 · 2\" arriba",
         "2": "Puente de glúteos · 10 · 2\" arriba",
@@ -1646,7 +1623,6 @@
       "blockId": "CAD27-MES01-D03-B01",
       "exerciseId": "EX0020",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "1": "Marcha A (A-march) · 2 × 10 m",
         "2": "Marcha A (A-march) · 2 × 10 m",
@@ -1658,7 +1634,6 @@
       "blockId": "CAD27-MES01-D03-B01",
       "exerciseId": "EX0045",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "1": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
         "2": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
@@ -1670,7 +1645,6 @@
       "blockId": "CAD27-MES01-D03-B02",
       "exerciseId": "EX0040",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 2 × 3",
         "2": "S2 3 × 3",
@@ -1682,7 +1656,6 @@
       "blockId": "CAD27-MES01-D03-B02",
       "exerciseId": "EX0039",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 2 × 3 por lado",
         "2": "S2 2 × 3",
@@ -1694,7 +1667,6 @@
       "blockId": "CAD27-MES01-D03-B03",
       "exerciseId": "EX0004",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 2 × 2",
         "2": "S2 2 × 3",
@@ -1706,7 +1678,6 @@
       "blockId": "CAD27-MES01-D03-B03",
       "exerciseId": "EX0002",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 2 × 10 por pierna",
         "2": "S2 2 × 12",
@@ -1718,7 +1689,6 @@
       "blockId": "CAD27-MES01-D03-B04",
       "exerciseId": "EX0066",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "1": "S1 tests 2 × 4 · media pista",
         "2": "S2 2 × 5 · media pista",
@@ -1730,7 +1700,6 @@
       "blockId": "CAD27-MES02-D01-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "4": "World's greatest stretch · 3 por lado",
         "5": "World's greatest stretch · 3 por lado",
@@ -1742,7 +1711,6 @@
       "blockId": "CAD27-MES02-D01-B01",
       "exerciseId": "EX0035",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "4": "Pasos laterales en posición defensiva · 2 × 10 pasos",
         "5": "Pasos laterales en posición defensiva · 2 × 10 pasos",
@@ -1754,7 +1722,6 @@
       "blockId": "CAD27-MES02-D01-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "4": "Movilidad de tobillo en la pared · 8 por lado",
         "5": "Movilidad de tobillo en la pared · 8 por lado",
@@ -1766,7 +1733,6 @@
       "blockId": "CAD27-MES02-D01-B01",
       "exerciseId": "EX0020",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "4": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
         "5": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
@@ -1778,7 +1744,6 @@
       "blockId": "CAD27-MES02-D01-B02",
       "exerciseId": "EX0037",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 3 × 3 · 30 cm",
         "5": "S5 3 × 3 · 40 cm",
@@ -1790,7 +1755,6 @@
       "blockId": "CAD27-MES02-D01-B02",
       "exerciseId": "EX0031",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 2 × 6",
         "5": "S5 3 × 6",
@@ -1802,7 +1766,6 @@
       "blockId": "CAD27-MES02-D01-B03",
       "exerciseId": "EX0047",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 3 × 8 por pierna · 6 kg",
         "5": "S5 3 × 8 · 8 kg",
@@ -1814,7 +1777,6 @@
       "blockId": "CAD27-MES02-D01-B03",
       "exerciseId": "EX0014",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 3 × 6",
         "5": "S5 3 × 8",
@@ -1826,7 +1788,6 @@
       "blockId": "CAD27-MES02-D01-B03",
       "exerciseId": "EX0028",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 3 × 8 · 8 kg",
         "5": "S5 3 × 8 · 10 kg",
@@ -1838,7 +1799,6 @@
       "blockId": "CAD27-MES02-D01-B03",
       "exerciseId": "EX0007",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 16 toques",
         "5": "S5 20 toques",
@@ -1850,7 +1810,6 @@
       "blockId": "CAD27-MES02-D01-B04",
       "exerciseId": "EX0064",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 4 por jugador",
         "5": "S5 5",
@@ -1862,7 +1821,6 @@
       "blockId": "CAD27-MES02-D02-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "4": "World's greatest stretch · 3 por lado",
         "5": "World's greatest stretch · 3 por lado",
@@ -1874,7 +1832,6 @@
       "blockId": "CAD27-MES02-D02-B01",
       "exerciseId": "EX0035",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "4": "Pasos laterales en posición defensiva · 2 × 10 pasos",
         "5": "Pasos laterales en posición defensiva · 2 × 10 pasos",
@@ -1886,7 +1843,6 @@
       "blockId": "CAD27-MES02-D02-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "4": "Movilidad de tobillo en la pared · 8 por lado",
         "5": "Movilidad de tobillo en la pared · 8 por lado",
@@ -1898,7 +1854,6 @@
       "blockId": "CAD27-MES02-D02-B01",
       "exerciseId": "EX0020",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "4": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
         "5": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
@@ -1910,7 +1865,6 @@
       "blockId": "CAD27-MES02-D02-B02",
       "exerciseId": "EX0051",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 4 × 10 m",
         "5": "S5 5 × 10 m",
@@ -1922,7 +1876,6 @@
       "blockId": "CAD27-MES02-D02-B02",
       "exerciseId": "EX0043",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 2 por lado",
         "5": "S5 2 por lado",
@@ -1934,7 +1887,6 @@
       "blockId": "CAD27-MES02-D02-B03",
       "exerciseId": "EX0023",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 3 × 8 · 2 × 8 kg",
         "5": "S5 3 × 8 · 2 × 10 kg",
@@ -1946,7 +1898,6 @@
       "blockId": "CAD27-MES02-D02-B03",
       "exerciseId": "EX0042",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 3 × 6 por lado · 6 kg",
         "5": "S5 3 × 8",
@@ -1958,7 +1909,6 @@
       "blockId": "CAD27-MES02-D02-B03",
       "exerciseId": "EX0008",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 3 × 15\" corta",
         "5": "S5 3 × 20\" corta",
@@ -1970,7 +1920,6 @@
       "blockId": "CAD27-MES02-D02-B04",
       "exerciseId": "EX0055",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 3 reps",
         "5": "S5 4 reps",
@@ -1982,7 +1931,6 @@
       "blockId": "CAD27-MES02-D03-B01",
       "exerciseId": "EX0012",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "4": "Rotación torácica en cuadrupedia · 5 por lado",
         "5": "Rotación torácica en cuadrupedia · 5 por lado",
@@ -1994,7 +1942,6 @@
       "blockId": "CAD27-MES02-D03-B01",
       "exerciseId": "EX0026",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "4": "Puente de glúteos · 10 · 2\" arriba",
         "5": "Puente de glúteos · 10 · 2\" arriba",
@@ -2006,7 +1953,6 @@
       "blockId": "CAD27-MES02-D03-B01",
       "exerciseId": "EX0020",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "4": "Marcha A (A-march) · 2 × 10 m",
         "5": "Marcha A (A-march) · 2 × 10 m",
@@ -2018,7 +1964,6 @@
       "blockId": "CAD27-MES02-D03-B01",
       "exerciseId": "EX0045",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "4": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
         "5": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
@@ -2030,7 +1975,6 @@
       "blockId": "CAD27-MES02-D03-B02",
       "exerciseId": "EX0036",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 2 × 3 por pierna",
         "5": "S5 3 × 3",
@@ -2042,7 +1986,6 @@
       "blockId": "CAD27-MES02-D03-B02",
       "exerciseId": "EX0039",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 3 × 3 por lado",
         "5": "S5 3 × 3",
@@ -2054,7 +1997,6 @@
       "blockId": "CAD27-MES02-D03-B03",
       "exerciseId": "EX0004",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 2 × 3",
         "5": "S5 3 × 3",
@@ -2066,7 +2008,6 @@
       "blockId": "CAD27-MES02-D03-B03",
       "exerciseId": "EX0016",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 2 × 12",
         "5": "S5 2 × 15",
@@ -2078,7 +2019,6 @@
       "blockId": "CAD27-MES02-D03-B04",
       "exerciseId": "EX0063",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "4": "S4 1 × 6",
         "5": "S5 2 × 5",
@@ -2090,7 +2030,6 @@
       "blockId": "CAD27-MES03-D01-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "7": "World's greatest stretch · 3 por lado",
         "8": "World's greatest stretch · 3 por lado",
@@ -2103,7 +2042,6 @@
       "blockId": "CAD27-MES03-D01-B01",
       "exerciseId": "EX0035",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "7": "Pasos laterales en posición defensiva · 2 × 10 pasos",
         "8": "Pasos laterales en posición defensiva · 2 × 10 pasos",
@@ -2116,7 +2054,6 @@
       "blockId": "CAD27-MES03-D01-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "7": "Movilidad de tobillo en la pared · 8 por lado",
         "8": "Movilidad de tobillo en la pared · 8 por lado",
@@ -2129,7 +2066,6 @@
       "blockId": "CAD27-MES03-D01-B01",
       "exerciseId": "EX0020",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "7": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
         "8": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
@@ -2142,7 +2078,6 @@
       "blockId": "CAD27-MES03-D01-B02",
       "exerciseId": "EX0037",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 3 × 3",
         "8": "S8 4 × 3",
@@ -2155,7 +2090,6 @@
       "blockId": "CAD27-MES03-D01-B02",
       "exerciseId": "EX0032",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 3 × 4",
         "8": "S8 3 × 4",
@@ -2168,7 +2102,6 @@
       "blockId": "CAD27-MES03-D01-B03",
       "exerciseId": "EX0041",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 3 × 8 por pierna · 2 × 6 kg",
         "8": "S8 3 × 8 · 2 × 8 kg",
@@ -2181,7 +2114,6 @@
       "blockId": "CAD27-MES03-D01-B03",
       "exerciseId": "EX0024",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 3 × 8 por brazo · 8 kg",
         "8": "S8 3 × 8 · 10 kg",
@@ -2194,7 +2126,6 @@
       "blockId": "CAD27-MES03-D01-B03",
       "exerciseId": "EX0029",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 3 × 5 por brazo",
         "8": "S8 3 × 6",
@@ -2207,7 +2138,6 @@
       "blockId": "CAD27-MES03-D01-B03",
       "exerciseId": "EX0021",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 30 m · 2 × 12 kg",
         "8": "S8 30 m · 2 × 14 kg",
@@ -2220,7 +2150,6 @@
       "blockId": "CAD27-MES03-D01-B04",
       "exerciseId": "EX0056",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 4 por pareja",
         "8": "S8 5",
@@ -2233,7 +2162,6 @@
       "blockId": "CAD27-MES03-D02-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "7": "World's greatest stretch · 3 por lado",
         "8": "World's greatest stretch · 3 por lado",
@@ -2246,7 +2174,6 @@
       "blockId": "CAD27-MES03-D02-B01",
       "exerciseId": "EX0035",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "7": "Pasos laterales en posición defensiva · 2 × 10 pasos",
         "8": "Pasos laterales en posición defensiva · 2 × 10 pasos",
@@ -2259,7 +2186,6 @@
       "blockId": "CAD27-MES03-D02-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "7": "Movilidad de tobillo en la pared · 8 por lado",
         "8": "Movilidad de tobillo en la pared · 8 por lado",
@@ -2272,7 +2198,6 @@
       "blockId": "CAD27-MES03-D02-B01",
       "exerciseId": "EX0020",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "7": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
         "8": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
@@ -2285,7 +2210,6 @@
       "blockId": "CAD27-MES03-D02-B02",
       "exerciseId": "EX0051",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 5 × 10 m",
         "8": "S8 5 × 10 m",
@@ -2298,7 +2222,6 @@
       "blockId": "CAD27-MES03-D02-B02",
       "exerciseId": "EX0046",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 3 por lado + salida",
         "8": "S8 4 por lado",
@@ -2311,7 +2234,6 @@
       "blockId": "CAD27-MES03-D02-B03",
       "exerciseId": "EX0022",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 3 × 8 por pierna · 8 kg",
         "8": "S8 3 × 8 · 10 kg",
@@ -2324,7 +2246,6 @@
       "blockId": "CAD27-MES03-D02-B03",
       "exerciseId": "EX0042",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 3 × 6 por lado · 8 kg",
         "8": "S8 3 × 6 · 10 kg",
@@ -2337,7 +2258,6 @@
       "blockId": "CAD27-MES03-D02-B03",
       "exerciseId": "EX0008",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 3 × 20\" corta",
         "8": "S8 3 × 20\"",
@@ -2350,7 +2270,6 @@
       "blockId": "CAD27-MES03-D02-B04",
       "exerciseId": "EX0055",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 4 reps",
         "8": "S8 5 reps",
@@ -2363,7 +2282,6 @@
       "blockId": "CAD27-MES03-D03-B01",
       "exerciseId": "EX0012",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "7": "Rotación torácica en cuadrupedia · 5 por lado",
         "8": "Rotación torácica en cuadrupedia · 5 por lado",
@@ -2376,7 +2294,6 @@
       "blockId": "CAD27-MES03-D03-B01",
       "exerciseId": "EX0026",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "7": "Puente de glúteos · 10 · 2\" arriba",
         "8": "Puente de glúteos · 10 · 2\" arriba",
@@ -2389,7 +2306,6 @@
       "blockId": "CAD27-MES03-D03-B01",
       "exerciseId": "EX0020",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "7": "Marcha A (A-march) · 2 × 10 m",
         "8": "Marcha A (A-march) · 2 × 10 m",
@@ -2402,7 +2318,6 @@
       "blockId": "CAD27-MES03-D03-B01",
       "exerciseId": "EX0045",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "7": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
         "8": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
@@ -2415,7 +2330,6 @@
       "blockId": "CAD27-MES03-D03-B02",
       "exerciseId": "EX0057",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 3 × 3 saltos",
         "8": "S8 3 × 3",
@@ -2428,7 +2342,6 @@
       "blockId": "CAD27-MES03-D03-B02",
       "exerciseId": "EX0058",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 3 × 4",
         "8": "S8 3 × 4",
@@ -2441,7 +2354,6 @@
       "blockId": "CAD27-MES03-D03-B03",
       "exerciseId": "EX0004",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 3 × 4",
         "8": "S8 3 × 4",
@@ -2454,7 +2366,6 @@
       "blockId": "CAD27-MES03-D03-B03",
       "exerciseId": "EX0002",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 2 × 12 por pierna · 8 kg",
         "8": "S8 2 × 12",
@@ -2467,7 +2378,6 @@
       "blockId": "CAD27-MES03-D03-B04",
       "exerciseId": "EX0063",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "7": "S7 2 × 6",
         "8": "S8 2 × 7",
@@ -2480,7 +2390,6 @@
       "blockId": "CAD27-MES04-D01-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "11": "World's greatest stretch · 3 por lado",
         "12": "World's greatest stretch · 3 por lado",
@@ -2493,7 +2402,6 @@
       "blockId": "CAD27-MES04-D01-B01",
       "exerciseId": "EX0035",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "11": "Pasos laterales en posición defensiva · 2 × 10 pasos",
         "12": "Pasos laterales en posición defensiva · 2 × 10 pasos",
@@ -2506,7 +2414,6 @@
       "blockId": "CAD27-MES04-D01-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "11": "Movilidad de tobillo en la pared · 8 por lado",
         "12": "Movilidad de tobillo en la pared · 8 por lado",
@@ -2519,7 +2426,6 @@
       "blockId": "CAD27-MES04-D01-B01",
       "exerciseId": "EX0020",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "11": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
         "12": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
@@ -2532,7 +2438,6 @@
       "blockId": "CAD27-MES04-D01-B02",
       "exerciseId": "EX0044",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 3 × 3 · 30 cm",
         "12": "S12 3 × 3",
@@ -2545,7 +2450,6 @@
       "blockId": "CAD27-MES04-D01-B02",
       "exerciseId": "EX0033",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 3 × 5 por lado",
         "12": "S12 3 × 5",
@@ -2558,7 +2462,6 @@
       "blockId": "CAD27-MES04-D01-B03",
       "exerciseId": "EX0048",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 3 × 6 por pierna + 2 saltos al cajón",
         "12": "S12 3 × 6 · más peso",
@@ -2571,7 +2474,6 @@
       "blockId": "CAD27-MES04-D01-B03",
       "exerciseId": "EX0015",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 3 × 8",
         "12": "S12 3 × 8",
@@ -2584,7 +2486,6 @@
       "blockId": "CAD27-MES04-D01-B03",
       "exerciseId": "EX0028",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 3 × 6 por brazo · 14 kg",
         "12": "S12 3 × 6 · 16 kg",
@@ -2597,7 +2498,6 @@
       "blockId": "CAD27-MES04-D01-B03",
       "exerciseId": "EX0005",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 20 m por lado · 14 kg",
         "12": "S12 30 m",
@@ -2610,7 +2510,6 @@
       "blockId": "CAD27-MES04-D01-B04",
       "exerciseId": "EX0068",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 5 por pareja",
         "12": "S12 6",
@@ -2623,7 +2522,6 @@
       "blockId": "CAD27-MES04-D02-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "11": "World's greatest stretch · 3 por lado",
         "12": "World's greatest stretch · 3 por lado",
@@ -2636,7 +2534,6 @@
       "blockId": "CAD27-MES04-D02-B01",
       "exerciseId": "EX0035",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "11": "Pasos laterales en posición defensiva · 2 × 10 pasos",
         "12": "Pasos laterales en posición defensiva · 2 × 10 pasos",
@@ -2649,7 +2546,6 @@
       "blockId": "CAD27-MES04-D02-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "11": "Movilidad de tobillo en la pared · 8 por lado",
         "12": "Movilidad de tobillo en la pared · 8 por lado",
@@ -2662,7 +2558,6 @@
       "blockId": "CAD27-MES04-D02-B01",
       "exerciseId": "EX0020",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "11": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
         "12": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
@@ -2675,7 +2570,6 @@
       "blockId": "CAD27-MES04-D02-B02",
       "exerciseId": "EX0049",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 5 reps",
         "12": "S12 6 reps",
@@ -2688,7 +2582,6 @@
       "blockId": "CAD27-MES04-D02-B02",
       "exerciseId": "EX0061",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 5 × 6\"",
         "12": "S12 6 × 6\"",
@@ -2701,7 +2594,6 @@
       "blockId": "CAD27-MES04-D02-B03",
       "exerciseId": "EX0022",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 3 × 6 por pierna · 12 kg",
         "12": "S12 3 × 6 · 14 kg",
@@ -2714,7 +2606,6 @@
       "blockId": "CAD27-MES04-D02-B03",
       "exerciseId": "EX0042",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 3 × 6 por lado · 10 kg",
         "12": "S12 4 × 6",
@@ -2727,7 +2618,6 @@
       "blockId": "CAD27-MES04-D02-B03",
       "exerciseId": "EX0008",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 3 × 20\" larga",
         "12": "S12 3 × 20\" larga",
@@ -2740,7 +2630,6 @@
       "blockId": "CAD27-MES04-D02-B04",
       "exerciseId": "EX0062",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 4 reps",
         "12": "S12 5 reps",
@@ -2753,7 +2642,6 @@
       "blockId": "CAD27-MES04-D03-B01",
       "exerciseId": "EX0012",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "11": "Rotación torácica en cuadrupedia · 5 por lado",
         "12": "Rotación torácica en cuadrupedia · 5 por lado",
@@ -2766,7 +2654,6 @@
       "blockId": "CAD27-MES04-D03-B01",
       "exerciseId": "EX0026",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "11": "Puente de glúteos · 10 · 2\" arriba",
         "12": "Puente de glúteos · 10 · 2\" arriba",
@@ -2779,7 +2666,6 @@
       "blockId": "CAD27-MES04-D03-B01",
       "exerciseId": "EX0020",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "11": "Marcha A (A-march) · 2 × 10 m",
         "12": "Marcha A (A-march) · 2 × 10 m",
@@ -2792,7 +2678,6 @@
       "blockId": "CAD27-MES04-D03-B01",
       "exerciseId": "EX0045",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "11": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
         "12": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
@@ -2805,7 +2690,6 @@
       "blockId": "CAD27-MES04-D03-B02",
       "exerciseId": "EX0059",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 3 × 3",
         "12": "S12 3 × 3",
@@ -2818,7 +2702,6 @@
       "blockId": "CAD27-MES04-D03-B02",
       "exerciseId": "EX0036",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 2 × 3 seguidos por pierna",
         "12": "S12 3 × 3 seguidos",
@@ -2831,7 +2714,6 @@
       "blockId": "CAD27-MES04-D03-B03",
       "exerciseId": "EX0004",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 3 × 5",
         "12": "S12 3 × 5",
@@ -2844,7 +2726,6 @@
       "blockId": "CAD27-MES04-D03-B03",
       "exerciseId": "EX0016",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 2 × 15",
         "12": "S12 2 × 15",
@@ -2857,7 +2738,6 @@
       "blockId": "CAD27-MES04-D03-B04",
       "exerciseId": "EX0066",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "11": "S11 2 × 5",
         "12": "S12 2 × 6",
@@ -2870,7 +2750,6 @@
       "blockId": "CAD27-MES05-D01-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "15": "World's greatest stretch · 3 por lado",
         "16": "World's greatest stretch · 3 por lado",
@@ -2883,7 +2762,6 @@
       "blockId": "CAD27-MES05-D01-B01",
       "exerciseId": "EX0035",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "15": "Pasos laterales en posición defensiva · 2 × 10 pasos",
         "16": "Pasos laterales en posición defensiva · 2 × 10 pasos",
@@ -2896,7 +2774,6 @@
       "blockId": "CAD27-MES05-D01-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "15": "Movilidad de tobillo en la pared · 8 por lado",
         "16": "Movilidad de tobillo en la pared · 8 por lado",
@@ -2909,7 +2786,6 @@
       "blockId": "CAD27-MES05-D01-B01",
       "exerciseId": "EX0020",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "15": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
         "16": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
@@ -2922,7 +2798,6 @@
       "blockId": "CAD27-MES05-D01-B02",
       "exerciseId": "EX0053",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 3 × 3 · 30 cm",
         "16": "S16 4 × 3",
@@ -2935,7 +2810,6 @@
       "blockId": "CAD27-MES05-D01-B02",
       "exerciseId": "EX0025",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 3 × 4",
         "16": "S16 3 × 5",
@@ -2948,7 +2822,6 @@
       "blockId": "CAD27-MES05-D01-B03",
       "exerciseId": "EX0041",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 4 × 5 por pierna + 2 saltos",
         "16": "S16 4 × 5 · más peso",
@@ -2961,7 +2834,6 @@
       "blockId": "CAD27-MES05-D01-B03",
       "exerciseId": "EX0024",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 3 × 6 por brazo",
         "16": "S16 4 × 6",
@@ -2974,7 +2846,6 @@
       "blockId": "CAD27-MES05-D01-B03",
       "exerciseId": "EX0029",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 3 × 6 por brazo",
         "16": "S16 3 × 8",
@@ -2987,7 +2858,6 @@
       "blockId": "CAD27-MES05-D01-B03",
       "exerciseId": "EX0006",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 20 m por brazo · 8 kg",
         "16": "S16 30 m",
@@ -3000,7 +2870,6 @@
       "blockId": "CAD27-MES05-D01-B04",
       "exerciseId": "EX0067",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 4 por jugador",
         "16": "S16 5",
@@ -3013,7 +2882,6 @@
       "blockId": "CAD27-MES05-D02-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "15": "World's greatest stretch · 3 por lado",
         "16": "World's greatest stretch · 3 por lado",
@@ -3026,7 +2894,6 @@
       "blockId": "CAD27-MES05-D02-B01",
       "exerciseId": "EX0035",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "15": "Pasos laterales en posición defensiva · 2 × 10 pasos",
         "16": "Pasos laterales en posición defensiva · 2 × 10 pasos",
@@ -3039,7 +2906,6 @@
       "blockId": "CAD27-MES05-D02-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "15": "Movilidad de tobillo en la pared · 8 por lado",
         "16": "Movilidad de tobillo en la pared · 8 por lado",
@@ -3052,7 +2918,6 @@
       "blockId": "CAD27-MES05-D02-B01",
       "exerciseId": "EX0020",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "15": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
         "16": "Marcha A (A-march) · 2 × 10 m Dibujos en las fichas del final",
@@ -3065,7 +2930,6 @@
       "blockId": "CAD27-MES05-D02-B02",
       "exerciseId": "EX0060",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 3 reps",
         "16": "S16 3 reps",
@@ -3078,7 +2942,6 @@
       "blockId": "CAD27-MES05-D02-B02",
       "exerciseId": "EX0052",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 5 × 10 m a señal",
         "16": "S16 6 × 10 m",
@@ -3091,7 +2954,6 @@
       "blockId": "CAD27-MES05-D02-B03",
       "exerciseId": "EX0022",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 4 × 5 por pierna · 14 kg",
         "16": "S16 4 × 5 · 16 kg",
@@ -3104,7 +2966,6 @@
       "blockId": "CAD27-MES05-D02-B03",
       "exerciseId": "EX0042",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 3 × 6 por lado · 12 kg",
         "16": "S16 4 × 6",
@@ -3117,7 +2978,6 @@
       "blockId": "CAD27-MES05-D02-B03",
       "exerciseId": "EX0008",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 3 × 25\" larga",
         "16": "S16 3 × 25\"",
@@ -3130,7 +2990,6 @@
       "blockId": "CAD27-MES05-D02-B04",
       "exerciseId": "EX0055",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 5 reps",
         "16": "S16 5 reps",
@@ -3143,7 +3002,6 @@
       "blockId": "CAD27-MES05-D03-B01",
       "exerciseId": "EX0012",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "15": "Rotación torácica en cuadrupedia · 5 por lado",
         "16": "Rotación torácica en cuadrupedia · 5 por lado",
@@ -3156,7 +3014,6 @@
       "blockId": "CAD27-MES05-D03-B01",
       "exerciseId": "EX0026",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "15": "Puente de glúteos · 10 · 2\" arriba",
         "16": "Puente de glúteos · 10 · 2\" arriba",
@@ -3169,7 +3026,6 @@
       "blockId": "CAD27-MES05-D03-B01",
       "exerciseId": "EX0020",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "15": "Marcha A (A-march) · 2 × 10 m",
         "16": "Marcha A (A-march) · 2 × 10 m",
@@ -3182,7 +3038,6 @@
       "blockId": "CAD27-MES05-D03-B01",
       "exerciseId": "EX0045",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "15": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
         "16": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
@@ -3195,7 +3050,6 @@
       "blockId": "CAD27-MES05-D03-B02",
       "exerciseId": "EX0054",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 3 × 20 m",
         "16": "S16 4 × 20 m",
@@ -3208,7 +3062,6 @@
       "blockId": "CAD27-MES05-D03-B02",
       "exerciseId": "EX0058",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 3 × 4",
         "16": "S16 4 × 4",
@@ -3221,7 +3074,6 @@
       "blockId": "CAD27-MES05-D03-B03",
       "exerciseId": "EX0004",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 3 × 5",
         "16": "S16 3 × 6",
@@ -3234,7 +3086,6 @@
       "blockId": "CAD27-MES05-D03-B03",
       "exerciseId": "EX0002",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 2 × 12 por pierna · 10 kg",
         "16": "S16 2 × 15",
@@ -3247,7 +3098,6 @@
       "blockId": "CAD27-MES05-D03-B04",
       "exerciseId": "EX0063",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "15": "S15 2 × 7",
         "16": "S16 2 × 8",
@@ -3260,7 +3110,6 @@
       "blockId": "CAD27-MES06-D01-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "21": "World's greatest stretch · 3 por lado",
         "22": "World's greatest stretch · 3 por lado",
@@ -3273,7 +3122,6 @@
       "blockId": "CAD27-MES06-D01-B01",
       "exerciseId": "EX0045",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "21": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
         "22": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
@@ -3286,7 +3134,6 @@
       "blockId": "CAD27-MES06-D01-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "21": "Movilidad de tobillo en la pared · 8 por lado",
         "22": "Movilidad de tobillo en la pared · 8 por lado",
@@ -3299,7 +3146,6 @@
       "blockId": "CAD27-MES06-D01-B01",
       "exerciseId": "EX0035",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "21": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
         "22": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
@@ -3312,7 +3158,6 @@
       "blockId": "CAD27-MES06-D01-B02",
       "exerciseId": "EX0037",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 3 × 3",
         "22": "S22 4 × 3",
@@ -3325,7 +3170,6 @@
       "blockId": "CAD27-MES06-D01-B02",
       "exerciseId": "EX0032",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 2 × 4",
         "22": "S22 3 × 4",
@@ -3338,7 +3182,6 @@
       "blockId": "CAD27-MES06-D01-B03",
       "exerciseId": "EX0041",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 2 × 8 por pierna · ligero",
         "22": "S22 3 × 6",
@@ -3351,7 +3194,6 @@
       "blockId": "CAD27-MES06-D01-B03",
       "exerciseId": "EX0024",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 2 × 8 por brazo",
         "22": "S22 3 × 6",
@@ -3364,7 +3206,6 @@
       "blockId": "CAD27-MES06-D01-B03",
       "exerciseId": "EX0028",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 2 × 8 por brazo",
         "22": "S22 3 × 6",
@@ -3377,7 +3218,6 @@
       "blockId": "CAD27-MES06-D01-B03",
       "exerciseId": "EX0021",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 30 m",
         "22": "S22 40 m",
@@ -3390,7 +3230,6 @@
       "blockId": "CAD27-MES06-D01-B04",
       "exerciseId": "EX0056",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 4",
         "22": "S22 5",
@@ -3403,7 +3242,6 @@
       "blockId": "CAD27-MES06-D02-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "21": "World's greatest stretch · 3 por lado",
         "22": "World's greatest stretch · 3 por lado",
@@ -3416,7 +3254,6 @@
       "blockId": "CAD27-MES06-D02-B01",
       "exerciseId": "EX0045",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "21": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
         "22": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
@@ -3429,7 +3266,6 @@
       "blockId": "CAD27-MES06-D02-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "21": "Movilidad de tobillo en la pared · 8 por lado",
         "22": "Movilidad de tobillo en la pared · 8 por lado",
@@ -3442,7 +3278,6 @@
       "blockId": "CAD27-MES06-D02-B01",
       "exerciseId": "EX0035",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "21": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
         "22": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
@@ -3455,7 +3290,6 @@
       "blockId": "CAD27-MES06-D02-B02",
       "exerciseId": "EX0051",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 4 × 10 m",
         "22": "S22 5 × 10 m",
@@ -3468,7 +3302,6 @@
       "blockId": "CAD27-MES06-D02-B02",
       "exerciseId": "EX0046",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 3 por lado",
         "22": "S22 4 por lado",
@@ -3481,7 +3314,6 @@
       "blockId": "CAD27-MES06-D02-B03",
       "exerciseId": "EX0022",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 2 × 8 por pierna",
         "22": "S22 3 × 6",
@@ -3494,7 +3326,6 @@
       "blockId": "CAD27-MES06-D02-B03",
       "exerciseId": "EX0042",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 2 × 6 por lado",
         "22": "S22 3 × 6",
@@ -3507,7 +3338,6 @@
       "blockId": "CAD27-MES06-D02-B03",
       "exerciseId": "EX0008",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 2 × 20\" larga",
         "22": "S22 3 × 25\"",
@@ -3520,7 +3350,6 @@
       "blockId": "CAD27-MES06-D02-B04",
       "exerciseId": "EX0061",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 4 × 5\"",
         "22": "S22 5 × 6\"",
@@ -3533,7 +3362,6 @@
       "blockId": "CAD27-MES06-D03-B01",
       "exerciseId": "EX0012",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "21": "Rotación torácica en cuadrupedia · 5 por lado",
         "22": "Rotación torácica en cuadrupedia · 5 por lado",
@@ -3546,7 +3374,6 @@
       "blockId": "CAD27-MES06-D03-B01",
       "exerciseId": "EX0026",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "21": "Puente de glúteos · 10 · 2\" arriba",
         "22": "Puente de glúteos · 10 · 2\" arriba",
@@ -3559,7 +3386,6 @@
       "blockId": "CAD27-MES06-D03-B01",
       "exerciseId": "EX0020",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "21": "Marcha A (A-march) · 2 × 10 m",
         "22": "Marcha A (A-march) · 2 × 10 m",
@@ -3572,7 +3398,6 @@
       "blockId": "CAD27-MES06-D03-B01",
       "exerciseId": "EX0045",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "21": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
         "22": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
@@ -3585,7 +3410,6 @@
       "blockId": "CAD27-MES06-D03-B02",
       "exerciseId": "EX0057",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 2 × 3",
         "22": "S22 3 × 3",
@@ -3598,7 +3422,6 @@
       "blockId": "CAD27-MES06-D03-B02",
       "exerciseId": "EX0039",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 2 × 3 por lado",
         "22": "S22 3 × 4",
@@ -3611,7 +3434,6 @@
       "blockId": "CAD27-MES06-D03-B03",
       "exerciseId": "EX0004",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 2 × 4",
         "22": "S22 3 × 5",
@@ -3624,7 +3446,6 @@
       "blockId": "CAD27-MES06-D03-B03",
       "exerciseId": "EX0016",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 2 × 12",
         "22": "S22 2 × 15",
@@ -3637,7 +3458,6 @@
       "blockId": "CAD27-MES06-D03-B04",
       "exerciseId": "EX0063",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "21": "S21 tests 1 × 6",
         "22": "S22 2 × 6",
@@ -3650,7 +3470,6 @@
       "blockId": "CAD27-MES07-D01-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "25": "World's greatest stretch · 3 por lado",
         "26": "World's greatest stretch · 3 por lado",
@@ -3663,7 +3482,6 @@
       "blockId": "CAD27-MES07-D01-B01",
       "exerciseId": "EX0045",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "25": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
         "26": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
@@ -3676,7 +3494,6 @@
       "blockId": "CAD27-MES07-D01-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "25": "Movilidad de tobillo en la pared · 8 por lado",
         "26": "Movilidad de tobillo en la pared · 8 por lado",
@@ -3689,7 +3506,6 @@
       "blockId": "CAD27-MES07-D01-B01",
       "exerciseId": "EX0035",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "25": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
         "26": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
@@ -3702,7 +3518,6 @@
       "blockId": "CAD27-MES07-D01-B02",
       "exerciseId": "EX0053",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 3 × 3 · 30 cm",
         "26": "S26 4 × 3",
@@ -3715,7 +3530,6 @@
       "blockId": "CAD27-MES07-D01-B02",
       "exerciseId": "EX0025",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 3 × 4",
         "26": "S26 3 × 5",
@@ -3728,7 +3542,6 @@
       "blockId": "CAD27-MES07-D01-B03",
       "exerciseId": "EX0048",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 3 × 5 por pierna · pesado + 3 pogos",
         "26": "S26 4 × 5",
@@ -3741,7 +3554,6 @@
       "blockId": "CAD27-MES07-D01-B03",
       "exerciseId": "EX0015",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 3 × 8",
         "26": "S26 3 × 10",
@@ -3754,7 +3566,6 @@
       "blockId": "CAD27-MES07-D01-B03",
       "exerciseId": "EX0028",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 3 × 8 por brazo · subida explosiva",
         "26": "S26 3 × 10",
@@ -3767,7 +3578,6 @@
       "blockId": "CAD27-MES07-D01-B03",
       "exerciseId": "EX0006",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 20 m por brazo",
         "26": "S26 30 m",
@@ -3780,7 +3590,6 @@
       "blockId": "CAD27-MES07-D01-B04",
       "exerciseId": "EX0068",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 5",
         "26": "S26 6",
@@ -3793,7 +3602,6 @@
       "blockId": "CAD27-MES07-D02-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "25": "World's greatest stretch · 3 por lado",
         "26": "World's greatest stretch · 3 por lado",
@@ -3806,7 +3614,6 @@
       "blockId": "CAD27-MES07-D02-B01",
       "exerciseId": "EX0045",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "25": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
         "26": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
@@ -3819,7 +3626,6 @@
       "blockId": "CAD27-MES07-D02-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "25": "Movilidad de tobillo en la pared · 8 por lado",
         "26": "Movilidad de tobillo en la pared · 8 por lado",
@@ -3832,7 +3638,6 @@
       "blockId": "CAD27-MES07-D02-B01",
       "exerciseId": "EX0035",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "25": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
         "26": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
@@ -3845,7 +3650,6 @@
       "blockId": "CAD27-MES07-D02-B02",
       "exerciseId": "EX0049",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 5 reps",
         "26": "S26 6 reps",
@@ -3858,7 +3662,6 @@
       "blockId": "CAD27-MES07-D02-B02",
       "exerciseId": "EX0061",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 5 × 6\"",
         "26": "S26 6 × 6\"",
@@ -3871,7 +3674,6 @@
       "blockId": "CAD27-MES07-D02-B03",
       "exerciseId": "EX0022",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 4 × 5 por pierna · pesado",
         "26": "S26 4 × 5",
@@ -3884,7 +3686,6 @@
       "blockId": "CAD27-MES07-D02-B03",
       "exerciseId": "EX0042",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 4 × 6 por lado · pesado",
         "26": "S26 4 × 6",
@@ -3897,7 +3698,6 @@
       "blockId": "CAD27-MES07-D02-B03",
       "exerciseId": "EX0008",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 3 × 25\" larga",
         "26": "S26 3 × 30\"",
@@ -3910,7 +3710,6 @@
       "blockId": "CAD27-MES07-D02-B04",
       "exerciseId": "EX0062",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 5 reps",
         "26": "S26 6 reps",
@@ -3923,7 +3722,6 @@
       "blockId": "CAD27-MES07-D03-B01",
       "exerciseId": "EX0012",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "25": "Rotación torácica en cuadrupedia · 5 por lado",
         "26": "Rotación torácica en cuadrupedia · 5 por lado",
@@ -3936,7 +3734,6 @@
       "blockId": "CAD27-MES07-D03-B01",
       "exerciseId": "EX0026",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "25": "Puente de glúteos · 10 · 2\" arriba",
         "26": "Puente de glúteos · 10 · 2\" arriba",
@@ -3949,7 +3746,6 @@
       "blockId": "CAD27-MES07-D03-B01",
       "exerciseId": "EX0020",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "25": "Marcha A (A-march) · 2 × 10 m",
         "26": "Marcha A (A-march) · 2 × 10 m",
@@ -3962,7 +3758,6 @@
       "blockId": "CAD27-MES07-D03-B01",
       "exerciseId": "EX0045",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "25": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
         "26": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
@@ -3975,7 +3770,6 @@
       "blockId": "CAD27-MES07-D03-B02",
       "exerciseId": "EX0059",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 3 × 3",
         "26": "S26 4 × 3",
@@ -3988,7 +3782,6 @@
       "blockId": "CAD27-MES07-D03-B02",
       "exerciseId": "EX0054",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 3 × 20 m",
         "26": "S26 4 × 20 m",
@@ -4001,7 +3794,6 @@
       "blockId": "CAD27-MES07-D03-B03",
       "exerciseId": "EX0004",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 3 × 5",
         "26": "S26 3 × 6",
@@ -4014,7 +3806,6 @@
       "blockId": "CAD27-MES07-D03-B03",
       "exerciseId": "EX0002",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 2 × 12 por pierna · pesado",
         "26": "S26 2 × 15",
@@ -4027,7 +3818,6 @@
       "blockId": "CAD27-MES07-D03-B04",
       "exerciseId": "EX0066",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "25": "S25 2 × 5",
         "26": "S26 2 × 6",
@@ -4040,7 +3830,6 @@
       "blockId": "CAD27-MES08-D01-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "29": "World's greatest stretch · 3 por lado",
         "30": "World's greatest stretch · 3 por lado",
@@ -4053,7 +3842,6 @@
       "blockId": "CAD27-MES08-D01-B01",
       "exerciseId": "EX0045",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "29": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
         "30": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
@@ -4066,7 +3854,6 @@
       "blockId": "CAD27-MES08-D01-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "29": "Movilidad de tobillo en la pared · 8 por lado",
         "30": "Movilidad de tobillo en la pared · 8 por lado",
@@ -4079,7 +3866,6 @@
       "blockId": "CAD27-MES08-D01-B01",
       "exerciseId": "EX0035",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "29": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
         "30": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
@@ -4092,7 +3878,6 @@
       "blockId": "CAD27-MES08-D01-B02",
       "exerciseId": "EX0053",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 4 × 3",
         "30": "S30 4 × 3",
@@ -4105,7 +3890,6 @@
       "blockId": "CAD27-MES08-D01-B02",
       "exerciseId": "EX0033",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 3 × 5 por lado",
         "30": "S30 3 × 6",
@@ -4118,7 +3902,6 @@
       "blockId": "CAD27-MES08-D01-B03",
       "exerciseId": "EX0041",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 4 × 4 por pierna · pesado + 2 saltos",
         "30": "S30 4 × 4",
@@ -4131,7 +3914,6 @@
       "blockId": "CAD27-MES08-D01-B03",
       "exerciseId": "EX0025",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 3 × 5",
         "30": "S30 3 × 5",
@@ -4144,7 +3926,6 @@
       "blockId": "CAD27-MES08-D01-B03",
       "exerciseId": "EX0029",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 3 × 8 por brazo",
         "30": "S30 4 × 6 · más peso",
@@ -4157,7 +3938,6 @@
       "blockId": "CAD27-MES08-D01-B03",
       "exerciseId": "EX0005",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 30 m por lado · pesado",
         "30": "S30 30 m",
@@ -4170,7 +3950,6 @@
       "blockId": "CAD27-MES08-D01-B04",
       "exerciseId": "EX0067",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 5 por jugador",
         "30": "S30 6",
@@ -4183,7 +3962,6 @@
       "blockId": "CAD27-MES08-D02-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "29": "World's greatest stretch · 3 por lado",
         "30": "World's greatest stretch · 3 por lado",
@@ -4196,7 +3974,6 @@
       "blockId": "CAD27-MES08-D02-B01",
       "exerciseId": "EX0045",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "29": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
         "30": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
@@ -4209,7 +3986,6 @@
       "blockId": "CAD27-MES08-D02-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "29": "Movilidad de tobillo en la pared · 8 por lado",
         "30": "Movilidad de tobillo en la pared · 8 por lado",
@@ -4222,7 +3998,6 @@
       "blockId": "CAD27-MES08-D02-B01",
       "exerciseId": "EX0035",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "29": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
         "30": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
@@ -4235,7 +4010,6 @@
       "blockId": "CAD27-MES08-D02-B02",
       "exerciseId": "EX0049",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 6 reps",
         "30": "S30 6 reps",
@@ -4248,7 +4022,6 @@
       "blockId": "CAD27-MES08-D02-B02",
       "exerciseId": "EX0043",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 3 por lado a señal",
         "30": "S30 3",
@@ -4261,7 +4034,6 @@
       "blockId": "CAD27-MES08-D02-B03",
       "exerciseId": "EX0022",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 4 × 4 por pierna · pesado",
         "30": "S30 4 × 4",
@@ -4274,7 +4046,6 @@
       "blockId": "CAD27-MES08-D02-B03",
       "exerciseId": "EX0042",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 4 × 5 por lado · pesado",
         "30": "S30 4 × 5",
@@ -4287,7 +4058,6 @@
       "blockId": "CAD27-MES08-D02-B03",
       "exerciseId": "EX0008",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 3 × 30\" larga",
         "30": "S30 3 × 30\"",
@@ -4300,7 +4070,6 @@
       "blockId": "CAD27-MES08-D02-B04",
       "exerciseId": "EX0055",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 5 reps",
         "30": "S30 6 reps",
@@ -4313,7 +4082,6 @@
       "blockId": "CAD27-MES08-D03-B01",
       "exerciseId": "EX0012",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "29": "Rotación torácica en cuadrupedia · 5 por lado",
         "30": "Rotación torácica en cuadrupedia · 5 por lado",
@@ -4326,7 +4094,6 @@
       "blockId": "CAD27-MES08-D03-B01",
       "exerciseId": "EX0026",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "29": "Puente de glúteos · 10 · 2\" arriba",
         "30": "Puente de glúteos · 10 · 2\" arriba",
@@ -4339,7 +4106,6 @@
       "blockId": "CAD27-MES08-D03-B01",
       "exerciseId": "EX0020",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "29": "Marcha A (A-march) · 2 × 10 m",
         "30": "Marcha A (A-march) · 2 × 10 m",
@@ -4352,7 +4118,6 @@
       "blockId": "CAD27-MES08-D03-B01",
       "exerciseId": "EX0045",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "29": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
         "30": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
@@ -4365,7 +4130,6 @@
       "blockId": "CAD27-MES08-D03-B02",
       "exerciseId": "EX0058",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 4 × 4",
         "30": "S30 4 × 5",
@@ -4378,7 +4142,6 @@
       "blockId": "CAD27-MES08-D03-B02",
       "exerciseId": "EX0050",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 3 × 10",
         "30": "S30 3 × 12",
@@ -4391,7 +4154,6 @@
       "blockId": "CAD27-MES08-D03-B03",
       "exerciseId": "EX0004",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 3 × 6",
         "30": "S30 3 × 6",
@@ -4404,7 +4166,6 @@
       "blockId": "CAD27-MES08-D03-B03",
       "exerciseId": "EX0016",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 2 × 15",
         "30": "S30 2 × 20",
@@ -4417,7 +4178,6 @@
       "blockId": "CAD27-MES08-D03-B04",
       "exerciseId": "EX0066",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "29": "S29 2 × 6",
         "30": "S30 2 × 6",
@@ -4430,7 +4190,6 @@
       "blockId": "CAD27-MES09-D01-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "34": "World's greatest stretch · 3 por lado",
         "35": "World's greatest stretch · 3 por lado",
@@ -4443,7 +4202,6 @@
       "blockId": "CAD27-MES09-D01-B01",
       "exerciseId": "EX0045",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "34": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
         "35": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
@@ -4456,7 +4214,6 @@
       "blockId": "CAD27-MES09-D01-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "34": "Movilidad de tobillo en la pared · 8 por lado",
         "35": "Movilidad de tobillo en la pared · 8 por lado",
@@ -4469,7 +4226,6 @@
       "blockId": "CAD27-MES09-D01-B01",
       "exerciseId": "EX0035",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "34": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
         "35": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
@@ -4482,7 +4238,6 @@
       "blockId": "CAD27-MES09-D01-B02",
       "exerciseId": "EX0053",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 2 × 3",
         "35": "S35 3 × 3",
@@ -4495,7 +4250,6 @@
       "blockId": "CAD27-MES09-D01-B02",
       "exerciseId": "EX0034",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 2 × 5 explosivo",
         "35": "S35 3 × 5",
@@ -4508,7 +4262,6 @@
       "blockId": "CAD27-MES09-D01-B03",
       "exerciseId": "EX0041",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 2 × 6 por pierna",
         "35": "S35 3 × 5",
@@ -4521,7 +4274,6 @@
       "blockId": "CAD27-MES09-D01-B03",
       "exerciseId": "EX0024",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 2 × 6 por brazo",
         "35": "S35 3 × 6",
@@ -4534,7 +4286,6 @@
       "blockId": "CAD27-MES09-D01-B03",
       "exerciseId": "EX0028",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 2 × 8 por brazo",
         "35": "S35 3 × 6",
@@ -4547,7 +4298,6 @@
       "blockId": "CAD27-MES09-D01-B03",
       "exerciseId": "EX0021",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 30 m",
         "35": "S35 40 m",
@@ -4560,7 +4310,6 @@
       "blockId": "CAD27-MES09-D01-B04",
       "exerciseId": "EX0068",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 4",
         "35": "S35 6",
@@ -4573,7 +4322,6 @@
       "blockId": "CAD27-MES09-D02-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "34": "World's greatest stretch · 3 por lado",
         "35": "World's greatest stretch · 3 por lado",
@@ -4586,7 +4334,6 @@
       "blockId": "CAD27-MES09-D02-B01",
       "exerciseId": "EX0045",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "34": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
         "35": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
@@ -4599,7 +4346,6 @@
       "blockId": "CAD27-MES09-D02-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "34": "Movilidad de tobillo en la pared · 8 por lado",
         "35": "Movilidad de tobillo en la pared · 8 por lado",
@@ -4612,7 +4358,6 @@
       "blockId": "CAD27-MES09-D02-B01",
       "exerciseId": "EX0035",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "34": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
         "35": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
@@ -4625,7 +4370,6 @@
       "blockId": "CAD27-MES09-D02-B02",
       "exerciseId": "EX0052",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 4 × 10 m a señal",
         "35": "S35 6 × 10 m",
@@ -4638,7 +4382,6 @@
       "blockId": "CAD27-MES09-D02-B02",
       "exerciseId": "EX0061",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 4 × 6\"",
         "35": "S35 6 × 6\"",
@@ -4651,7 +4394,6 @@
       "blockId": "CAD27-MES09-D02-B03",
       "exerciseId": "EX0022",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 2 × 6 por pierna",
         "35": "S35 3 × 5",
@@ -4664,7 +4406,6 @@
       "blockId": "CAD27-MES09-D02-B03",
       "exerciseId": "EX0042",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 2 × 6 por lado",
         "35": "S35 3 × 6",
@@ -4677,7 +4418,6 @@
       "blockId": "CAD27-MES09-D02-B03",
       "exerciseId": "EX0008",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 2 × 20\"",
         "35": "S35 3 × 25\"",
@@ -4690,7 +4430,6 @@
       "blockId": "CAD27-MES09-D02-B04",
       "exerciseId": "EX0062",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 4 reps",
         "35": "S35 5 reps",
@@ -4703,7 +4442,6 @@
       "blockId": "CAD27-MES09-D03-B01",
       "exerciseId": "EX0012",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "34": "Rotación torácica en cuadrupedia · 5 por lado",
         "35": "Rotación torácica en cuadrupedia · 5 por lado",
@@ -4716,7 +4454,6 @@
       "blockId": "CAD27-MES09-D03-B01",
       "exerciseId": "EX0026",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "34": "Puente de glúteos · 10 · 2\" arriba",
         "35": "Puente de glúteos · 10 · 2\" arriba",
@@ -4729,7 +4466,6 @@
       "blockId": "CAD27-MES09-D03-B01",
       "exerciseId": "EX0020",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "34": "Marcha A (A-march) · 2 × 10 m",
         "35": "Marcha A (A-march) · 2 × 10 m",
@@ -4742,7 +4478,6 @@
       "blockId": "CAD27-MES09-D03-B01",
       "exerciseId": "EX0045",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "34": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
         "35": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
@@ -4755,7 +4490,6 @@
       "blockId": "CAD27-MES09-D03-B02",
       "exerciseId": "EX0059",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 2 × 3",
         "35": "S35 3 × 3",
@@ -4768,7 +4502,6 @@
       "blockId": "CAD27-MES09-D03-B02",
       "exerciseId": "EX0058",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 2 × 4",
         "35": "S35 3 × 4",
@@ -4781,7 +4514,6 @@
       "blockId": "CAD27-MES09-D03-B03",
       "exerciseId": "EX0004",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 2 × 4",
         "35": "S35 3 × 5",
@@ -4794,7 +4526,6 @@
       "blockId": "CAD27-MES09-D03-B03",
       "exerciseId": "EX0002",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 2 × 10 por pierna",
         "35": "S35 2 × 12",
@@ -4807,7 +4538,6 @@
       "blockId": "CAD27-MES09-D03-B04",
       "exerciseId": "EX0063",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "34": "S34 1 × 6",
         "35": "S35 2 × 7",
@@ -4820,7 +4550,6 @@
       "blockId": "CAD27-MES10-D01-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "38": "World's greatest stretch · 3 por lado",
         "39": "World's greatest stretch · 3 por lado",
@@ -4833,7 +4562,6 @@
       "blockId": "CAD27-MES10-D01-B01",
       "exerciseId": "EX0045",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "38": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
         "39": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
@@ -4846,7 +4574,6 @@
       "blockId": "CAD27-MES10-D01-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "38": "Movilidad de tobillo en la pared · 8 por lado",
         "39": "Movilidad de tobillo en la pared · 8 por lado",
@@ -4859,7 +4586,6 @@
       "blockId": "CAD27-MES10-D01-B01",
       "exerciseId": "EX0035",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "38": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
         "39": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
@@ -4872,7 +4598,6 @@
       "blockId": "CAD27-MES10-D01-B02",
       "exerciseId": "EX0040",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 2 × 3",
         "39": "S39 2 × 3",
@@ -4885,7 +4610,6 @@
       "blockId": "CAD27-MES10-D01-B02",
       "exerciseId": "EX0031",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 2 × 5",
         "39": "S39 2 × 5",
@@ -4898,7 +4622,6 @@
       "blockId": "CAD27-MES10-D01-B03",
       "exerciseId": "EX0030",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 2 × 5 · pesado",
         "39": "S39 2 × 5",
@@ -4911,7 +4634,6 @@
       "blockId": "CAD27-MES10-D01-B03",
       "exerciseId": "EX0014",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 2 × 8",
         "39": "S39 2 × 8",
@@ -4924,7 +4646,6 @@
       "blockId": "CAD27-MES10-D01-B03",
       "exerciseId": "EX0028",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 2 × 6 por brazo · pesado",
         "39": "S39 2 × 6",
@@ -4937,7 +4658,6 @@
       "blockId": "CAD27-MES10-D01-B03",
       "exerciseId": "EX0009",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 30\"",
         "39": "S39 30\"",
@@ -4950,7 +4670,6 @@
       "blockId": "CAD27-MES10-D01-B04",
       "exerciseId": "EX0056",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 3",
         "39": "S39 4",
@@ -4963,7 +4682,6 @@
       "blockId": "CAD27-MES10-D02-B01",
       "exerciseId": "EX0017",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "38": "World's greatest stretch · 3 por lado",
         "39": "World's greatest stretch · 3 por lado",
@@ -4976,7 +4694,6 @@
       "blockId": "CAD27-MES10-D02-B01",
       "exerciseId": "EX0045",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "38": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
         "39": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas",
@@ -4989,7 +4706,6 @@
       "blockId": "CAD27-MES10-D02-B01",
       "exerciseId": "EX0003",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "38": "Movilidad de tobillo en la pared · 8 por lado",
         "39": "Movilidad de tobillo en la pared · 8 por lado",
@@ -5002,7 +4718,6 @@
       "blockId": "CAD27-MES10-D02-B01",
       "exerciseId": "EX0035",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "38": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
         "39": "Pasos laterales en posición defensiva · 2 × 10 pasos Dibujos en las fichas del final",
@@ -5015,7 +4730,6 @@
       "blockId": "CAD27-MES10-D02-B02",
       "exerciseId": "EX0046",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 3 por lado + salida",
         "39": "S39 3",
@@ -5028,7 +4742,6 @@
       "blockId": "CAD27-MES10-D02-B02",
       "exerciseId": "EX0065",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 4 sprints",
         "39": "S39 4",
@@ -5041,7 +4754,6 @@
       "blockId": "CAD27-MES10-D02-B03",
       "exerciseId": "EX0022",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 2 × 5 por pierna · pesado",
         "39": "S39 2 × 5",
@@ -5054,7 +4766,6 @@
       "blockId": "CAD27-MES10-D02-B03",
       "exerciseId": "EX0042",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 2 × 6 por lado",
         "39": "S39 2 × 6",
@@ -5067,7 +4778,6 @@
       "blockId": "CAD27-MES10-D02-B03",
       "exerciseId": "EX0008",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 2 × 20\"",
         "39": "S39 2 × 25\"",
@@ -5080,7 +4790,6 @@
       "blockId": "CAD27-MES10-D02-B04",
       "exerciseId": "EX0055",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 3 reps",
         "39": "S39 4 reps",
@@ -5093,7 +4802,6 @@
       "blockId": "CAD27-MES10-D03-B01",
       "exerciseId": "EX0012",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "38": "Rotación torácica en cuadrupedia · 5 por lado",
         "39": "Rotación torácica en cuadrupedia · 5 por lado",
@@ -5106,7 +4814,6 @@
       "blockId": "CAD27-MES10-D03-B01",
       "exerciseId": "EX0026",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "38": "Puente de glúteos · 10 · 2\" arriba",
         "39": "Puente de glúteos · 10 · 2\" arriba",
@@ -5119,7 +4826,6 @@
       "blockId": "CAD27-MES10-D03-B01",
       "exerciseId": "EX0020",
       "itemOrder": 3,
-      "stationLabel": "",
       "weekDoses": {
         "38": "Marcha A (A-march) · 2 × 10 m",
         "39": "Marcha A (A-march) · 2 × 10 m",
@@ -5132,7 +4838,6 @@
       "blockId": "CAD27-MES10-D03-B01",
       "exerciseId": "EX0045",
       "itemOrder": 4,
-      "stationLabel": "",
       "weekDoses": {
         "38": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
         "39": "Escalera de agilidad (In-In-Out-Out · Scissors) · 3 pasadas Dibujos en las fichas del final",
@@ -5145,7 +4850,6 @@
       "blockId": "CAD27-MES10-D03-B02",
       "exerciseId": "EX0059",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 2 × 3",
         "39": "S39 2 × 3",
@@ -5158,7 +4862,6 @@
       "blockId": "CAD27-MES10-D03-B02",
       "exerciseId": "EX0050",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 2 × 8",
         "39": "S39 2 × 10",
@@ -5171,7 +4874,6 @@
       "blockId": "CAD27-MES10-D03-B03",
       "exerciseId": "EX0004",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 2 × 4",
         "39": "S39 2 × 4",
@@ -5184,7 +4886,6 @@
       "blockId": "CAD27-MES10-D03-B03",
       "exerciseId": "EX0016",
       "itemOrder": 2,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 2 × 12",
         "39": "S39 2 × 12",
@@ -5197,7 +4898,6 @@
       "blockId": "CAD27-MES10-D03-B04",
       "exerciseId": "EX0052",
       "itemOrder": 1,
-      "stationLabel": "",
       "weekDoses": {
         "38": "S38 4 × 10 m",
         "39": "S39 4 × 10 m",
@@ -5210,8 +4910,6 @@
     {
       "id": "EX0001",
       "name": "Dead bug (bicho muerto)",
-      "category": "Nivel 0−",
-      "focus": "Proteger",
       "movementLevel": "0−",
       "movementArea": "Proteger",
       "material": "Sin material",
@@ -5231,8 +4929,6 @@
     {
       "id": "EX0002",
       "name": "Elevación de talones a 1 pierna",
-      "category": "Nivel 0−",
-      "focus": "Proteger",
       "movementLevel": "0−",
       "movementArea": "Proteger",
       "material": "Cajón o escalón + pared",
@@ -5252,8 +4948,6 @@
     {
       "id": "EX0003",
       "name": "Movilidad de tobillo en la pared",
-      "category": "Nivel 0−",
-      "focus": "Proteger",
       "movementLevel": "0−",
       "movementArea": "Proteger",
       "material": "Pared",
@@ -5273,8 +4967,6 @@
     {
       "id": "EX0004",
       "name": "Nórdico de isquiotibiales",
-      "category": "Nivel 0−",
-      "focus": "Proteger",
       "movementLevel": "0−",
       "movementArea": "Proteger",
       "material": "Compañero + esterilla",
@@ -5294,8 +4986,6 @@
     {
       "id": "EX0005",
       "name": "Paseo con maleta (1 mancuerna)",
-      "category": "Nivel 0−",
-      "focus": "Luchar",
       "movementLevel": "0−",
       "movementArea": "Luchar",
       "material": "1 mancuerna",
@@ -5315,8 +5005,6 @@
     {
       "id": "EX0006",
       "name": "Paseo del camarero",
-      "category": "Nivel 0−",
-      "focus": "Luchar",
       "movementLevel": "0−",
       "movementArea": "Luchar",
       "material": "1 mancuerna",
@@ -5336,8 +5024,6 @@
     {
       "id": "EX0007",
       "name": "Plancha con toques de hombro",
-      "category": "Nivel 0−",
-      "focus": "Luchar",
       "movementLevel": "0−",
       "movementArea": "Luchar",
       "material": "Sin material",
@@ -5357,8 +5043,6 @@
     {
       "id": "EX0008",
       "name": "Plancha Copenhagen (aductores)",
-      "category": "Nivel 0−",
-      "focus": "Proteger",
       "movementLevel": "0−",
       "movementArea": "Proteger",
       "material": "Cajón o banco",
@@ -5378,8 +5062,6 @@
     {
       "id": "EX0009",
       "name": "Plancha frontal",
-      "category": "Nivel 0−",
-      "focus": "Luchar",
       "movementLevel": "0−",
       "movementArea": "Luchar",
       "material": "Sin material",
@@ -5399,8 +5081,6 @@
     {
       "id": "EX0010",
       "name": "Plancha lateral",
-      "category": "Nivel 0−",
-      "focus": "Luchar",
       "movementLevel": "0−",
       "movementArea": "Luchar",
       "material": "Sin material",
@@ -5420,8 +5100,6 @@
     {
       "id": "EX0011",
       "name": "Postura del niño",
-      "category": "Nivel 0−",
-      "focus": "Proteger",
       "movementLevel": "0−",
       "movementArea": "Proteger",
       "material": "Sin material",
@@ -5438,8 +5116,6 @@
     {
       "id": "EX0012",
       "name": "Rotación torácica en cuadrupedia",
-      "category": "Nivel 0−",
-      "focus": "Proteger",
       "movementLevel": "0−",
       "movementArea": "Proteger",
       "material": "Sin material",
@@ -5459,8 +5135,6 @@
     {
       "id": "EX0013",
       "name": "Carrera continua / fartlek",
-      "category": "Nivel 0+",
-      "focus": "Desplazarse",
       "movementLevel": "0+",
       "movementArea": "Desplazarse",
       "material": "Exterior",
@@ -5479,8 +5153,6 @@
     {
       "id": "EX0014",
       "name": "Flexiones",
-      "category": "Nivel 0+",
-      "focus": "Luchar",
       "movementLevel": "0+",
       "movementArea": "Luchar",
       "material": "Sin material",
@@ -5500,8 +5172,6 @@
     {
       "id": "EX0015",
       "name": "Flexiones con pies elevados",
-      "category": "Nivel 0+",
-      "focus": "Luchar",
       "movementLevel": "0+",
       "movementArea": "Luchar",
       "material": "Cajón",
@@ -5521,8 +5191,6 @@
     {
       "id": "EX0016",
       "name": "Tibial en la pared",
-      "category": "Nivel 0−",
-      "focus": "Proteger",
       "movementLevel": "0−",
       "movementArea": "Proteger",
       "material": "Pared",
@@ -5542,8 +5210,6 @@
     {
       "id": "EX0017",
       "name": "World's greatest stretch",
-      "category": "Nivel 0−",
-      "focus": "Proteger",
       "movementLevel": "0−",
       "movementArea": "Proteger",
       "material": "Sin material",
@@ -5563,8 +5229,6 @@
     {
       "id": "EX0018",
       "name": "Y-W en el suelo",
-      "category": "Nivel 0−",
-      "focus": "Proteger",
       "movementLevel": "0−",
       "movementArea": "Proteger",
       "material": "Sin material",
@@ -5584,8 +5248,6 @@
     {
       "id": "EX0019",
       "name": "Flexiones inclinadas",
-      "category": "Nivel 0+",
-      "focus": "Luchar",
       "movementLevel": "0+",
       "movementArea": "Luchar",
       "material": "Cajón o banco",
@@ -5605,8 +5267,6 @@
     {
       "id": "EX0020",
       "name": "Marcha A (A-march)",
-      "category": "Nivel 0+",
-      "focus": "Desplazarse",
       "movementLevel": "0+",
       "movementArea": "Desplazarse",
       "material": "Sin material",
@@ -5626,8 +5286,6 @@
     {
       "id": "EX0021",
       "name": "Paseo del granjero",
-      "category": "Nivel 0+",
-      "focus": "Luchar",
       "movementLevel": "0+",
       "movementArea": "Luchar",
       "material": "2 mancuernas",
@@ -5647,8 +5305,6 @@
     {
       "id": "EX0022",
       "name": "Peso muerto a 1 pierna",
-      "category": "Nivel 0+",
-      "focus": "Desplazarse",
       "movementLevel": "0+",
       "movementArea": "Desplazarse",
       "material": "Mancuerna",
@@ -5668,8 +5324,6 @@
     {
       "id": "EX0023",
       "name": "Peso muerto rumano con mancuernas",
-      "category": "Nivel 0+",
-      "focus": "Saltar",
       "movementLevel": "0+",
       "movementArea": "Saltar",
       "material": "Mancuernas",
@@ -5689,8 +5343,6 @@
     {
       "id": "EX0024",
       "name": "Press a 1 brazo medio arrodillado",
-      "category": "Nivel 0+",
-      "focus": "Jugar el balón",
       "movementLevel": "0+",
       "movementArea": "Jugar el balón",
       "material": "Mancuerna",
@@ -5710,8 +5362,6 @@
     {
       "id": "EX0025",
       "name": "Flexión explosiva",
-      "category": "Nivel I",
-      "focus": "Jugar el balón",
       "movementLevel": "I",
       "movementArea": "Jugar el balón",
       "material": "Sin material",
@@ -5731,8 +5381,6 @@
     {
       "id": "EX0026",
       "name": "Puente de glúteos",
-      "category": "Nivel 0+",
-      "focus": "Saltar",
       "movementLevel": "0+",
       "movementArea": "Saltar",
       "material": "Sin material",
@@ -5752,8 +5400,6 @@
     {
       "id": "EX0027",
       "name": "Puente de glúteos a 1 pierna",
-      "category": "Nivel 0+",
-      "focus": "Saltar",
       "movementLevel": "0+",
       "movementArea": "Saltar",
       "material": "Sin material",
@@ -5773,8 +5419,6 @@
     {
       "id": "EX0028",
       "name": "Remo a 1 brazo con mancuerna",
-      "category": "Nivel 0+",
-      "focus": "Luchar",
       "movementLevel": "0+",
       "movementArea": "Luchar",
       "material": "Mancuerna + cajón",
@@ -5794,8 +5438,6 @@
     {
       "id": "EX0029",
       "name": "Remo en plancha (renegade row)",
-      "category": "Nivel 0+",
-      "focus": "Luchar",
       "movementLevel": "0+",
       "movementArea": "Luchar",
       "material": "Mancuernas",
@@ -5815,8 +5457,6 @@
     {
       "id": "EX0030",
       "name": "Sentadilla goblet",
-      "category": "Nivel 0+",
-      "focus": "Saltar",
       "movementLevel": "0+",
       "movementArea": "Saltar",
       "material": "Mancuerna",
@@ -5836,8 +5476,6 @@
     {
       "id": "EX0031",
       "name": "Lanzamiento al suelo (slam)",
-      "category": "Nivel I",
-      "focus": "Luchar",
       "movementLevel": "I",
       "movementArea": "Luchar",
       "material": "Balón medicinal 3 kg",
@@ -5857,8 +5495,6 @@
     {
       "id": "EX0032",
       "name": "Lanzamiento hacia atrás por encima de la cabeza",
-      "category": "Nivel I",
-      "focus": "Saltar",
       "movementLevel": "I",
       "movementArea": "Saltar",
       "material": "Balón medicinal 3 kg · espacio libre",
@@ -5878,8 +5514,6 @@
     {
       "id": "EX0033",
       "name": "Lanzamiento rotacional a la pared",
-      "category": "Nivel I",
-      "focus": "Jugar el balón",
       "movementLevel": "I",
       "movementArea": "Jugar el balón",
       "material": "Balón medicinal 3 kg",
@@ -5899,8 +5533,6 @@
     {
       "id": "EX0034",
       "name": "Pase de pecho a la pared",
-      "category": "Nivel I",
-      "focus": "Jugar el balón",
       "movementLevel": "I",
       "movementArea": "Jugar el balón",
       "material": "Balón medicinal 3 kg",
@@ -5920,8 +5552,6 @@
     {
       "id": "EX0035",
       "name": "Pasos laterales en posición defensiva",
-      "category": "Nivel I",
-      "focus": "Desplazarse",
       "movementLevel": "I",
       "movementArea": "Desplazarse",
       "material": "Sin material",
@@ -5941,8 +5571,6 @@
     {
       "id": "EX0036",
       "name": "Salto a 1 pierna adelante con parada",
-      "category": "Nivel I",
-      "focus": "Saltar",
       "movementLevel": "I",
       "movementArea": "Saltar",
       "material": "Sin material",
@@ -5962,8 +5590,6 @@
     {
       "id": "EX0037",
       "name": "Salto al cajón con parada",
-      "category": "Nivel I",
-      "focus": "Saltar",
       "movementLevel": "I",
       "movementArea": "Saltar",
       "material": "Cajón 30-50 cm",
@@ -5983,8 +5609,6 @@
     {
       "id": "EX0038",
       "name": "Salto horizontal con parada",
-      "category": "Nivel I",
-      "focus": "Saltar",
       "movementLevel": "I",
       "movementArea": "Saltar",
       "material": "Sin material",
@@ -6004,8 +5628,6 @@
     {
       "id": "EX0039",
       "name": "Salto lateral a 1 pierna con parada (Heiden)",
-      "category": "Nivel I",
-      "focus": "Desplazarse",
       "movementLevel": "I",
       "movementArea": "Desplazarse",
       "material": "Sin material",
@@ -6025,8 +5647,6 @@
     {
       "id": "EX0040",
       "name": "Salto vertical con contramovimiento",
-      "category": "Nivel I",
-      "focus": "Saltar",
       "movementLevel": "I",
       "movementArea": "Saltar",
       "material": "Sin material",
@@ -6046,8 +5666,6 @@
     {
       "id": "EX0041",
       "name": "Sentadilla búlgara (pie de atrás en el cajón)",
-      "category": "Nivel I",
-      "focus": "Desplazarse",
       "movementLevel": "I",
       "movementArea": "Desplazarse",
       "material": "Cajón/banco + mancuernas",
@@ -6067,8 +5685,6 @@
     {
       "id": "EX0042",
       "name": "Sentadilla lateral",
-      "category": "Nivel I",
-      "focus": "Desplazarse",
       "movementLevel": "I",
       "movementArea": "Desplazarse",
       "material": "Mancuerna",
@@ -6088,8 +5704,6 @@
     {
       "id": "EX0043",
       "name": "5-10-5 (pro agility)",
-      "category": "Nivel II",
-      "focus": "Desplazarse",
       "movementLevel": "II",
       "movementArea": "Desplazarse",
       "material": "3 conos",
@@ -6109,8 +5723,6 @@
     {
       "id": "EX0044",
       "name": "Caída desde el cajón",
-      "category": "Nivel II",
-      "focus": "Saltar",
       "movementLevel": "II",
       "movementArea": "Saltar",
       "material": "Cajón 30 cm",
@@ -6130,8 +5742,6 @@
     {
       "id": "EX0045",
       "name": "Escalera de agilidad (In-In-Out-Out · Scissors)",
-      "category": "Nivel II",
-      "focus": "Desplazarse",
       "movementLevel": "II",
       "movementArea": "Desplazarse",
       "material": "Escalera de agilidad",
@@ -6151,8 +5761,6 @@
     {
       "id": "EX0046",
       "name": "Frenada en 2 tiempos + salida",
-      "category": "Nivel II",
-      "focus": "Desplazarse",
       "movementLevel": "II",
       "movementArea": "Desplazarse",
       "material": "Conos",
@@ -6172,8 +5780,6 @@
     {
       "id": "EX0047",
       "name": "Split squat goblet",
-      "category": "Nivel I",
-      "focus": "Desplazarse",
       "movementLevel": "I",
       "movementArea": "Desplazarse",
       "material": "Mancuerna",
@@ -6193,8 +5799,6 @@
     {
       "id": "EX0048",
       "name": "Subida al cajón con mancuernas",
-      "category": "Nivel I",
-      "focus": "Saltar",
       "movementLevel": "I",
       "movementArea": "Saltar",
       "material": "Cajón 40 cm + mancuernas",
@@ -6214,8 +5818,6 @@
     {
       "id": "EX0049",
       "name": "Pase de pecho + sprint",
-      "category": "Nivel II",
-      "focus": "Jugar el balón",
       "movementLevel": "II",
       "movementArea": "Jugar el balón",
       "material": "Balón medicinal 3 kg",
@@ -6234,8 +5836,6 @@
     {
       "id": "EX0050",
       "name": "Pogos (saltos de tobillo)",
-      "category": "Nivel II",
-      "focus": "Saltar",
       "movementLevel": "II",
       "movementArea": "Saltar",
       "material": "Sin material",
@@ -6255,8 +5855,6 @@
     {
       "id": "EX0051",
       "name": "Salida en caída + sprint",
-      "category": "Nivel II",
-      "focus": "Desplazarse",
       "movementLevel": "II",
       "movementArea": "Desplazarse",
       "material": "Pista",
@@ -6276,8 +5874,6 @@
     {
       "id": "EX0052",
       "name": "Salidas de 10 m",
-      "category": "Nivel II",
-      "focus": "Desplazarse",
       "movementLevel": "II",
       "movementArea": "Desplazarse",
       "material": "Conos",
@@ -6296,8 +5892,6 @@
     {
       "id": "EX0053",
       "name": "Salto reactivo desde el cajón (depth jump)",
-      "category": "Nivel II",
-      "focus": "Saltar",
       "movementLevel": "II",
       "movementArea": "Saltar",
       "material": "Cajón 30 cm",
@@ -6317,8 +5911,6 @@
     {
       "id": "EX0054",
       "name": "Saltos alternos (bounding)",
-      "category": "Nivel II",
-      "focus": "Desplazarse",
       "movementLevel": "II",
       "movementArea": "Desplazarse",
       "material": "Pista · 20 m",
@@ -6338,8 +5930,6 @@
     {
       "id": "EX0055",
       "name": "Defensa en zigzag a toda pista",
-      "category": "Nivel III",
-      "focus": "Desplazarse",
       "movementLevel": "III",
       "movementArea": "Desplazarse",
       "material": "6 conos",
@@ -6359,8 +5949,6 @@
     {
       "id": "EX0056",
       "name": "Duelo de rebote",
-      "category": "Nivel III",
-      "focus": "Luchar",
       "movementLevel": "III",
       "movementArea": "Luchar",
       "material": "Pista, balón",
@@ -6380,8 +5968,6 @@
     {
       "id": "EX0057",
       "name": "Saltos horizontales encadenados",
-      "category": "Nivel II",
-      "focus": "Saltar",
       "movementLevel": "II",
       "movementArea": "Saltar",
       "material": "Sin material",
@@ -6401,8 +5987,6 @@
     {
       "id": "EX0058",
       "name": "Saltos laterales continuos",
-      "category": "Nivel II",
-      "focus": "Desplazarse",
       "movementLevel": "II",
       "movementArea": "Desplazarse",
       "material": "Sin material",
@@ -6422,8 +6006,6 @@
     {
       "id": "EX0059",
       "name": "Snap down + salto",
-      "category": "Nivel II",
-      "focus": "Saltar",
       "movementLevel": "II",
       "movementArea": "Saltar",
       "material": "Sin material",
@@ -6443,8 +6025,6 @@
     {
       "id": "EX0060",
       "name": "T-test adaptado",
-      "category": "Nivel II",
-      "focus": "Desplazarse",
       "movementLevel": "II",
       "movementArea": "Desplazarse",
       "material": "4 conos",
@@ -6464,8 +6044,6 @@
     {
       "id": "EX0061",
       "name": "Espejo 1x1",
-      "category": "Nivel III",
-      "focus": "Desplazarse",
       "movementLevel": "III",
       "movementArea": "Desplazarse",
       "material": "4 conos",
@@ -6485,8 +6063,6 @@
     {
       "id": "EX0062",
       "name": "Presión: espalda · lateral · sprint",
-      "category": "Nivel III",
-      "focus": "Desplazarse",
       "movementLevel": "III",
       "movementArea": "Desplazarse",
       "material": "4 conos",
@@ -6506,8 +6082,6 @@
     {
       "id": "EX0063",
       "name": "Ritmo de juego 15\"/15\"",
-      "category": "Nivel III",
-      "focus": "Desplazarse",
       "movementLevel": "III",
       "movementArea": "Desplazarse",
       "material": "Pista entera",
@@ -6527,8 +6101,6 @@
     {
       "id": "EX0064",
       "name": "Sprint + recepción + entrada",
-      "category": "Nivel III",
-      "focus": "Jugar el balón",
       "movementLevel": "III",
       "movementArea": "Jugar el balón",
       "material": "Pista, balón",
@@ -6548,8 +6120,6 @@
     {
       "id": "EX0065",
       "name": "Sprint de reacción 1x1",
-      "category": "Nivel III",
-      "focus": "Desplazarse",
       "movementLevel": "III",
       "movementArea": "Desplazarse",
       "material": "Balón o cono",
@@ -6568,8 +6138,6 @@
     {
       "id": "EX0066",
       "name": "Sprints de contraataque (3 carriles)",
-      "category": "Nivel III",
-      "focus": "Desplazarse",
       "movementLevel": "III",
       "movementArea": "Desplazarse",
       "material": "Pista entera",
@@ -6589,8 +6157,6 @@
     {
       "id": "EX0067",
       "name": "1x1 a toda pista",
-      "category": "Nivel IV",
-      "focus": "Desplazarse",
       "movementLevel": "IV",
       "movementArea": "Desplazarse",
       "material": "Pista entera, balón",
@@ -6610,8 +6176,6 @@
     {
       "id": "EX0068",
       "name": "Contraataque 2x1",
-      "category": "Nivel IV",
-      "focus": "Jugar el balón",
       "movementLevel": "IV",
       "movementArea": "Jugar el balón",
       "material": "Pista entera, balón",

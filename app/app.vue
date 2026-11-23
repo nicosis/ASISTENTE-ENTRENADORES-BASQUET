@@ -1408,8 +1408,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
               <div class="exercise-content">
                 <div class="exercise-meta-top">
                   <span>
-                    {{ item.stationLabel }} ·
-                    {{ item.exercise.movementLevel || item.exercise.category
+                    {{ item.exercise.movementLevel
                     }}<span v-if="item.exercise.movementArea">
                       · {{ item.exercise.movementArea }}</span
                     >

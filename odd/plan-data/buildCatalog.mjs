@@ -26,8 +26,6 @@ const exerciseItems = exerciseSource.exercises
 const exercises = exerciseItems.map((item, index) => ({
   id: item.id,
   name: item.name,
-  category: `Nivel ${item.level}`,
-  focus: item.movement_area,
   movementLevel: item.level,
   movementArea: item.movement_area,
   material: item.material,
@@ -84,7 +82,7 @@ for (const source of sessions.trainingSessions) {
       }
       blockExercises.push({
         id: `${blockId}-E${String(itemIndex + 1).padStart(2, '0')}`,
-        blockId, exerciseId, itemOrder: itemIndex + 1, stationLabel: '',
+        blockId, exerciseId, itemOrder: itemIndex + 1,
         weekDoses: weeklyDoses,
       })
     }

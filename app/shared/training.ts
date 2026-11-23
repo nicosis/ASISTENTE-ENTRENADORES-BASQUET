@@ -6,8 +6,6 @@ export type PhaseType = 'training' | 'holiday' | 'assessment'
 export interface ExerciseRecord {
   id: string
   name: string
-  category: string
-  focus: string
   movementLevel?: string
   movementArea?: string
   material: string
@@ -78,7 +76,6 @@ export interface BlockExerciseRecord {
   blockId: string
   exerciseId: string
   itemOrder: number
-  stationLabel: string
   weekDoses: Record<number, string>
 }
 
@@ -109,7 +106,6 @@ export interface HydratedBlockExercise {
   blockId: string
   exerciseId: string
   itemOrder: number
-  stationLabel: string
   dose: string
   exercise: ExerciseRecord
 }
