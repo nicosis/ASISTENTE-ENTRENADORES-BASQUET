@@ -19,7 +19,7 @@ test('builds a complete Sheets snapshot from the 42-week PDF catalog', () => {
   const expectedDoseRows = catalog.blockExercises.reduce((total, item) => total + Object.keys(item.weekDoses).length, 0)
   assert.deepEqual(tableByName.get('block_exercise_doses').headers, ['block_exercise_id', 'week', 'dose'])
   assert.equal(tableByName.get('block_exercise_doses').rows.length, expectedDoseRows)
-  assert.deepEqual(tableByName.get('block_exercises').headers, ['id', 'block_id', 'exercise_id', 'item_order', 'station_label'])
+  assert.deepEqual(tableByName.get('block_exercises').headers, ['id', 'block_id', 'exercise_id', 'item_order'])
   assert.deepEqual(tableByName.get('team_coaches').headers, ['id', 'team_id', 'coach_id', 'role'])
   assert.equal(tableByName.get('team_coaches').rows.length, 0)
   assert.equal(tableByName.get('macrocycles').rows.length, 1)

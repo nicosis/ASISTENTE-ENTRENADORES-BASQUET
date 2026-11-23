@@ -360,14 +360,12 @@ export function buildTrainingSheetTables(
         'block_id',
         'exercise_id',
         'item_order',
-        'station_label',
       ],
       rows: blockExercises.map((item) => [
         item.id,
         item.blockId,
         item.exerciseId,
         item.itemOrder,
-        item.stationLabel,
       ]),
       rgbColor: { red: 0.94, green: 0.27, blue: 0.27 },
     },
@@ -387,12 +385,12 @@ export function buildTrainingSheetTables(
       headers: [
         'id',
         'name',
-        'category',
-        'focus',
         'movement_level',
         'movement_area',
         'material',
-        'how',
+        'how_1',
+        'how_2',
+        'how_3',
         'cue',
         'errors',
         'easier',
@@ -401,12 +399,12 @@ export function buildTrainingSheetTables(
       rows: exercises.map((item) => [
         item.id,
         item.name,
-        item.category,
-        item.focus,
         item.movementLevel ?? '',
         item.movementArea ?? '',
         item.material,
-        item.how.join(' | '),
+        item.how[0] ?? '',
+        item.how[1] ?? '',
+        item.how[2] ?? '',
         item.cue,
         item.errors.join(' | '),
         item.easier,
@@ -953,7 +951,6 @@ function parseCatalogTables(rowsByTab: Map<string, string[][]>): TrainingCatalog
           blockId: normalizeTrainingBlockId(cellString(row, 1)),
           exerciseId: cellString(row, 2),
           itemOrder: cellNumber(row, 3, 1),
-          stationLabel: cellString(row, 4),
           weekDoses: weekDosesByBlockExerciseId.get(id) ?? {},
         }
       })
@@ -961,21 +958,18 @@ function parseCatalogTables(rowsByTab: Map<string, string[][]>): TrainingCatalog
   const parsedBlockExercises: BlockExerciseRecord[] = parsedSheetBlockExercises
 
   const exerciseRows = rowsByTab.get(SHEET_TITLES.exercises) || []
-  const hasMovementClassification = exerciseRows.some(row => row.length >= 12)
   const parsedExercises: ExerciseRecord[] = exerciseRows.length
     ? exerciseRows.map((row) => ({
         id: cellString(row, 0),
         name: cellString(row, 1),
-        category: cellString(row, 2),
-        focus: cellString(row, 3),
-        movementLevel: hasMovementClassification ? cellString(row, 4) : '',
-        movementArea: hasMovementClassification ? cellString(row, 5) : '',
-        material: cellString(row, hasMovementClassification ? 6 : 4),
-        how: splitPipeList(cellString(row, hasMovementClassification ? 7 : 5)),
-        cue: cellString(row, hasMovementClassification ? 8 : 6),
-        errors: splitPipeList(cellString(row, hasMovementClassification ? 9 : 7)),
-        easier: cellString(row, hasMovementClassification ? 10 : 8),
-        harder: cellString(row, hasMovementClassification ? 11 : 9),
+        movementLevel: cellString(row, 2),
+        movementArea: cellString(row, 3),
+        material: cellString(row, 4),
+        how: [cellString(row, 5), cellString(row, 6), cellString(row, 7)].filter(Boolean),
+        cue: cellString(row, 8),
+        errors: splitPipeList(cellString(row, 9)),
+        easier: cellString(row, 10),
+        harder: cellString(row, 11),
       }))
     : []
 
