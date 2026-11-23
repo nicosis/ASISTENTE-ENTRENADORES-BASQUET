@@ -710,19 +710,22 @@ function splitPipeList(raw: string): string[] {
     .filter(Boolean)
 }
 
-function parseJsonCell(raw: string, column: string): unknown {
-  try {
-    return JSON.parse(raw)
-  } catch {
-    throw new Error(`Valor JSON inválido en la columna ${column} de Google Sheets: ${raw.slice(0, 80)}`)
-  }
+function warnInvalidWeekCell(column: string, raw: string): void {
+  console.warn(`[sheets-db] Celda ignorada en ${column}: ${raw.slice(0, 80)}`)
 }
 
 function parseWeekDoses(raw: string): Record<number, string> | undefined {
   if (!raw.trim()) return undefined
-  const value = parseJsonCell(raw, 'week_doses_json')
+  let value: unknown
+  try {
+    value = JSON.parse(raw)
+  } catch {
+    warnInvalidWeekCell('week_doses_json', raw)
+    return undefined
+  }
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    throw new Error('week_doses_json debe ser un objeto JSON indexado por semana.')
+    warnInvalidWeekCell('week_doses_json', raw)
+    return undefined
   }
   const entries = Object.entries(value).filter(([week, dose]) =>
     /^\d+$/.test(week) && typeof dose === 'string' && dose.trim().length > 0,
@@ -732,9 +735,20 @@ function parseWeekDoses(raw: string): Record<number, string> | undefined {
 
 function parseWeekNumbers(raw: string): number[] | undefined {
   if (!raw.trim()) return undefined
-  const value = parseJsonCell(raw, 'week_numbers_json')
-  if (!Array.isArray(value)) throw new Error('week_numbers_json debe ser una lista JSON.')
-  const weeks = value.filter((week): week is number => Number.isInteger(week) && week > 0)
+  let value: unknown
+  try {
+    value = JSON.parse(raw)
+  } catch {
+    warnInvalidWeekCell('week_numbers_json', raw)
+    return undefined
+  }
+  // A single week typed by hand in the sheet (e.g. "19") is read as [19].
+  const list = typeof value === 'number' ? [value] : value
+  if (!Array.isArray(list)) {
+    warnInvalidWeekCell('week_numbers_json', raw)
+    return undefined
+  }
+  const weeks = list.filter((week): week is number => Number.isInteger(week) && week > 0)
   return weeks.length ? weeks : undefined
 }
 
