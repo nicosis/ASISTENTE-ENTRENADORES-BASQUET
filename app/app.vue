@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from "vue";
 import {
   ageCategoryOptions,
   blockPalette,
-  competitiveLevelOptions,
   formattedDate,
   useCoachWorkspace,
-} from '~/composables/useCoachWorkspace'
-import { isoToSpanishDate, spanishDateToIso } from '~/shared/spanishDate'
-import { firstExerciseIdOf } from '~/shared/seasonSessions'
+} from "~/composables/useCoachWorkspace";
+import { isoToSpanishDate, spanishDateToIso } from "~/shared/spanishDate";
+import { phaseColorFor, phaseWeekNumbers } from "~/shared/phaseColors";
 
 const {
   coach,
@@ -18,7 +17,6 @@ const {
   signedIn,
   view,
   activeTeamTab,
-  activeSeasonSessions,
   selectedSeasonSession,
   catalog: trainingCatalog,
   showArchivedTeams,
@@ -50,8 +48,10 @@ const {
   selectedDay,
   displayedWeekStart,
   isCadeteHoliday,
+  isHolidayWeek,
+  isTrainingWeek,
   holidayHomeSessions,
-  currentAssessmentTests,
+  seasonAssessments,
   canGoToPreviousWeek,
   canGoToNextWeek,
   weekLabel,
@@ -59,7 +59,6 @@ const {
   nextWeekMicrocycle,
   nextSessionIndex,
   setActiveWeekSessionsDone,
-  setDraftFrequency,
   draftHolidaySuggestions,
   activeWeekReview,
   seasonReviews,
@@ -70,7 +69,6 @@ const {
   selectedHistoryReviewId,
   teamDraft,
   seasonDraft,
-  draftCadeteWeeks,
   session,
   loadingSession,
   error,
@@ -96,107 +94,115 @@ const {
   closeHistory,
   generateSession,
   refreshDatabaseFromSheets,
-} = useCoachWorkspace()
+} = useCoachWorkspace();
 
 const lastSyncedLabel = computed(() => {
-  if (!lastSyncedAt.value) return ''
-  const date = new Date(lastSyncedAt.value)
-  if (Number.isNaN(date.getTime())) return ''
-  return new Intl.DateTimeFormat('es-ES', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date).replace('.', '')
-})
+  if (!lastSyncedAt.value) return "";
+  const date = new Date(lastSyncedAt.value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("es-ES", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+    .format(date)
+    .replace(".", "");
+});
 
 function teamInitials(name: string): string {
-  return name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0]?.toUpperCase() || '').join('')
+  return name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() || "")
+    .join("");
 }
 
-const teamSearch = ref('')
-const showAllHolidayWeeks = ref(false)
-const noteInput = ref<HTMLTextAreaElement | null>(null)
+const teamSearch = ref("");
+const noteInput = ref<HTMLTextAreaElement | null>(null);
 const filteredTeams = computed(() => {
-  const query = teamSearch.value.trim().toLocaleLowerCase('es')
+  const query = teamSearch.value.trim().toLocaleLowerCase("es");
   return visibleTeams.value.filter((team) =>
-    `${team.name} ${team.club}`.toLocaleLowerCase('es').includes(query),
-  )
-})
-const startsAtText = ref('')
-const startsAtInvalid = computed(() => startsAtText.value.trim() !== '' && !spanishDateToIso(startsAtText.value))
+    `${team.name} ${team.club}`.toLocaleLowerCase("es").includes(query),
+  );
+});
+const startsAtText = ref("");
+const startsAtInvalid = computed(
+  () =>
+    startsAtText.value.trim() !== "" && !spanishDateToIso(startsAtText.value),
+);
 watch(
   () => seasonDraft.value.startsAt,
   (iso) => {
-    if (spanishDateToIso(startsAtText.value) !== iso) startsAtText.value = isoToSpanishDate(iso)
+    if (spanishDateToIso(startsAtText.value) !== iso)
+      startsAtText.value = isoToSpanishDate(iso);
   },
   { immediate: true },
-)
+);
 function handleStartsAtInput(value: string): void {
-  startsAtText.value = value
-  const iso = spanishDateToIso(value)
-  if (iso) seasonDraft.value.startsAt = iso
+  startsAtText.value = value;
+  const iso = spanishDateToIso(value);
+  if (iso) seasonDraft.value.startsAt = iso;
 }
-const startsAtPicker = ref<HTMLInputElement | null>(null)
+const startsAtPicker = ref<HTMLInputElement | null>(null);
 function openStartsAtPicker(): void {
-  const picker = startsAtPicker.value
-  if (!picker) return
-  if (typeof picker.showPicker === 'function') picker.showPicker()
-  else picker.click()
+  const picker = startsAtPicker.value;
+  if (!picker) return;
+  if (typeof picker.showPicker === "function") picker.showPicker();
+  else picker.click();
 }
 function pickStartsAt(iso: string): void {
-  if (spanishDateToIso(isoToSpanishDate(iso)) === iso) seasonDraft.value.startsAt = iso
+  if (spanishDateToIso(isoToSpanishDate(iso)) === iso)
+    seasonDraft.value.startsAt = iso;
 }
 
-function firstExerciseNameOf(sessionId: string): string {
-  const exerciseId = firstExerciseIdOf(sessionId, trainingCatalog)
-  if (!exerciseId) return '—'
-  return trainingCatalog.exercises.find((item) => item.id === exerciseId)?.name ?? exerciseId
-}
 const seasonProgress = computed(() => {
-  if (!activeSeason.value || !activeSeasonEndDate.value) return null
-  const start = Date.parse(`${activeSeason.value.startsAt}T00:00:00Z`)
-  const end = Date.parse(`${activeSeasonEndDate.value}T00:00:00Z`) + 86400000
-  const now = new Date()
-  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
-  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null
-  return Math.round(Math.max(0, Math.min(1, (today - start) / (end - start))) * 100)
-})
+  if (!activeSeason.value || !activeSeasonEndDate.value) return null;
+  const start = Date.parse(`${activeSeason.value.startsAt}T00:00:00Z`);
+  const end = Date.parse(`${activeSeasonEndDate.value}T00:00:00Z`) + 86400000;
+  const now = new Date();
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start)
+    return null;
+  return Math.round(
+    Math.max(0, Math.min(1, (today - start) / (end - start))) * 100,
+  );
+});
 const doneCount = computed(() =>
   nextSessionIndex.value < 0 ? frequency.value : nextSessionIndex.value,
-)
-
-function handleFrequencyChange(event: Event): void {
-  const value = Number((event.target as HTMLSelectElement).value)
-  setDraftFrequency(value === 2 || value === 3 ? value : 1)
-}
+);
 
 async function openFloatingNote(): Promise<void> {
-  if (!reviewEditorOpen.value) openReviewEditor()
-  await nextTick()
-  noteInput.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  noteInput.value?.focus({ preventScroll: true })
+  if (!reviewEditorOpen.value) openReviewEditor();
+  await nextTick();
+  noteInput.value?.scrollIntoView({ behavior: "smooth", block: "center" });
+  noteInput.value?.focus({ preventScroll: true });
 }
 
-const sessionExerciseCount = computed(() =>
-  session.value?.trainingBlocks.reduce((total, block) => total + block.items.length, 0) || 0,
-)
-
+const sessionExerciseCount = computed(
+  () =>
+    session.value?.trainingBlocks.reduce(
+      (total, block) => total + block.items.length,
+      0,
+    ) || 0,
+);
 
 function microcycleStatusLabel(status: string | undefined): string {
-  if (status === 'completed') return 'Planificación completada'
-  if (status === 'active') return 'Planificación activa'
-  if (status === 'planned') return 'Planificación prevista'
-  return ''
+  if (status === "completed") return "Planificación completada";
+  if (status === "active") return "Planificación activa";
+  if (status === "planned") return "Planificación prevista";
+  return "";
 }
 
 function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
-  if (!isAdmin.value) return
+  if (!isAdmin.value) return;
   const accepted = window.confirm(
     `¿Eliminar definitivamente el equipo "${teamName}" (${teamId})?\n\nEsta acción de administrador borrará en cascada el equipo, todas sus temporadas y sus observaciones semanales en Google Sheets.`,
-  )
+  );
   if (accepted) {
-    deleteTeamCascade(teamId)
+    deleteTeamCascade(teamId);
   }
 }
 </script>
@@ -226,43 +232,71 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           role="status"
           aria-live="polite"
         >
-          <span aria-hidden="true">{{ dbSource === 'google-sheets' ? '●' : '○' }}</span>
-          {{ dbSource === 'google-sheets' ? 'Sheets conectado' : 'Sheets no disponible' }}
+          <span aria-hidden="true">{{
+            dbSource === "google-sheets" ? "●" : "○"
+          }}</span>
+          {{
+            dbSource === "google-sheets"
+              ? "Sheets conectado"
+              : "Sheets no disponible"
+          }}
           <small v-if="lastSyncedLabel">· {{ lastSyncedLabel }}</small>
         </span>
         <button
           class="refresh-button"
           type="button"
           :disabled="loadingDatabase"
-          :aria-label="loadingDatabase ? 'Actualizando datos desde Google Sheets' : 'Actualizar datos desde Google Sheets'"
+          :aria-label="
+            loadingDatabase
+              ? 'Actualizando datos desde Google Sheets'
+              : 'Actualizar datos desde Google Sheets'
+          "
           @click="refreshDatabaseFromSheets"
         >
-          {{ loadingDatabase ? 'Actualizando…' : 'Actualizar' }}
+          {{ loadingDatabase ? "Actualizando…" : "Actualizar" }}
         </button>
         <template v-if="signedIn">
           <div class="desktop-account">
-          <span class="coach-avatar">{{ coach.name.slice(0, 1) }}</span>
-          <span>{{ coach.name }}</span>
-          <button
-            class="role-badge"
-            :class="{ admin: isAdmin }"
-            type="button"
-            title="Haz clic para alternar rol en tabla `entrenadores` (Admin / Entrenador)"
-            @click="toggleCoachRole"
-          >
-            {{ isAdmin ? 'ADMIN' : 'ENTRENADOR' }}
-          </button>
-          <button class="logout-button" type="button" @click="signOut">
-            Cerrar sesión
-          </button>
+            <span class="coach-avatar">{{ coach.name.slice(0, 1) }}</span>
+            <span>{{ coach.name }}</span>
+            <button
+              class="role-badge"
+              :class="{ admin: isAdmin }"
+              type="button"
+              title="Haz clic para alternar rol en tabla `entrenadores` (Admin / Entrenador)"
+              @click="toggleCoachRole"
+            >
+              {{ isAdmin ? "ADMIN" : "ENTRENADOR" }}
+            </button>
+            <button class="logout-button" type="button" @click="signOut">
+              Cerrar sesión
+            </button>
           </div>
           <details class="mobile-account">
-            <summary :aria-label="`Cuenta de ${coach.name}`">{{ coach.name.slice(0, 1).toUpperCase() }}</summary>
+            <summary :aria-label="`Cuenta de ${coach.name}`">
+              {{ coach.name.slice(0, 1).toUpperCase() }}
+            </summary>
             <div class="account-menu">
               <strong>{{ coach.name }}</strong>
-              <span>{{ dbSource === 'google-sheets' ? 'Sheets conectado' : 'Sheets no disponible' }}<small v-if="lastSyncedLabel"> · {{ lastSyncedLabel }}</small></span>
-              <button type="button" :disabled="loadingDatabase" @click="refreshDatabaseFromSheets">{{ loadingDatabase ? 'Actualizando…' : 'Actualizar datos' }}</button>
-              <button type="button" @click="toggleCoachRole">Rol: {{ isAdmin ? 'ADMIN' : 'ENTRENADOR' }}</button>
+              <span
+                >{{
+                  dbSource === "google-sheets"
+                    ? "Sheets conectado"
+                    : "Sheets no disponible"
+                }}<small v-if="lastSyncedLabel">
+                  · {{ lastSyncedLabel }}</small
+                ></span
+              >
+              <button
+                type="button"
+                :disabled="loadingDatabase"
+                @click="refreshDatabaseFromSheets"
+              >
+                {{ loadingDatabase ? "Actualizando…" : "Actualizar datos" }}
+              </button>
+              <button type="button" @click="toggleCoachRole">
+                Rol: {{ isAdmin ? "ADMIN" : "ENTRENADOR" }}
+              </button>
               <button type="button" @click="signOut">Cerrar sesión</button>
             </div>
           </details>
@@ -280,9 +314,14 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       <strong>Datos no disponibles.</strong>
       <span>
         No se pudo cargar Google Sheets. La aplicación no mostrará datos locales
-        antiguos ni permitirá crear o modificar información hasta recuperar la conexión.
+        antiguos ni permitirá crear o modificar información hasta recuperar la
+        conexión.
       </span>
-      <button class="secondary-button" type="button" @click="refreshDatabaseFromSheets">
+      <button
+        class="secondary-button"
+        type="button"
+        @click="refreshDatabaseFromSheets"
+      >
         Reintentar conexión
       </button>
     </section>
@@ -320,25 +359,25 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           type="submit"
           :disabled="loadingDatabase || dbSource !== 'google-sheets'"
         >
-          {{ loadingDatabase ? 'Conectando con Google Sheets…' : 'Entrar' }}
+          {{ loadingDatabase ? "Conectando con Google Sheets…" : "Entrar" }}
         </button>
       </form>
     </section>
 
     <section v-else-if="view === 'home'" class="page home-page">
       <p class="eyebrow">
-        PANEL DEL ENTRENADOR · {{ isAdmin ? 'ADMINISTRADOR' : 'ENTRENADOR' }}
+        PANEL DEL ENTRENADOR · {{ isAdmin ? "ADMINISTRADOR" : "ENTRENADOR" }}
       </p>
       <div class="heading-row">
         <div>
           <h1>
-            {{ showArchivedTeams ? 'Equipos archivados.' : 'Mis equipos.' }}
+            {{ showArchivedTeams ? "Equipos archivados." : "Mis equipos." }}
           </h1>
           <p>
             {{
               showArchivedTeams
-                ? 'Estos equipos están ocultos del panel principal conservando todo su historial de temporadas y observaciones.'
-                : 'Accede a las sesiones de la semana, consulta tu planificación y gestiona tus equipos.'
+                ? "Estos equipos están ocultos del panel principal conservando todo su historial de temporadas y observaciones."
+                : "Accede a las sesiones de la semana, consulta tu planificación y gestiona tus equipos."
             }}
           </p>
         </div>
@@ -368,11 +407,24 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       </div>
       <label v-if="visibleTeams.length" class="team-search">
         <span>Buscar equipo</span>
-        <input v-model="teamSearch" type="search" placeholder="Nombre del equipo o club" />
+        <input
+          v-model="teamSearch"
+          type="search"
+          placeholder="Nombre del equipo o club"
+        />
       </label>
       <p v-if="visibleTeams.length" class="team-list-summary">
-        {{ filteredTeams.length }} {{ filteredTeams.length === 1 ? 'equipo' : 'equipos' }}
-        {{ showArchivedTeams ? (filteredTeams.length === 1 ? 'archivado' : 'archivados') : (filteredTeams.length === 1 ? 'activo' : 'activos') }}
+        {{ filteredTeams.length }}
+        {{ filteredTeams.length === 1 ? "equipo" : "equipos" }}
+        {{
+          showArchivedTeams
+            ? filteredTeams.length === 1
+              ? "archivado"
+              : "archivados"
+            : filteredTeams.length === 1
+              ? "activo"
+              : "activos"
+        }}
       </p>
       <section class="team-grid" aria-label="Listado de equipos">
         <article
@@ -382,9 +434,14 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           :class="{ 'is-archived': team.status === 'archived' }"
         >
           <div class="team-card-top">
-            <span class="team-avatar" aria-hidden="true">{{ teamInitials(team.name) }}</span>
-            <span class="team-status" :class="{ 'team-status-archived': team.status === 'archived' }">
-              {{ team.status === 'archived' ? 'ARCHIVADO' : 'ACTIVO' }}
+            <span class="team-avatar" aria-hidden="true">{{
+              teamInitials(team.name)
+            }}</span>
+            <span
+              class="team-status"
+              :class="{ 'team-status-archived': team.status === 'archived' }"
+            >
+              {{ team.status === "archived" ? "ARCHIVADO" : "ACTIVO" }}
             </span>
           </div>
           <button
@@ -397,9 +454,8 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             <div class="team-card-meta">
               <strong>{{
                 seasons.find(
-                  (item) =>
-                    item.teamId === team.id && item.status === 'active',
-                )?.category || 'Sin temporada activa (cerrada)'
+                  (item) => item.teamId === team.id && item.status === "active",
+                )?.category || "Sin temporada activa (cerrada)"
               }}</strong>
               <small>{{ playerCountByTeam.get(team.id) || 0 }} jugadores</small>
             </div>
@@ -414,7 +470,17 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
               title="Ocultar equipo del panel principal sin perder su historial"
               @click.stop="archiveTeam(team.id)"
             >
-              <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h18v4H3zM5 8v12h14V8m-9 4h4" /></svg>
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                width="17"
+                height="17"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M3 4h18v4H3zM5 8v12h14V8m-9 4h4" />
+              </svg>
             </button>
             <button
               v-else
@@ -432,25 +498,37 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
               title="Solo Administrador: borra equipo, temporadas y observaciones en cascada"
               @click.stop="handleConfirmDeleteTeam(team.id, team.name)"
             >
-              <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v6m4-6v6" /></svg>
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                width="17"
+                height="17"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v6m4-6v6" />
+              </svg>
             </button>
           </div>
         </article>
       </section>
-      <p v-if="visibleTeams.length && !filteredTeams.length" role="status">No se encontraron equipos para esta búsqueda.</p>
+      <p v-if="visibleTeams.length && !filteredTeams.length" role="status">
+        No se encontraron equipos para esta búsqueda.
+      </p>
       <section v-if="!visibleTeams.length" class="empty-state">
         <h2>
           {{
             showArchivedTeams
-              ? 'No hay equipos archivados.'
-              : 'Tu primer equipo empieza aquí.'
+              ? "No hay equipos archivados."
+              : "Tu primer equipo empieza aquí."
           }}
         </h2>
         <p>
           {{
             showArchivedTeams
-              ? 'Todos tus equipos están activos en el panel principal.'
-              : 'Crea su ficha, añade la plantilla y después configura la temporada.'
+              ? "Todos tus equipos están activos en el panel principal."
+              : "Crea su ficha, añade la plantilla y después configura la temporada."
           }}
         </p>
         <button
@@ -483,11 +561,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       <form @submit.prevent="createTeam">
         <label>
           Nombre identificativo
-          <input
-            v-model="teamDraft.name"
-            required
-            placeholder="Ej. Cadete A"
-          />
+          <input v-model="teamDraft.name" required placeholder="Ej. Cadete A" />
         </label>
         <label>
           Club
@@ -510,7 +584,8 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       <h1>Define {{ activeTeam?.name }}.</h1>
       <p>
         Categoría, nivel competitivo y frecuencia semanal determinan el plan
-        anual reutilizable (`macrocycles` → `mesocycles` → `mesocycle_sessions`).
+        anual reutilizable (`macrocycles` → `mesocycles` →
+        `mesocycle_sessions`).
       </p>
       <form @submit.prevent="createSeason">
         <div class="form-grid">
@@ -531,18 +606,6 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             </select>
           </label>
           <label>
-            Nivel competitivo / Intensidad
-            <select v-model="seasonDraft.competitiveLevel" class="form-select">
-              <option
-                v-for="opt in competitiveLevelOptions"
-                :key="opt.value"
-                :value="opt.value"
-              >
-                {{ opt.label }}
-              </option>
-            </select>
-          </label>
-          <label>
             Inicio de temporada
             <span class="date-field">
               <input
@@ -554,9 +617,18 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
                 autocomplete="off"
                 aria-describedby="starts-at-hint"
                 required
-                @input="handleStartsAtInput(($event.target as HTMLInputElement).value)"
+                @input="
+                  handleStartsAtInput(($event.target as HTMLInputElement).value)
+                "
               />
-              <button type="button" class="date-picker-button" aria-label="Abrir calendario" @click="openStartsAtPicker">📅</button>
+              <button
+                type="button"
+                class="date-picker-button"
+                aria-label="Abrir calendario"
+                @click="openStartsAtPicker"
+              >
+                📅
+              </button>
               <input
                 ref="startsAtPicker"
                 class="visually-hidden-picker"
@@ -564,54 +636,52 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
                 tabindex="-1"
                 aria-hidden="true"
                 :value="seasonDraft.startsAt"
-                @change="pickStartsAt(($event.target as HTMLInputElement).value)"
+                @change="
+                  pickStartsAt(($event.target as HTMLInputElement).value)
+                "
               />
             </span>
-            <small v-if="startsAtInvalid" class="field-error">Escribe una fecha válida con formato dd/mm/aaaa.</small>
-            <small v-else id="starts-at-hint">Para cadete, escribe un lunes de agosto (dd/mm/aaaa).</small>
+            <small v-if="startsAtInvalid" class="field-error"
+              >Escribe una fecha válida con formato dd/mm/aaaa.</small
+            >
+            <small v-else id="starts-at-hint"
+              >Para cadete, escribe un lunes de agosto (dd/mm/aaaa).</small
+            >
           </label>
           <div class="computed-field">
             <span>Final de temporada</span>
-            <strong>{{ seasonDraftEndDate ? formattedDate(seasonDraftEndDate) : '—' }}</strong>
-            <small>Se calcula automáticamente según el calendario de la temporada.</small>
+            <strong>{{
+              seasonDraftEndDate ? formattedDate(seasonDraftEndDate) : "—"
+            }}</strong>
+            <small
+              >Se calcula automáticamente según el calendario de la
+              temporada.</small
+            >
           </div>
         </div>
-        <fieldset>
+        <fieldset
+          class="holiday-fieldset"
+          v-if="
+            seasonDraft.ageCategory === 'cadete' &&
+            draftHolidaySuggestions.length
+          "
+        >
           <legend>
-            Sesiones por semana <small>Cuántas sesiones de entrenamiento tiene el equipo cada semana.</small>
-          </legend>
-          <label class="frequency-select">
-            <select :value="seasonDraft.frequency" class="form-select" @change="handleFrequencyChange">
-              <option :value="1">1 sesión por semana</option>
-              <option :value="2">2 sesiones por semana</option>
-              <option :value="3">3 sesiones por semana</option>
-            </select>
-          </label>
-        </fieldset>
-        <fieldset class="holiday-fieldset" v-if="seasonDraft.ageCategory === 'cadete' && draftCadeteWeeks.length">
-          <legend>Vacaciones</legend>
-          <p v-if="!showAllHolidayWeeks">
-            Sugerimos Navidad y Semana Santa según las fechas reales. Desmarca las que no apliquen.
-          </p>
-          <p v-else>Marca cualquier semana sin entrenamiento.</p>
-          <div class="holiday-grid">
-            <label
-              v-for="week in showAllHolidayWeeks ? draftCadeteWeeks : draftHolidaySuggestions"
-              :key="week.weekStart"
-              class="holiday-option"
+            Vacaciones
+            <small
+              >Se fijan con las fechas reales de la temporada; no se eligen por
+              equipo.</small
             >
-              <input v-model="seasonDraft.holidayWeeks" type="checkbox" :value="week.weekStart" />
-              <span class="holiday-option-text">
-                <strong>S{{ week.weekNumber }} · {{ formattedDate(week.weekStart) }}</strong>
-                <em v-if="week.label">{{ week.label }}</em>
-              </span>
-            </label>
-          </div>
-          <div class="holiday-actions">
-            <button class="secondary-button" type="button" @click="showAllHolidayWeeks = !showAllHolidayWeeks">
-              {{ showAllHolidayWeeks ? 'Mostrar solo sugeridas' : 'Elegir otras semanas' }}
-            </button>
-          </div>
+          </legend>
+          <ul class="holiday-list">
+            <li v-for="week in draftHolidaySuggestions" :key="week.weekStart">
+              <strong
+                >S{{ week.weekNumber }} ·
+                {{ formattedDate(week.weekStart) }}</strong
+              >
+              <span>{{ week.label }}</span>
+            </li>
+          </ul>
         </fieldset>
         <label>
           Contexto inicial
@@ -635,7 +705,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         <div>
           <p class="eyebrow">
             TEMPORADA {{ activeSeason?.name }} ({{
-              activeSeason?.status === 'closed' ? 'CERRADA' : 'ACTIVA'
+              activeSeason?.status === "closed" ? "CERRADA" : "ACTIVA"
             }})
           </p>
           <h1>{{ activeTeam?.name }}</h1>
@@ -653,52 +723,74 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             + Nueva temporada
           </button>
           <details class="other-actions">
-          <summary class="secondary-button">⋮ Otras acciones</summary>
-          <div class="other-actions-menu">
-          <button
-            v-if="activeSeason && activeSeason.status === 'active'"
-            class="secondary-button"
-            type="button"
-            title="Cerrar/archivar esta temporada"
-            @click="closeSeason(activeSeason.id)"
-          >
-            <span aria-hidden="true">✕</span> Cerrar temporada
-          </button>
-          <button
-            v-else-if="activeSeason && activeSeason.status === 'closed'"
-            class="secondary-button"
-            type="button"
-            title="Volver a marcar esta temporada como activa"
-            @click="reopenSeason(activeSeason.id)"
-          >
-            Reactivar temporada
-          </button>
-          <button
-            v-if="activeTeam && activeTeam.status !== 'archived'"
-            class="secondary-button"
-            type="button"
-            title="Ocultar equipo del panel principal"
-            @click="archiveTeam(activeTeam.id)"
-          >
-            <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h18v4H3zM5 8v12h14V8m-9 4h4" /></svg> Archivar equipo
-          </button>
-          <button
-            v-else-if="activeTeam && activeTeam.status === 'archived'"
-            class="secondary-button"
-            type="button"
-            @click="restoreTeam(activeTeam.id)"
-          >
-            Restaurar equipo
-          </button>
-          <button
-            v-if="isAdmin && activeTeam"
-            class="danger-button"
-            type="button"
-            @click="handleConfirmDeleteTeam(activeTeam.id, activeTeam.name)"
-          >
-            <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v6m4-6v6" /></svg> Eliminar equipo (Admin)
-          </button>
-          </div>
+            <summary class="secondary-button">⋮ Otras acciones</summary>
+            <div class="other-actions-menu">
+              <button
+                v-if="activeSeason && activeSeason.status === 'active'"
+                class="secondary-button"
+                type="button"
+                title="Cerrar/archivar esta temporada"
+                @click="closeSeason(activeSeason.id)"
+              >
+                <span aria-hidden="true">✕</span> Cerrar temporada
+              </button>
+              <button
+                v-else-if="activeSeason && activeSeason.status === 'closed'"
+                class="secondary-button"
+                type="button"
+                title="Volver a marcar esta temporada como activa"
+                @click="reopenSeason(activeSeason.id)"
+              >
+                Reactivar temporada
+              </button>
+              <button
+                v-if="activeTeam && activeTeam.status !== 'archived'"
+                class="secondary-button"
+                type="button"
+                title="Ocultar equipo del panel principal"
+                @click="archiveTeam(activeTeam.id)"
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M3 4h18v4H3zM5 8v12h14V8m-9 4h4" />
+                </svg>
+                Archivar equipo
+              </button>
+              <button
+                v-else-if="activeTeam && activeTeam.status === 'archived'"
+                class="secondary-button"
+                type="button"
+                @click="restoreTeam(activeTeam.id)"
+              >
+                Restaurar equipo
+              </button>
+              <button
+                v-if="isAdmin && activeTeam"
+                class="danger-button"
+                type="button"
+                @click="handleConfirmDeleteTeam(activeTeam.id, activeTeam.name)"
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v6m4-6v6" />
+                </svg>
+                Eliminar equipo (Admin)
+              </button>
+            </div>
           </details>
         </div>
       </div>
@@ -714,7 +806,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           @click="selectSeason(item.id)"
         >
           {{ item.name }} ({{
-            item.status === 'active' ? 'Activa' : 'Cerrada'
+            item.status === "active" ? "Activa" : "Cerrada"
           }})
         </button>
       </div>
@@ -722,12 +814,12 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       <section class="season-summary">
         <div>
           <span>CATEGORÍA Y NIVEL</span>
-          <strong>{{ activeSeason?.category || '—' }}</strong>
+          <strong>{{ activeSeason?.category || "—" }}</strong>
         </div>
         <div>
-          <span>ENTRENOS (`frequency`)</span>
+          <span>ENTRENOS</span>
           <strong>
-            {{ frequency }} {{ frequency === 1 ? 'día' : 'días' }} / semana
+            {{ frequency }} {{ frequency === 1 ? "día" : "días" }} / semana
           </strong>
         </div>
         <div>
@@ -735,14 +827,27 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           <strong>{{
             activeSeason
               ? `${formattedDate(activeSeason.startsAt)} – ${formattedDate(activeSeasonEndDate)}`
-              : '—'
+              : "—"
           }}</strong>
         </div>
       </section>
 
-      <section v-if="seasonProgress !== null" class="season-progress" aria-label="Progreso de la temporada">
-        <div><strong>Tiempo transcurrido de la temporada</strong><span>{{ seasonProgress }} %</span></div>
-        <progress :value="seasonProgress" max="100" :aria-label="`Tiempo transcurrido de la temporada: ${seasonProgress} %`">{{ seasonProgress }} %</progress>
+      <section
+        v-if="seasonProgress !== null"
+        class="season-progress"
+        aria-label="Progreso de la temporada"
+      >
+        <div>
+          <strong>Tiempo transcurrido de la temporada</strong
+          ><span>{{ seasonProgress }} %</span>
+        </div>
+        <progress
+          :value="seasonProgress"
+          max="100"
+          :aria-label="`Tiempo transcurrido de la temporada: ${seasonProgress} %`"
+        >
+          {{ seasonProgress }} %
+        </progress>
       </section>
 
       <section v-if="!trainingDataStatus.available" class="panel-box">
@@ -753,10 +858,18 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           base de datos antes de continuar.
         </p>
         <nav class="week-navigation" aria-label="Cambiar de semana">
-          <button type="button" :disabled="!canGoToPreviousWeek" @click="moveWeek(-1)">
+          <button
+            type="button"
+            :disabled="!canGoToPreviousWeek"
+            @click="moveWeek(-1)"
+          >
             ← Semana anterior
           </button>
-          <button type="button" :disabled="!canGoToNextWeek" @click="moveWeek(1)">
+          <button
+            type="button"
+            :disabled="!canGoToNextWeek"
+            @click="moveWeek(1)"
+          >
             Siguiente semana →
           </button>
         </nav>
@@ -784,17 +897,17 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         </button>
         <button
           type="button"
+          :class="{ active: activeTeamTab === 'assessments' }"
+          @click="activeTeamTab = 'assessments'"
+        >
+          Evaluaciones
+        </button>
+        <button
+          type="button"
           :class="{ active: activeTeamTab === 'roster' }"
           @click="activeTeamTab = 'roster'"
         >
           Plantilla
-        </button>
-        <button
-          type="button"
-          :class="{ active: activeTeamTab === 'sessions' }"
-          @click="activeTeamTab = 'sessions'"
-        >
-          Sesiones de la temporada
         </button>
       </nav>
 
@@ -808,8 +921,10 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             </p>
             <h2>{{ currentPhase.name }}</h2>
             <span>
-              Semana del {{ weekLabel }} ·
-              {{ currentPhase.weeklyProgressionNote }}
+              Semana del {{ weekLabel }} · Carga
+              {{ currentWeekContext.loadIndex }}/10{{
+                currentWeekContext.isDeload ? " · Descarga" : ""
+              }}
             </span>
           </div>
           <nav class="week-navigation" aria-label="Cambiar de semana">
@@ -830,29 +945,18 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           </nav>
         </section>
 
-        <div class="phase-rules-banner">
-          <span
-            v-for="rule in currentPhase.loadRules"
-            :key="rule"
-            class="rule-chip"
-          >
-            {{ rule }}
-          </span>
-          <span class="rule-chip plio-chip">
-            Pliometría: {{ currentPhase.plioRule }}
-          </span>
-        </div>
-
-        <section
-          v-if="currentPhase.type === 'holiday' || isCadeteHoliday"
-          class="holiday-notice-card"
-        >
+        <section v-if="isHolidayWeek" class="holiday-notice-card">
           <p class="eyebrow">SEMANA DE RECESO</p>
           <h3>Descanso de pista: trabajo autónomo en casa</h3>
           <p>
-            Esta semana ({{ weekLabel }}) corresponde a vacaciones. Realiza las actividades indicadas para esta semana.
+            Esta semana ({{ weekLabel }}) corresponde a vacaciones. Realiza las
+            actividades indicadas para esta semana.
           </p>
-          <article v-for="home in holidayHomeSessions" :key="home.id" class="holiday-session-card">
+          <article
+            v-for="home in holidayHomeSessions"
+            :key="home.id"
+            class="holiday-session-card"
+          >
             <h4>{{ home.name }} · {{ home.minutes }} min</h4>
             <p>{{ home.format }}</p>
             <ul>
@@ -864,18 +968,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           </article>
         </section>
 
-        <section v-if="currentAssessmentTests.length" class="panel-box">
-          <p class="eyebrow">COMBINE DEL CLUB · S{{ currentWeekNumber }}</p>
-          <h3>Evaluaciones de la temporada</h3>
-          <p>Registra los resultados en la hoja de combine del equipo.</p>
-          <ol>
-            <li v-for="test in currentAssessmentTests" :key="test.id">
-              <strong>{{ test.name }}</strong> — {{ test.protocol }}
-            </li>
-          </ol>
-        </section>
-
-        <template v-if="currentPhase.type === 'training' && !isCadeteHoliday">
+        <template v-if="isTrainingWeek">
           <section class="week-outlook" aria-label="Esta semana y la próxima">
             <article class="week-outlook-card">
               <span class="eyebrow">ESTA SEMANA</span>
@@ -884,99 +977,163 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
             </article>
             <article v-if="nextWeekMicrocycle" class="week-outlook-card">
               <span class="eyebrow">PRÓXIMA SEMANA</span>
-              <strong>Semana {{ nextWeekMicrocycle.weekNumber }} · {{ formattedDate(nextWeekMicrocycle.weekStart) }}</strong>
-              <p>{{ frequency }} {{ frequency === 1 ? 'sesión' : 'sesiones' }}<span v-if="nextWeekMicrocycle.objective"> · {{ nextWeekMicrocycle.objective }}</span></p>
+              <strong
+                >Semana {{ nextWeekMicrocycle.weekNumber }} ·
+                {{ formattedDate(nextWeekMicrocycle.weekStart) }}</strong
+              >
+              <p>
+                {{ frequency }} {{ frequency === 1 ? "sesión" : "sesiones"
+                }}<span v-if="nextWeekMicrocycle.objective">
+                  · {{ nextWeekMicrocycle.objective }}</span
+                >
+              </p>
             </article>
           </section>
 
           <section class="session-grid">
-          <article
-            v-for="(item, index) in weeklySessions"
-            :key="item.id"
-            :class="{ 'is-next': nextSessionIndex === index, 'is-done': index < doneCount }"
-          >
-            <span>SESIÓN {{ seasonSessionOffset + index + 1 }} · DÍA {{ index + 1 }}</span>
-            <span v-if="nextSessionIndex === index" class="session-state-label">Próxima sesión</span>
-            <span v-else-if="index < doneCount" class="session-state-label">Hecha</span>
-            <h3>{{ item.name }}</h3>
-            <p class="session-focus">{{ item.focus }}</p>
-            <p><strong>{{ item.totalMinutes }} min</strong></p>
-            <div class="card-actions">
-              <button
-                class="primary-button"
-                type="button"
-                :disabled="loadingSession"
-                @click="generateSession(item.day)"
+            <article
+              v-for="(item, index) in weeklySessions"
+              :key="item.id"
+              :class="{
+                'is-next': nextSessionIndex === index,
+                'is-done': index < doneCount,
+              }"
+            >
+              <span
+                >SESIÓN {{ seasonSessionOffset + index + 1 }} · DÍA
+                {{ index + 1 }}</span
               >
-                {{
-                  loadingSession && selectedDay === item.day
-                    ? 'Preparando…'
-                    : 'Ver bloques y ejercicios →'
-                }}
-              </button>
-              <button
-                class="secondary-button"
-                type="button"
-                :disabled="nextSessionIndex !== index && index !== doneCount - 1"
-                @click="nextSessionIndex === index ? setActiveWeekSessionsDone(index + 1) : setActiveWeekSessionsDone(index)"
+              <span
+                v-if="nextSessionIndex === index"
+                class="session-state-label"
+                >Próxima sesión</span
               >
-                {{ index === doneCount - 1 && nextSessionIndex !== index ? 'Deshacer' : 'Marcar como hecha' }}
-              </button>
-            </div>
-          </article>
+              <span v-else-if="index < doneCount" class="session-state-label"
+                >Hecha</span
+              >
+              <h3>{{ item.name }}</h3>
+              <p class="session-focus">{{ item.focus }}</p>
+              <p>
+                <strong>{{ item.totalMinutes }} min</strong>
+              </p>
+              <div class="card-actions">
+                <button
+                  class="primary-button"
+                  type="button"
+                  :disabled="loadingSession"
+                  @click="generateSession(item.day)"
+                >
+                  {{
+                    loadingSession && selectedDay === item.day
+                      ? "Preparando…"
+                      : "Ver bloques y ejercicios →"
+                  }}
+                </button>
+                <button
+                  class="secondary-button"
+                  type="button"
+                  :disabled="
+                    nextSessionIndex !== index && index !== doneCount - 1
+                  "
+                  @click="
+                    nextSessionIndex === index
+                      ? setActiveWeekSessionsDone(index + 1)
+                      : setActiveWeekSessionsDone(index)
+                  "
+                >
+                  {{
+                    index === doneCount - 1 && nextSessionIndex !== index
+                      ? "Deshacer"
+                      : "Marcar como hecha"
+                  }}
+                </button>
+              </div>
+            </article>
           </section>
         </template>
-      </template>
 
-      <!-- PESTAÑA 3: PLANTILLA DEL EQUIPO -->
-      <template v-else-if="trainingDataStatus.available && activeTeamTab === 'sessions'">
-        <section class="season-sessions" aria-label="Sesiones de la temporada">
-          <p class="eyebrow">SESIONES DE LA TEMPORADA</p>
-          <h3>Orden de sesiones (solo lectura, desde Google Sheets)</h3>
-          <p v-if="!activeSeasonSessions.length">No hay sesiones registradas para esta temporada.</p>
-          <div v-else class="season-sessions-scroll">
-            <table class="season-sessions-table">
-              <thead>
-                <tr>
-                  <th scope="col">Sesión</th>
-                  <th scope="col">Semana</th>
-                  <th scope="col">Día</th>
-                  <th scope="col">Sesión</th>
-                  <th scope="col">Primer ejercicio</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="row in activeSeasonSessions" :key="row.sessionNumber">
-                  <td>{{ row.sessionNumber }}</td>
-                  <td>S{{ row.weekNumber }}</td>
-                  <td>{{ row.day }}</td>
-                  <td>{{ row.sessionId }}</td>
-                  <td>{{ firstExerciseNameOf(row.sessionId) }}</td>
-                </tr>
-              </tbody>
-            </table>
+        <section class="review-section">
+          <div>
+            <p class="eyebrow">NOTAS SEMANALES</p>
+            <h2>Seguimiento del equipo.</h2>
+            <span>
+              {{ seasonReviews.length }}
+              {{
+                seasonReviews.length === 1 ? "nota guardada" : "notas guardadas"
+              }}
+              en esta temporada.
+            </span>
+          </div>
+          <div class="review-buttons">
+            <button
+              class="secondary-button"
+              type="button"
+              @click="openReviewEditor"
+            >
+              {{ activeWeekReview ? "Editar nota" : "Añadir nota" }}
+            </button>
+            <button
+              class="secondary-button"
+              type="button"
+              :disabled="!seasonReviews.length"
+              @click="openHistory"
+            >
+              Ver historial
+            </button>
           </div>
         </section>
       </template>
 
-      <template v-else-if="trainingDataStatus.available && activeTeamTab === 'roster'">
+      <template
+        v-else-if="
+          trainingDataStatus.available && activeTeamTab === 'assessments'
+        "
+      >
+        <section class="panel-box">
+          <p class="eyebrow">EVALUACIONES DE LA TEMPORADA</p>
+          <h3>Pruebas por semana</h3>
+          <article v-for="group in seasonAssessments" :key="group.week">
+            <h4>Semana {{ group.week.slice(1) }}</h4>
+            <ol>
+              <li v-for="test in group.tests" :key="test.id">
+                <strong>{{ test.name }}</strong> — {{ test.protocol }}
+              </li>
+            </ol>
+          </article>
+        </section>
+      </template>
+
+      <template
+        v-else-if="trainingDataStatus.available && activeTeamTab === 'roster'"
+      >
         <section class="panel-box roster-panel">
           <div class="section-heading">
             <div>
               <p class="eyebrow">PLANTILLA DEL EQUIPO</p>
               <h2>Jugadores</h2>
               <p class="construction-notice" role="status">
-                La configuración de la plantilla está en construcción. Por ahora, esta vista es solo de consulta.
+                La configuración de la plantilla está en construcción. Por
+                ahora, esta vista es solo de consulta.
               </p>
               <span>
                 {{ activeTeamRoster.length }}
-                {{ activeTeamRoster.length === 1 ? 'jugador activo' : 'jugadores activos' }}
+                {{
+                  activeTeamRoster.length === 1
+                    ? "jugador activo"
+                    : "jugadores activos"
+                }}
               </span>
             </div>
           </div>
           <div v-if="activeTeamRoster.length" class="roster-grid">
-            <article v-for="membership in activeTeamRoster" :key="membership.id" class="roster-card">
-              <strong>{{ membership.player?.name || 'Jugador sin nombre' }}</strong>
+            <article
+              v-for="membership in activeTeamRoster"
+              :key="membership.id"
+              class="roster-card"
+            >
+              <strong>{{
+                membership.player?.name || "Jugador sin nombre"
+              }}</strong>
             </article>
           </div>
           <p v-else class="panel-lead">
@@ -986,17 +1143,24 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       </template>
 
       <!-- PESTAÑA 2: ESTRUCTURA ANUAL -->
-      <template v-else-if="trainingDataStatus.available && activeTeamTab === 'annual'">
+      <template
+        v-else-if="trainingDataStatus.available && activeTeamTab === 'annual'"
+      >
         <section class="phases-strip">
           <div class="phases-header">
             <div>
               <p class="eyebrow">ESTRUCTURA ANUAL</p>
-              <h3>Mesociclos de la temporada (haz clic en una fase o semana)</h3>
+              <h3>
+                Mesociclos de la temporada (haz clic en una fase o semana)
+              </h3>
             </div>
-            <span class="phase-badge" :style="{ background: currentPhase.color }">
+            <span
+              class="phase-badge"
+              :style="{ background: phaseColorFor(currentPhase.phaseOrder) }"
+            >
               {{ currentPhase.name }} · Semana {{ currentWeekNumber }} (Carga
               {{ currentWeekContext.loadIndex }}/10{{
-                currentWeekContext.isDeload ? ' · Descarga' : ''
+                currentWeekContext.isDeload ? " · Descarga" : ""
               }})
             </span>
           </div>
@@ -1007,7 +1171,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
               :key="ph.id"
               class="phase-row"
               :class="{ active: ph.id === currentPhase.id }"
-              :style="{ '--phase-color': ph.color }"
+              :style="{ '--phase-color': phaseColorFor(ph.phaseOrder) }"
             >
               <div class="phase-row-header">
                 <span class="phase-row-title">
@@ -1021,20 +1185,34 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
               </div>
               <div class="week-grid" aria-label="Semanas de la fase">
                 <button
-                  v-for="(load, idx) in ph.weeklyLoads"
-                  :key="idx"
+                  v-for="weekNumber in phaseWeekNumbers(ph)"
+                  :key="weekNumber"
                   type="button"
                   class="week-cell"
-                  :class="{ current: Number(ph.weekStart) + idx === currentWeekNumber }"
-                  :aria-current="Number(ph.weekStart) + idx === currentWeekNumber ? 'true' : undefined"
-                  @click="selectPhaseWeek(Number(ph.weekStart) + idx)"
+                  :class="{ current: weekNumber === currentWeekNumber }"
+                  :aria-current="
+                    weekNumber === currentWeekNumber ? 'true' : undefined
+                  "
+                  @click="selectPhaseWeek(weekNumber)"
                 >
-                  <span class="week-cell-number">Semana {{ Number(ph.weekStart) + idx }}</span>
-                  <span v-if="Number(ph.weekStart) + idx === currentWeekNumber" class="week-cell-selected">Seleccionada</span>
-                  <span class="week-cell-date">{{ annualWeekLabel(Number(ph.weekStart) + idx).replace(/^Semana \d+ · /, '') }}</span>
-                  <span class="week-cell-load">Carga <strong>{{ load }}/10</strong></span>
+                  <span class="week-cell-number">Semana {{ weekNumber }}</span>
                   <span
-                    v-if="ph.type === 'training' && idx === ph.weeklyLoads.length - 1 && load <= 4"
+                    v-if="weekNumber === currentWeekNumber"
+                    class="week-cell-selected"
+                    >Seleccionada</span
+                  >
+                  <span class="week-cell-date">{{
+                    annualWeekLabel(weekNumber).replace(/^Semana \d+ · /, "")
+                  }}</span>
+                  <span class="week-cell-load"
+                    >Carga <strong>{{ ph.load }}/10</strong></span
+                  >
+                  <span
+                    v-if="
+                      ph.type === 'training' &&
+                      weekNumber === ph.weekEnd &&
+                      ph.load <= 4
+                    "
                     class="week-cell-deload"
                   >
                     Descarga
@@ -1046,45 +1224,32 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         </section>
       </template>
 
-      <section class="review-section">
-        <div>
-          <p class="eyebrow">NOTAS SEMANALES</p>
-          <h2>Seguimiento del equipo.</h2>
-          <span>
-            {{ seasonReviews.length }}
-            {{
-              seasonReviews.length === 1 ? 'nota guardada' : 'notas guardadas'
-            }}
-            en esta temporada.
-          </span>
-        </div>
-        <div class="review-buttons">
-          <button
-            class="secondary-button"
-            type="button"
-            @click="openReviewEditor"
-          >
-            {{ activeWeekReview ? 'Editar nota' : 'Añadir nota' }}
-          </button>
-          <button
-            class="secondary-button"
-            type="button"
-            :disabled="!seasonReviews.length"
-            @click="openHistory"
-          >
-            Ver historial
-          </button>
-        </div>
-      </section>
-
-      <button v-if="!reviewEditorOpen" class="floating-note" type="button" :aria-label="activeWeekReview ? 'Editar nota semanal' : 'Añadir nota semanal'" @click="openFloatingNote">
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+      <button
+        v-if="!reviewEditorOpen"
+        class="floating-note"
+        type="button"
+        :aria-label="
+          activeWeekReview ? 'Editar nota semanal' : 'Añadir nota semanal'
+        "
+        @click="openFloatingNote"
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          width="24"
+          height="24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M12 5v14M5 12h14" />
+        </svg>
       </button>
 
       <section v-if="reviewEditorOpen" class="note-editor">
         <div>
           <p class="eyebrow">
-            {{ activeWeekReview ? 'EDITAR NOTA' : 'NUEVA NOTA' }}
+            {{ activeWeekReview ? "EDITAR NOTA" : "NUEVA NOTA" }}
           </p>
           <h2>Semana del {{ formattedDate(displayedWeekStart) }}.</h2>
         </div>
@@ -1163,7 +1328,10 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         ← Volver a la semana {{ session.weekNumber }}
       </button>
       <p v-if="selectedSeasonSession" class="eyebrow">
-        SESIÓN {{ selectedSeasonSession.sessionNumber }} DE LA TEMPORADA · SEMANA {{ selectedSeasonSession.weekNumber }} · DÍA {{ selectedSeasonSession.day.replace('dia', '') }} · {{ session.duration }} MINUTOS TOTALES
+        SESIÓN {{ selectedSeasonSession.sessionNumber }} DE LA TEMPORADA ·
+        SEMANA {{ selectedSeasonSession.weekNumber }} · DÍA
+        {{ selectedSeasonSession.day.replace("dia", "") }} ·
+        {{ session.duration }} MINUTOS TOTALES
       </p>
       <p v-else class="eyebrow">
         SESIÓN · {{ session.duration }} MINUTOS TOTALES
@@ -1199,9 +1367,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
       </nav>
 
       <div class="timebar-wrap">
-        <span class="eyebrow">
-            DISTRIBUCIÓN DE TIEMPO
-        </span>
+        <span class="eyebrow"> DISTRIBUCIÓN DE TIEMPO </span>
         <div class="session-timebar">
           <div
             v-for="(blk, idx) in session.trainingBlocks"
@@ -1226,9 +1392,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
         >
           <header class="session-block-header">
             <div>
-              <span class="eyebrow">
-                BLOQUE {{ blk.blockOrder }}
-              </span>
+              <span class="eyebrow"> BLOQUE {{ blk.blockOrder }} </span>
               <h2>{{ blk.name }}</h2>
               <p>{{ blk.format }}</p>
             </div>
@@ -1236,11 +1400,7 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
           </header>
 
           <ol class="exercise-list">
-            <li
-              v-for="item in blk.items"
-              :key="item.id"
-              class="exercise-card"
-            >
+            <li v-for="item in blk.items" :key="item.id" class="exercise-card">
               <ExerciseImages
                 :exercise-id="item.exercise.id"
                 :exercise-name="item.exercise.name"
@@ -1248,7 +1408,11 @@ function handleConfirmDeleteTeam(teamId: string, teamName: string): void {
               <div class="exercise-content">
                 <div class="exercise-meta-top">
                   <span>
-                    {{ item.stationLabel }} · {{ item.exercise.movementLevel || item.exercise.category }}<span v-if="item.exercise.movementArea"> · {{ item.exercise.movementArea }}</span>
+                    {{ item.stationLabel }} ·
+                    {{ item.exercise.movementLevel || item.exercise.category
+                    }}<span v-if="item.exercise.movementArea">
+                      · {{ item.exercise.movementArea }}</span
+                    >
                   </span>
                   <code>Material: {{ item.exercise.material }}</code>
                 </div>
@@ -1368,7 +1532,9 @@ button {
   color: var(--ink);
   background: transparent;
   font:
-    700 21px "Barlow Condensed", "Arial Narrow", sans-serif;
+    700 21px "Barlow Condensed",
+    "Arial Narrow",
+    sans-serif;
 }
 .brand-ball,
 .coach-avatar {
@@ -1397,10 +1563,20 @@ button {
   color: var(--muted);
   font-size: 14px;
 }
-.desktop-account { display: flex; align-items: center; gap: 9px; }
-.mobile-account { display: none; }
-.mobile-account, .other-actions { position: relative; }
-.account-menu, .other-actions-menu {
+.desktop-account {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.mobile-account {
+  display: none;
+}
+.mobile-account,
+.other-actions {
+  position: relative;
+}
+.account-menu,
+.other-actions-menu {
   position: absolute;
   right: 0;
   z-index: 5;
@@ -1413,9 +1589,16 @@ button {
   background: var(--surface);
   box-shadow: 0 8px 24px #0002;
 }
-.account-menu button { text-align: left; }
-.other-actions summary { cursor: pointer; list-style: none; }
-.other-actions summary::-webkit-details-marker { display: none; }
+.account-menu button {
+  text-align: left;
+}
+.other-actions summary {
+  cursor: pointer;
+  list-style: none;
+}
+.other-actions summary::-webkit-details-marker {
+  display: none;
+}
 .logout-button {
   margin-left: 8px;
   border: 0;
@@ -1450,7 +1633,9 @@ button {
 .auth-page h1 {
   margin: 0;
   font:
-    600 clamp(38px, 6vw, 56px) / 1 "Barlow Condensed", "Arial Narrow", sans-serif;
+    600 clamp(38px, 6vw, 56px) / 1 "Barlow Condensed",
+    "Arial Narrow",
+    sans-serif;
   letter-spacing: -0.045em;
 }
 .auth-page > p:not(.eyebrow) {
@@ -1505,7 +1690,9 @@ button {
 .team-heading h1 {
   margin: 0;
   font:
-    600 clamp(40px, 6vw, 62px) / 0.96 "Barlow Condensed", "Arial Narrow", sans-serif;
+    600 clamp(40px, 6vw, 62px) / 0.96 "Barlow Condensed",
+    "Arial Narrow",
+    sans-serif;
   letter-spacing: 0.01em;
 }
 .heading-row p,
@@ -1603,26 +1790,114 @@ button {
   font-size: 13px;
   font-weight: 700;
 }
-.team-search { display: grid; gap: 7px; max-width: 360px; margin-top: 30px; color: var(--muted); font-size: 13px; font-weight: 700; }
-.team-search input { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--surface); }
-.season-progress { display: grid; gap: 8px; margin: 18px 0; color: var(--muted); font-size: 13px; }
-.season-progress div { display: flex; justify-content: space-between; gap: 12px; }
-.season-progress progress { width: 100%; height: 10px; accent-color: var(--button); }
-.session-grid article.is-done { background: #eef0f4; border-color: #d3d8e0; }
-.week-outlook { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 18px 0 24px; }
-.week-outlook-card { display: grid; gap: 6px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
-.week-outlook-card strong { font-size: 17px; }
-.week-outlook-card p { margin: 0; color: var(--muted); font-size: 14px; }
-.computed-field { display: grid; gap: 7px; color: var(--muted); font-size: 13px; font-weight: 700; }
-.computed-field strong { padding: 11px 12px; border: 1px dashed var(--line); border-radius: 8px; color: var(--ink); background: var(--soft); font-size: 15px; }
-.computed-field small { font-weight: 400; }
-.frequency-select { display: block; max-width: 280px; margin-top: 10px; }
-.date-field { position: relative; display: flex; gap: 6px; align-items: center; }
-.date-field input[type="text"] { flex: 1; min-width: 0; }
-.date-picker-button { flex: none; padding: 8px 10px; border: 1px solid #bcc8d8; border-radius: 8px; background: transparent; cursor: pointer; }
-.visually-hidden-picker { position: absolute; right: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-.frequency-select select { width: 100%; }
-.floating-note { display: none; }
+.team-search {
+  display: grid;
+  gap: 7px;
+  max-width: 360px;
+  margin-top: 30px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.team-search input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--surface);
+}
+.season-progress {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.season-progress div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.season-progress progress {
+  width: 100%;
+  height: 10px;
+  accent-color: var(--button);
+}
+.session-grid article.is-done {
+  background: #eef0f4;
+  border-color: #d3d8e0;
+}
+.week-outlook {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin: 18px 0 24px;
+}
+.week-outlook-card {
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.week-outlook-card strong {
+  font-size: 17px;
+}
+.week-outlook-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.computed-field {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.computed-field strong {
+  padding: 11px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--soft);
+  font-size: 15px;
+}
+.computed-field small {
+  font-weight: 400;
+}
+.date-field {
+  position: relative;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.date-field input[type="text"] {
+  flex: 1;
+  min-width: 0;
+}
+.date-picker-button {
+  flex: none;
+  padding: 8px 10px;
+  border: 1px solid #bcc8d8;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+}
+.visually-hidden-picker {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.floating-note {
+  display: none;
+}
 .team-card {
   position: relative;
   display: flex;
@@ -1639,10 +1914,24 @@ button {
     transform 0.18s,
     border-color 0.18s;
 }
-.team-card-main::after { content: ''; position: absolute; inset: 0; }
-.team-card-footer { position: relative; z-index: 1; pointer-events: none; }
-.team-card-footer button { pointer-events: auto; }
-.team-card-top { display: flex; align-items: center; justify-content: space-between; }
+.team-card-main::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.team-card-footer {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+.team-card-footer button {
+  pointer-events: auto;
+}
+.team-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 .team-card-top .team-avatar {
   display: grid;
   place-items: center;
@@ -1694,7 +1983,9 @@ button {
 .team-card h2 {
   margin: 5px 0 0;
   font:
-    600 27px "Barlow Condensed", "Arial Narrow", sans-serif;
+    600 27px "Barlow Condensed",
+    "Arial Narrow",
+    sans-serif;
   letter-spacing: 0.01em;
 }
 .team-card p {
@@ -1866,7 +2157,9 @@ legend {
 }
 .season-summary strong {
   font:
-    600 16px "Barlow Condensed", "Arial Narrow", sans-serif;
+    600 16px "Barlow Condensed",
+    "Arial Narrow",
+    sans-serif;
 }
 
 /* Mesociclos de la temporada */
@@ -1888,7 +2181,9 @@ legend {
 .phases-header h3 {
   margin: 0;
   font:
-    600 20px "Barlow Condensed", "Arial Narrow", sans-serif;
+    600 20px "Barlow Condensed",
+    "Arial Narrow",
+    sans-serif;
 }
 .phase-badge {
   border-radius: 999px;
@@ -2029,7 +2324,9 @@ legend {
 .review-section h2 {
   margin: 0;
   font:
-    600 32px "Barlow Condensed", "Arial Narrow", sans-serif;
+    600 32px "Barlow Condensed",
+    "Arial Narrow",
+    sans-serif;
   letter-spacing: 0.01em;
 }
 .section-heading {
@@ -2104,7 +2401,9 @@ legend {
 .session-grid h3 {
   margin: 0;
   font:
-    600 22px "Barlow Condensed", "Arial Narrow", sans-serif;
+    600 22px "Barlow Condensed",
+    "Arial Narrow",
+    sans-serif;
 }
 .session-focus {
   color: var(--ink) !important;
@@ -2188,7 +2487,9 @@ legend {
 .holiday-notice-card h3 {
   margin: 4px 0 8px;
   font:
-    600 24px "Barlow Condensed", "Arial Narrow", sans-serif;
+    600 24px "Barlow Condensed",
+    "Arial Narrow",
+    sans-serif;
 }
 
 /* Team detail panels */
@@ -2201,7 +2502,9 @@ legend {
 .panel-box h2 {
   margin: 0 0 6px;
   font:
-    600 26px "Barlow Condensed", "Arial Narrow", sans-serif;
+    600 26px "Barlow Condensed",
+    "Arial Narrow",
+    sans-serif;
 }
 .panel-lead {
   margin: 0 0 16px;
@@ -2257,7 +2560,9 @@ legend {
 .note-editor h2 {
   margin: 0;
   font:
-    600 28px "Barlow Condensed", "Arial Narrow", sans-serif;
+    600 28px "Barlow Condensed",
+    "Arial Narrow",
+    sans-serif;
   letter-spacing: 0.01em;
 }
 .note-editor > div:last-child {
@@ -2303,7 +2608,9 @@ legend {
 .history-modal h2 {
   margin: 0;
   font:
-    600 34px "Barlow Condensed", "Arial Narrow", sans-serif;
+    600 34px "Barlow Condensed",
+    "Arial Narrow",
+    sans-serif;
   letter-spacing: -0.045em;
 }
 .history-layout {
@@ -2354,7 +2661,9 @@ legend {
 .session-page > h1 {
   margin: 0;
   font:
-    600 clamp(36px, 6vw, 52px) / 0.98 "Barlow Condensed", "Arial Narrow", sans-serif;
+    600 clamp(36px, 6vw, 52px) / 0.98 "Barlow Condensed",
+    "Arial Narrow",
+    sans-serif;
   letter-spacing: 0.01em;
 }
 .session-rationale {
@@ -2407,7 +2716,9 @@ legend {
 .session-block-header h2 {
   margin: 2px 0 4px;
   font:
-    600 24px "Barlow Condensed", "Arial Narrow", sans-serif;
+    600 24px "Barlow Condensed",
+    "Arial Narrow",
+    sans-serif;
 }
 .session-block-header p {
   margin: 0;
@@ -2457,7 +2768,9 @@ legend {
 .exercise-content h3 {
   margin: 0;
   font:
-    600 21px "Barlow Condensed", "Arial Narrow", sans-serif;
+    600 21px "Barlow Condensed",
+    "Arial Narrow",
+    sans-serif;
 }
 .dose-pill {
   display: inline-block;
@@ -2517,7 +2830,9 @@ legend {
 }
 .empty-state h2 {
   font:
-    600 28px "Barlow Condensed", "Arial Narrow", sans-serif;
+    600 28px "Barlow Condensed",
+    "Arial Narrow",
+    sans-serif;
 }
 .connection-status {
   display: inline-flex;
@@ -2527,8 +2842,13 @@ legend {
   font-size: 12px;
   font-weight: 700;
 }
-.connection-status.connected { color: #2a3f5c; }
-.connection-status small { color: var(--muted); font-weight: 500; }
+.connection-status.connected {
+  color: #2a3f5c;
+}
+.connection-status small {
+  color: var(--muted);
+  font-weight: 500;
+}
 .refresh-button {
   border: 1px solid var(--line);
   border-radius: 7px;
@@ -2538,7 +2858,10 @@ legend {
   font-size: 12px;
   font-weight: 700;
 }
-.refresh-button:hover { border-color: var(--button); background: var(--soft); }
+.refresh-button:hover {
+  border-color: var(--button);
+  background: var(--soft);
+}
 .construction-notice {
   max-width: 48ch;
   margin: 8px 0 0;
@@ -2546,7 +2869,10 @@ legend {
   font-size: 13px;
   line-height: 1.45;
 }
-.microcycle-status { color: #3d5a7a !important; font-size: 12px !important; }
+.microcycle-status {
+  color: #3d5a7a !important;
+  font-size: 12px !important;
+}
 .session-grid article.is-next {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(255, 122, 26, 0.14);
@@ -2581,7 +2907,9 @@ legend {
   border-radius: 9px;
   background: var(--surface);
 }
-.block-jump-nav .eyebrow { margin: 0 5px 0 0; }
+.block-jump-nav .eyebrow {
+  margin: 0 5px 0 0;
+}
 .block-jump-nav a {
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -2592,7 +2920,9 @@ legend {
   font-weight: 700;
   text-decoration: none;
 }
-.block-jump-nav a:hover { border-color: var(--accent); }
+.block-jump-nav a:hover {
+  border-color: var(--accent);
+}
 .weekly-next-session {
   display: grid;
   gap: 5px;
@@ -2602,7 +2932,10 @@ legend {
   border-radius: 8px;
   background: #ffe9d6;
 }
-.weekly-next-session strong { color: #7c3f24; font-size: 15px; }
+.weekly-next-session strong {
+  color: #7c3f24;
+  font-size: 15px;
+}
 .session-overview {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2618,8 +2951,13 @@ legend {
   border-radius: 9px;
   background: var(--surface);
 }
-.session-overview strong { color: var(--button); font-size: 18px; }
-.session-block-card { scroll-margin-top: 150px; }
+.session-overview strong {
+  color: var(--button);
+  font-size: 18px;
+}
+.session-block-card {
+  scroll-margin-top: 150px;
+}
 button:focus-visible,
 summary:focus-visible,
 a:focus-visible,
@@ -2697,9 +3035,14 @@ textarea:focus-visible {
     gap: 6px;
     font-size: 12px;
   }
-  .desktop-account, .is-signed-in .topbar-right > .connection-status,
-  .is-signed-in .topbar-right > .refresh-button { display: none; }
-  .mobile-account { display: block; }
+  .desktop-account,
+  .is-signed-in .topbar-right > .connection-status,
+  .is-signed-in .topbar-right > .refresh-button {
+    display: none;
+  }
+  .mobile-account {
+    display: block;
+  }
   .mobile-account summary {
     display: grid;
     place-items: center;
@@ -2711,8 +3054,12 @@ textarea:focus-visible {
     cursor: pointer;
     list-style: none;
   }
-  .mobile-account summary::-webkit-details-marker { display: none; }
-  .other-actions { width: 100%; }
+  .mobile-account summary::-webkit-details-marker {
+    display: none;
+  }
+  .other-actions {
+    width: 100%;
+  }
   .heading-actions,
   .heading-actions > button,
   .week-navigation,
@@ -2738,11 +3085,21 @@ textarea:focus-visible {
     align-items: stretch;
     flex-direction: column;
   }
-  .session-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .session-overview > div:last-child { grid-column: 1 / -1; }
-  .block-jump-nav a { text-align: center; }
-  .session-block-header h2 { font-size: 21px; }
-  .session-timebar div { font-size: 10px; }
+  .session-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .session-overview > div:last-child {
+    grid-column: 1 / -1;
+  }
+  .block-jump-nav a {
+    text-align: center;
+  }
+  .session-block-header h2 {
+    font-size: 21px;
+  }
+  .session-timebar div {
+    font-size: 10px;
+  }
 }
 h1,
 h2,

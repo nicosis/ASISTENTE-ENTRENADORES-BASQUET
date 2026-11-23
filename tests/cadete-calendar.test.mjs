@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { easterSunday, getCadeteWeeks, holidayLabelForWeek } from '../app/shared/cadeteCalendar.ts'
+import { easterSunday, getCadeteWeeks, holidayLabelForWeek, suggestedHolidayWeeks } from '../app/shared/cadeteCalendar.ts'
 
 test('assigns each week to the period of its Monday through June', () => {
   const weeks = getCadeteWeeks('2026-08-03')
@@ -53,8 +53,11 @@ test('suggests Christmas and Semana Santa weeks by real date', () => {
   assert.deepEqual(labels, [
     { number: 19, label: 'Navidad' },
     { number: 20, label: 'Navidad' },
-    { number: 21, label: 'Navidad' },
     { number: 32, label: 'Semana Santa' },
   ])
 })
 
+
+test('suggests the season holiday weeks from real dates', () => {
+  assert.deepEqual(suggestedHolidayWeeks('2026-08-17'), ['2026-12-21', '2026-12-28', '2027-03-22'])
+})

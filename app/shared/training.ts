@@ -1,12 +1,10 @@
 export type Frequency = 1 | 2 | 3
 export type TrainingDay = 'dia1' | 'dia2' | 'dia3'
 export type AgeCategory = 'alevin' | 'infantil' | 'cadete' | 'juvenil'
-export type CompetitiveLevel = 'formacion' | 'liga'
 export type PhaseType = 'training' | 'holiday' | 'assessment'
 
 export interface ExerciseRecord {
   id: string
-  slug: string
   name: string
   category: string
   focus: string
@@ -33,15 +31,10 @@ export interface MesocycleRecord {
   phaseOrder: number
   type: PhaseType
   name: string
-  weeksCount: number
   weekStart: number
   weekEnd: number
-  color: string
   objective: string
-  loadRules: string[]
-  plioRule: string
-  weeklyProgressionNote: string
-  weeklyLoads: number[]
+  load: number
 }
 
 export type MicrocycleStatus = 'planned' | 'active' | 'completed'
@@ -86,9 +79,7 @@ export interface BlockExerciseRecord {
   exerciseId: string
   itemOrder: number
   stationLabel: string
-  doseFormacion: string
-  doseLiga: string
-  weekDoses?: Record<number, string>
+  weekDoses: Record<number, string>
 }
 
 export interface HomeSessionRecord {
@@ -100,7 +91,6 @@ export interface HomeSessionRecord {
   format: string
   exerciseId: string
   doseHoliday1: string
-  doseHoliday2: string
   weekNumbers?: number[]
   weekDoses?: Record<number, string>
 }
@@ -120,8 +110,6 @@ export interface HydratedBlockExercise {
   exerciseId: string
   itemOrder: number
   stationLabel: string
-  doseFormacion: string
-  doseLiga: string
   dose: string
   exercise: ExerciseRecord
 }
@@ -413,11 +401,11 @@ export function getMesocycleForWeek(
     )
   }
   const weekInPhase = Math.max(1, clampedWeek - phase.weekStart + 1)
-  const loadIndex =
-    phase.weeklyLoads[weekInPhase - 1] ?? phase.weeklyLoads[0] ?? 5
+  const weeksInPhase = phase.weekEnd - phase.weekStart + 1
+  const loadIndex = phase.load
   const isDeload =
     phase.type === 'training' &&
-    weekInPhase === phase.weeksCount &&
+    weekInPhase === weeksInPhase &&
     loadIndex <= 4
   return {
     phase,
@@ -454,7 +442,6 @@ export function getSeasonSessionOffset(
 export function getWeeklySessionsForMesocycle(
   mesocycleId: string,
   frequency: Frequency,
-  competitiveLevel: CompetitiveLevel = 'liga',
   catalog: TrainingCatalogTables = defaultTrainingCatalog,
 ): MesocycleSessionRecord[] {
   const direct = catalog.mesocycleSessions
@@ -476,7 +463,6 @@ export function getHydratedSession(
     ageCategory?: AgeCategory
     macrocycleId?: string
     mesocycleId?: string
-    competitiveLevel?: CompetitiveLevel
     frequency: Frequency
     weekNumber?: number
     day: TrainingDay
@@ -484,7 +470,6 @@ export function getHydratedSession(
   catalog: TrainingCatalogTables = defaultTrainingCatalog,
 ): HydratedPhaseSession {
   const ageCategory = params.ageCategory || 'cadete'
-  const competitiveLevel = params.competitiveLevel || 'liga'
   const plan = resolveMacrocycle(ageCategory, catalog, params.macrocycleId)
   const weekNumber = params.weekNumber || 1
   const { phase: resolvedPhase, weekInPhase, loadIndex, isDeload } =
@@ -493,7 +478,6 @@ export function getHydratedSession(
   const weeklySessions = getWeeklySessionsForMesocycle(
     resolvedPhase.id,
     params.frequency,
-    competitiveLevel,
     catalog,
   )
   const session = weeklySessions.find((item) => item.day === params.day)
@@ -537,9 +521,7 @@ export function getHydratedSession(
           `No existe el ejercicio ${item.exerciseId} referenciado por la sesión.`,
         )
       }
-      const baseDose = item.weekDoses?.[weekNumber] ?? (
-        competitiveLevel === 'formacion' ? item.doseFormacion : item.doseLiga
-      )
+      const baseDose = item.weekDoses[weekNumber] ?? ''
 
       return {
         ...item,
@@ -599,7 +581,6 @@ export function getWeeklyPlan(
   frequency: Frequency,
   weekNumber = 1,
   ageCategory: AgeCategory = 'cadete',
-  competitiveLevel: CompetitiveLevel = 'liga',
   catalog: TrainingCatalogTables = defaultTrainingCatalog,
 ): MesocycleSessionRecord[] {
   const plan = resolveMacrocycle(ageCategory, catalog)
@@ -607,7 +588,6 @@ export function getWeeklyPlan(
   return getWeeklySessionsForMesocycle(
     phase.id,
     frequency,
-    competitiveLevel,
     catalog,
   )
 }

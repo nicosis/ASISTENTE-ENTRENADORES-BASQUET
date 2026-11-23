@@ -18,10 +18,11 @@ Hay dos grupos de hojas. Los nombres son los que lee el código hoy.
 | Hoja | Contenido |
 | --- | --- |
 | `macrocycles` | Plan anual completo (42 semanas, categoría cadete). |
-| `mesocycles` | Fases: 10 de entrenamiento, más las semanas de vacaciones (Navidad y Semana Santa) y el combine final. Cada fase tiene su rango de semanas, cargas y reglas. |
+| `mesocycles` | Fases del plan: su rango de semanas, tipo, objetivo y carga (intensidad 0-10). Las series, repeticiones y cargas por ejercicio viven en `block_exercise_doses`. |
 | `mesocycle_sessions` | Plantilla de sesiones de una fase: `day` (`dia1`–`dia3`), `order` y `name`. El nombre es «Día N» en el generador local; la hoja debe actualizarse a mano porque `sheets-sync` no escribe el catálogo. |
 | `training_blocks` | Bloques de una sesión (activa, rápido, fuerte, juega), con sus minutos y formato. |
-| `block_exercises` | Ejercicio dentro de un bloque, con su dosis de formación, de liga y la dosis de cada semana. |
+| `block_exercises` | Ejercicio dentro de un bloque. |
+| `block_exercise_doses` | Dosis de un ejercicio de bloque en una semana concreta (una fila por ejercicio y semana). |
 | `exercises` | Ficha de cada ejercicio: nombre, área de movimiento, nivel de aproximación, material, cómo se hace, indicación clave, errores, versión más fácil y más difícil. |
 | `home_sessions` | Trabajo en casa de Navidad y Semana Santa (sesiones A, B y C). |
 | `tests` | Pruebas del combine (S1, S21 y S42) con su protocolo. |
@@ -32,6 +33,27 @@ La sesión se encuentra por fase y día. El rango de semanas es el de la fase, a
 Macrociclo → Fase → Sesión (día) → Bloque → Ejercicio en bloque → Dosis por semana
                                                     ↑ ficha de `exercises`
 ```
+
+### Convenciones de IDs
+
+| Entidad | Formato | Ejemplo | Origen |
+| --- | --- | --- | --- |
+| Macrociclo | `CAD` + año del plan | `CAD27` | Fijo en `buildCatalog.mjs`. Las 42 semanas son un dato (`totalWeeks`), no parte del ID. |
+| Fase | `{macro}-MES{NN}` | `CAD27-MES01` | Derivado del orden de la fase. |
+| Sesión | `{fase}-D{NN}` | `CAD27-MES01-D01` | Día de la fase. |
+| Bloque | `{sesión}-B{NN}` | `CAD27-MES01-D01-B01` | Orden del bloque. |
+| Ejercicio en bloque | `{bloque}-E{NN}` | `CAD27-MES01-D01-B01-E01` | Orden dentro del bloque. |
+| Ficha de ejercicio | `EX{NNNN}` | `EX0017` | Persistente: se asigna una vez en `odd/plan-data/exercises.json` y no se recalcula. |
+| Test | `{macro}-T{NN}` | `CAD27-T01` | Orden del test. |
+| Sesión en casa | `{macro}-H{NN}-{letra}-E{NN}` | `CAD27-H01-A-E01` | Plan de vacaciones y sesión A/B/C. |
+
+Regla: los IDs de ficha (`EX`) no contienen categoría ni macrociclo, porque un ejercicio se reutiliza en varios planes y bloques. La relación se expresa con tablas (`block_exercises`, `block_exercise_doses`), no con el ID.
+
+### Qué informa cada tabla de forma única
+
+- `mesocycles` informa cuántas fases hay, su rango de semanas, tipo, objetivo y `load` (intensidad de la fase, 0-10; `0` en vacaciones y combine). No guarda series, repeticiones ni color.
+- `block_exercise_doses` es la única fuente de dosis: una fila por ejercicio y semana, con el texto de la dosis (series, repeticiones, carga).
+- El color lo decide el front (`app/shared/phaseColors.ts`).
 
 ### Operación (la escribe la aplicación)
 
@@ -134,3 +156,10 @@ node --test tests/*.test.mjs
 6. Evaluar una base de datos transaccional para producción y generación de PDF.
 7. Actualizar en Sheets la columna `name` de `mesocycle_sessions` (30 filas) de «Lunes», «Miércoles» y «Viernes» a «Día 1», «Día 2» y «Día 3». La aplicación no puede hacerlo.
 8. Decidir si las semanas de vacaciones deben aparecer como semanas sin sesiones en la numeración de la temporada (hoy no suman).
+9. Renombrar `exercises.category` a `level`: hoy guarda el nivel de movimiento (`Nivel I`, `Nivel 0−`…), no una categoría.
+10. Corregir el slug que termina en guion (`dead-bug-bicho-muerto-`); la normalización no recorta los extremos.
+11. Decidir si las semanas de descanso dentro de una fase de cadete deben mostrar una carga distinta de la fase. Antes mostraban 3; ahora muestran `load` de la fase.
+12. `home_sessions` todavía guarda `week_doses_json` y `dose_holiday_1/2`. Unificarlo con `block_exercise_doses` está pendiente.
+13. Mostrar en la pantalla de equipos el acceso compartido (`team_coaches`). La pestaña existe y el tipo está en el código; falta la interfaz.
+14. El chequeo de tipos (`nuxi typecheck`) no corre en este entorno porque requiere instalar `golar`. Los cambios de esta sesión se validaron con las pruebas y lectura de código.
+15. Los cambios de código de esta sesión no tienen commit todavía.

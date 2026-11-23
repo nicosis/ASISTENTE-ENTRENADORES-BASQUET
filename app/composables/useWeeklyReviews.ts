@@ -60,7 +60,6 @@ export function useWeeklyReviews(params: {
         seasonId: params.activeSeason.value.id,
         weekStart: params.displayedWeekStart.value,
         text: reviewDraft.value.trim(),
-        createdAt: new Date().toISOString(),
       })
     }
     reviewDraft.value = ''
